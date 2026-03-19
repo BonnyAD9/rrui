@@ -6,3 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.102"
+flexi_logger = "0.31.8"
+futures = "0.3.32"
+log = "0.4.29"
+wgpu = "29.0.0"
+winit = "0.30.13"
