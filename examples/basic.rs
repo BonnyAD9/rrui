@@ -1,14 +1,25 @@
-use std::{iter, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
 use futures::executor::block_on;
+use iced_wgpu::{
+    core::{
+        alignment,
+        renderer::Quad,
+        text::{Alignment, LineHeight, Renderer as _, Shaping, Wrapping},
+        Background, Border, Color, Font, Point, Rectangle,
+        Renderer as _, Shadow, Size, Text,
+    },
+    graphics::{Antialiasing, Shell, Viewport},
+    Engine, Renderer,
+};
 use log::error;
 use wgpu::{
-    Backends, Color, CommandEncoderDescriptor, CurrentSurfaceTexture, Device,
-    DeviceDescriptor, ExperimentalFeatures, Features, Instance,
-    InstanceDescriptor, Limits, LoadOp, Operations, Queue,
-    RenderPassDescriptor, RequestAdapterOptions, StoreOp, Surface,
-    SurfaceConfiguration, TextureUsages, TextureViewDescriptor, Trace,
+    Backends, Device, DeviceDescriptor, ExperimentalFeatures, Features,
+    Instance, InstanceDescriptor, Limits,
+    RequestAdapterOptions, Surface,
+    SurfaceConfiguration, SurfaceError, TextureUsages,
+    TextureViewDescriptor, Trace,
 };
 use winit::{
     application::ApplicationHandler,
@@ -30,10 +41,11 @@ fn main() -> anyhow::Result<()> {
 
 pub struct State {
     window: Arc<Window>,
+    renderer: Renderer,
     surface: Surface<'static>,
-    device: Device,
-    queue: Queue,
     config: SurfaceConfiguration,
+    device: Device,
+    viewport: Viewport,
     is_surface_configured: bool,
 }
 
@@ -41,9 +53,9 @@ impl State {
     pub fn new(window: Arc<Window>) -> Result<Self> {
         let size = window.inner_size();
 
-        let instance = Instance::new(InstanceDescriptor {
+        let instance = Instance::new(&InstanceDescriptor {
             backends: Backends::PRIMARY,
-            ..InstanceDescriptor::new_without_display_handle()
+            ..InstanceDescriptor::default()
         });
 
         let surface = instance.create_surface(window.clone()).unwrap();
@@ -69,7 +81,7 @@ impl State {
         let surface_format = surface_caps
             .formats
             .iter()
-            .find(|f| f.is_srgb())
+            .find(|f| f.is_srgb() && f.components() == 4)
             .copied()
             .unwrap_or(surface_caps.formats[0]);
 
@@ -79,17 +91,33 @@ impl State {
             width: size.width,
             height: size.height,
             present_mode: surface_caps.present_modes[0],
-            alpha_mode: surface_caps.alpha_modes[0],
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
 
+        let engine = Engine::new(
+            &adapter,
+            device.clone(),
+            queue,
+            config.format,
+            Some(Antialiasing::MSAAx4),
+            Shell::headless(),
+        );
+        let renderer = Renderer::new(engine, Font::DEFAULT, 64.into());
+
+        let viewport = Viewport::with_physical_size(
+            Size::new(size.width, size.height),
+            1.,
+        );
+
         Ok(Self {
             window,
+            renderer,
+            config,
             surface,
             device,
-            queue,
-            config,
+            viewport,
             is_surface_configured: false,
         })
     }
@@ -98,6 +126,7 @@ impl State {
         if w > 0 && h > 0 {
             self.config.width = w;
             self.config.height = h;
+            self.viewport = Viewport::with_physical_size(Size::new(w, h), 1.);
             self.surface.configure(&self.device, &self.config);
             self.is_surface_configured = true;
         }
@@ -106,14 +135,20 @@ impl State {
     pub fn render(&mut self) {
         self.window.request_redraw();
 
+        self.renderer.reset(Rectangle {
+            x: 0.,
+            y: 0.,
+            width: self.config.width as f32,
+            height: self.config.height as f32,
+        });
+
         if !self.is_surface_configured {
             return;
         }
 
         let output = match self.surface.get_current_texture() {
-            CurrentSurfaceTexture::Suboptimal(t) => t,
-            CurrentSurfaceTexture::Success(t) => t,
-            CurrentSurfaceTexture::Lost | CurrentSurfaceTexture::Outdated => {
+            Ok(r) => r,
+            Err(SurfaceError::Lost | SurfaceError::Outdated) => {
                 let size = self.window.inner_size();
                 self.resize(size.width, size.height);
                 return;
@@ -128,35 +163,50 @@ impl State {
             .texture
             .create_view(&TextureViewDescriptor::default());
 
-        let mut encoder =
-            self.device
-                .create_command_encoder(&CommandEncoderDescriptor {
-                    label: Some("Render encoder"),
-                });
-
-        encoder.begin_render_pass(&RenderPassDescriptor {
-            label: Some("Render Pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &view,
-                depth_slice: None,
-                resolve_target: None,
-                ops: Operations {
-                    load: LoadOp::Clear(Color {
-                        r: 0.1,
-                        g: 0.2,
-                        b: 0.3,
-                        a: 1.0,
-                    }),
-                    store: StoreOp::Store,
+        self.renderer.fill_quad(
+            Quad {
+                bounds: Rectangle {
+                    x: 10.,
+                    y: 10.,
+                    width: 50.,
+                    height: 50.,
                 },
-            })],
-            depth_stencil_attachment: None,
-            occlusion_query_set: None,
-            timestamp_writes: None,
-            multiview_mask: None,
-        });
+                border: Border::default(),
+                shadow: Shadow::default(),
+                snap: false,
+            },
+            Background::Color(Color::from_rgb8(0x12, 0x34, 0x56)),
+        );
 
-        self.queue.submit(iter::once(encoder.finish()));
+        self.renderer.fill_text(
+            Text {
+                content: "Hello rrui!".into(),
+                bounds: Size::new(150., 30.),
+                size: 16.into(),
+                line_height: LineHeight::Absolute(20.into()),
+                font: Font::DEFAULT,
+                align_x: Alignment::Left,
+                align_y: alignment::Vertical::Top,
+                shaping: Shaping::Auto,
+                wrapping: Wrapping::WordOrGlyph,
+            },
+            Point::new(20., 20.),
+            Color::from_rgba8(255, 255, 255, 1.0),
+            Rectangle {
+                x: 20.,
+                y: 20.,
+                width: 100.,
+                height: 50.,
+            },
+        );
+
+        self.renderer.present(
+            Some(Color::from_rgb8(0x65, 0x43, 0x21)),
+            self.config.format,
+            &view,
+            &self.viewport,
+        );
+
         output.present();
     }
 
