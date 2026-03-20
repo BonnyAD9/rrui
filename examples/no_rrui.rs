@@ -7,8 +7,8 @@ use iced_wgpu::{
         alignment,
         renderer::Quad,
         text::{Alignment, LineHeight, Renderer as _, Shaping, Wrapping},
-        Background, Border, Color, Font, Point, Rectangle,
-        Renderer as _, Shadow, Size, Text,
+        Background, Border, Color, Font, Point, Rectangle, Renderer as _,
+        Shadow, Size, Text,
     },
     graphics::{Antialiasing, Shell, Viewport},
     Engine, Renderer,
@@ -16,10 +16,9 @@ use iced_wgpu::{
 use log::error;
 use wgpu::{
     Backends, Device, DeviceDescriptor, ExperimentalFeatures, Features,
-    Instance, InstanceDescriptor, Limits,
-    RequestAdapterOptions, Surface,
-    SurfaceConfiguration, SurfaceError, TextureUsages,
-    TextureViewDescriptor, Trace,
+    Instance, InstanceDescriptor, Limits, RequestAdapterOptions, Surface,
+    SurfaceConfiguration, SurfaceError, TextureUsages, TextureViewDescriptor,
+    Trace,
 };
 use winit::{
     application::ApplicationHandler,

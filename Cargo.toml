@@ -7,9 +7,13 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.102"
+bitflags = "2.11.0"
 flexi_logger = "0.31.8"
 futures = "0.3.32"
 iced_wgpu = "0.14.0"
 log = "0.4.29"
+minlin = "0.3.1"
+smol_str = "0.2.2"
+thiserror = "2.0.18"
 wgpu = "27.0.0"
 winit = "0.30.13"
