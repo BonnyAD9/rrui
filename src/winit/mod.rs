@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use minlin::Vec2;
+use minlin::{MapExt, Vec2};
 use smol_str::SmolStr;
 use winit::{
     application::ApplicationHandler,

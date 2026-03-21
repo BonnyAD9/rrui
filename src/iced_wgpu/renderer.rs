@@ -3,7 +3,7 @@ use iced_wgpu::{
     graphics::{Antialiasing, Shell, Viewport},
     Engine,
 };
-use minlin::{Vec2, Vec4};
+use minlin::{MapExt, Vec2};
 
 #[derive(Debug)]
 pub struct RendererConfig {
@@ -11,13 +11,13 @@ pub struct RendererConfig {
     pub font_size: f32,
     pub scale: f32,
     pub antialiasing: bool,
-    pub clear_color: Option<Vec4<f32>>,
+    pub clear_color: Option<crate::Color>,
 }
 
 pub struct Renderer {
     renderer: iced_wgpu::Renderer,
     viewport: Viewport,
-    clear_color: Option<iced_wgpu::core::Color>,
+    clear_color: Option<Color>,
 }
 
 impl crate::wgpu::Renderer for Renderer {
@@ -100,7 +100,7 @@ impl Default for RendererConfig {
             font_size: 16.,
             scale: 1.,
             antialiasing: true,
-            clear_color: Some(Vec4::new(0., 0., 0., 1.)),
+            clear_color: Some(crate::Color::BLACK),
         }
     }
 }

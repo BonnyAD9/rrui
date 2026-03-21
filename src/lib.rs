@@ -25,6 +25,8 @@ pub use self::{
     renderer::*, shell::*, widget::*, window::*,
 };
 
+pub type Color = minlin::Rgba<f32>;
+
 pub fn run<App, Rend, RendState, Evt, Win, EvtLoop>(
     app: App,
     config: Configuration<App, Rend, RendState, Evt, Win, EvtLoop>,

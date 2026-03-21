@@ -1,12 +1,11 @@
 use std::fmt::Debug;
 
-use minlin::Vec4;
-use rrui::{config::IcedWgpuWinit, widgets, Application};
+use rrui::{Application, Color, config::IcedWgpuWinit, widgets};
 use winit::error::EventLoopError;
 
 pub fn main() -> Result<(), EventLoopError> {
     let mut config = IcedWgpuWinit::default();
-    config.render_config.clear_color = Some(Vec4::new(0.8, 0.8, 0.2, 1.));
+    config.render_config.clear_color = Some(Color::xrgb(0xdddd55));
     config.window_config.title = "hello rrui window".into();
 
     rrui::run(App, config)?;
