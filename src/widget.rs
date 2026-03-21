@@ -1,7 +1,15 @@
-use crate::Shell;
+use minlin::Rect;
+
+use crate::{LayoutBounds, Shell};
 
 pub trait Widget<Rend, Msg, Evt> {
-    fn event(&mut self, event: &Evt, shell: &mut Shell);
+    fn layout(
+        &mut self,
+        shell: &mut Shell,
+        bounds: &LayoutBounds,
+    ) -> Rect<f32>;
 
-    fn draw(&mut self, renderer: &mut Rend, shell: &mut Shell);
+    fn event(&mut self, shell: &mut Shell, event: &Evt);
+
+    fn draw(&mut self, shell: &mut Shell, renderer: &mut Rend);
 }

@@ -10,6 +10,7 @@ pub struct Configuration<App, Rend, RendState, Evt, Win, EvtLoop>
 where
     Win: Window,
     Evt: Event,
+    Rend: crate::Renderer,
     RendState: RenderState<Win, Rend>,
     EvtLoop: EventLoop<
         App::Message,
@@ -29,6 +30,7 @@ impl<App, Rend, RendState, Evt, Win, EvtLoop> Default
 where
     Evt: Event,
     Win: Window,
+    Rend: crate::Renderer,
     RendState: RenderState<Win, Rend>,
     EvtLoop: EventLoop<
         App::Message,

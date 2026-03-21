@@ -1,5 +1,7 @@
 use iced_wgpu::{
-    core::{Color, Font, Rectangle, Renderer as _},
+    core::{
+        renderer::Quad, Border, Color, Font, Rectangle, Renderer as _, Shadow,
+    },
     graphics::{Antialiasing, Shell, Viewport},
     Engine,
 };
@@ -102,5 +104,48 @@ impl Default for RendererConfig {
             antialiasing: true,
             clear_color: Some(crate::Color::BLACK),
         }
+    }
+}
+
+impl crate::QuadRenderer for Renderer {
+    fn draw_quad(
+        &mut self,
+        quad: &crate::Quad,
+        bg: impl Into<crate::Background>,
+    ) {
+        self.renderer.fill_quad(quad.into(), bg.into());
+    }
+
+    fn draw_rect(
+        &mut self,
+        rect: impl Into<minlin::Rect<f32>>,
+        bg: impl Into<crate::Background>,
+    ) {
+        self.renderer.fill_quad(
+            Quad {
+                bounds: super::rect(rect.into()),
+                border: Border::default(),
+                shadow: Shadow::default(),
+                snap: false,
+            },
+            bg.into(),
+        );
+    }
+
+    fn draw_border(
+        &mut self,
+        bounds: impl Into<minlin::Rect<f32>>,
+        border: impl Into<crate::Border>,
+        bg: impl Into<crate::Background>,
+    ) {
+        self.renderer.fill_quad(
+            Quad {
+                bounds: super::rect(bounds.into()),
+                border: border.into().into(),
+                shadow: Shadow::default(),
+                snap: false,
+            },
+            bg.into(),
+        );
     }
 }

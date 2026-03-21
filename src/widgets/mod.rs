@@ -1,3 +1,4 @@
 mod nothing;
+mod rectangle;
 
-pub use self::nothing::*;
+pub use self::{nothing::*, rectangle::*};

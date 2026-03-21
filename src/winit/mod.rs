@@ -210,6 +210,11 @@ impl crate::wgpu::Window for Arc<Window> {
 
 impl crate::Window for Arc<Window> {
     type Config = WindowAttributes;
+
+    fn size(&self) -> Vec2<u32> {
+        let s = self.inner_size();
+        Vec2::new(s.width, s.height)
+    }
 }
 
 impl AppCtrl for &ActiveEventLoop {
@@ -232,6 +237,7 @@ impl<App, Rend, RendState> ApplicationHandler<App::Message>
     for AppState<App, Rend, RendState, WindowEvent, Arc<Window>>
 where
     App: Application<Rend, WindowEvent>,
+    Rend: crate::Renderer,
     RendState: RenderState<Arc<Window>, Rend> + 'static,
 {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
@@ -263,6 +269,7 @@ impl<App, Rend, RendState>
     > for EventLoop<App::Message>
 where
     App: Application<Rend, WindowEvent>,
+    Rend: crate::Renderer,
     RendState: RenderState<Arc<Window>, Rend> + 'static,
 {
     type Event = WindowEvent;

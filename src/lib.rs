@@ -7,7 +7,9 @@ pub mod event;
 mod event_loop;
 mod event_loop_proxy;
 pub mod iced_wgpu;
+mod layout;
 mod may_init;
+mod primitives;
 mod render_state;
 mod renderer;
 mod shell;
@@ -21,8 +23,8 @@ use crate::event::Event;
 
 pub use self::{
     app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
-    event_loop::*, event_loop_proxy::*, may_init::*, render_state::*,
-    renderer::*, shell::*, widget::*, window::*,
+    event_loop::*, event_loop_proxy::*, layout::*, may_init::*, primitives::*,
+    render_state::*, renderer::*, shell::*, widget::*, window::*,
 };
 
 pub type Color = minlin::Rgba<f32>;
@@ -34,6 +36,7 @@ pub fn run<App, Rend, RendState, Evt, Win, EvtLoop>(
 where
     Evt: Event,
     Win: Window,
+    Rend: crate::Renderer,
     RendState: RenderState<Win, Rend> + 'static,
     EvtLoop: EventLoop<
         App::Message,

@@ -1,3 +1,7 @@
+mod quad_renderer;
+
+pub use self::quad_renderer::*;
+
 use minlin::Vec2;
 
 pub trait Renderer {
