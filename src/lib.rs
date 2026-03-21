@@ -13,6 +13,7 @@ mod shell;
 pub mod wgpu;
 mod widget;
 pub mod widgets;
+pub mod winit;
 
 use crate::event::Event;
 

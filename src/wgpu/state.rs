@@ -11,7 +11,10 @@ use wgpu::{
     SurfaceError, TextureUsages, TextureViewDescriptor, Trace,
 };
 
-use crate::wgpu::{Renderer, Window};
+use crate::{
+    wgpu::{Renderer, Window},
+    RenderState,
+};
 
 #[derive(Debug, Error)]
 pub enum StateCreateError {
@@ -33,15 +36,16 @@ pub struct State<W: Window, R: Renderer> {
     renderer: R,
 }
 
-impl<W: Window, R: Renderer> State<W, R> {
-    pub fn renderer(&mut self) -> &mut R {
-        &mut self.renderer
-    }
+impl<Window: crate::wgpu::Window, Rend: Renderer> RenderState<Window, Rend>
+    for crate::wgpu::State<Window, Rend>
+{
+    type Config = Rend::Config;
+    type Error = crate::wgpu::StateCreateError;
 
-    pub fn new(
-        window: W,
-        renderer_config: R::Config,
-    ) -> Result<Self, StateCreateError> {
+    fn create(
+        renderer_config: Self::Config,
+        window: Window,
+    ) -> Result<Self, Self::Error> {
         let size = window.inner_size();
 
         let instance = Instance::new(&InstanceDescriptor {
@@ -87,7 +91,7 @@ impl<W: Window, R: Renderer> State<W, R> {
             desired_maximum_frame_latency: 2,
         };
 
-        let renderer = R::create(
+        let renderer = Rend::create(
             renderer_config,
             &adapter,
             &device,
@@ -105,7 +109,7 @@ impl<W: Window, R: Renderer> State<W, R> {
         })
     }
 
-    pub fn resize(&mut self, size: Vec2<u32>) {
+    fn resize(&mut self, size: Vec2<u32>) {
         if size.x > 0 && size.y > 0 {
             self.config.width = size.x;
             self.config.height = size.y;
@@ -114,10 +118,9 @@ impl<W: Window, R: Renderer> State<W, R> {
         }
     }
 
-    pub fn render(&mut self) {
-        self.window.request_redraw();
-
+    fn render(&mut self) {
         if !self.is_surface_configured {
+            self.window.request_redraw();
             return;
         }
 
@@ -146,7 +149,11 @@ impl<W: Window, R: Renderer> State<W, R> {
         output.present();
     }
 
-    pub fn request_redraw(&mut self) {
+    fn renderer(&mut self) -> &mut Rend {
+        &mut self.renderer
+    }
+
+    fn request_redraw(&mut self) {
         self.window.request_redraw();
     }
 }

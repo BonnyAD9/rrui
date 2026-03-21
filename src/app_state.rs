@@ -1,6 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
-
-use winit::window::Window;
+use std::marker::PhantomData;
 
 use crate::{
     application::Application,
@@ -77,42 +75,5 @@ where
             }
             _ => {}
         }
-    }
-}
-
-impl<App, Rend, RendState> winit::application::ApplicationHandler<App::Message>
-    for AppState<
-        App,
-        Rend,
-        RendState,
-        winit::event::WindowEvent,
-        Arc<winit::window::Window>,
-    >
-where
-    App: Application<Rend, winit::event::WindowEvent>,
-    RendState: RenderState<Arc<winit::window::Window>, Rend> + 'static,
-{
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let window_attributes = Window::default_attributes();
-        let window =
-            event_loop.create_window(window_attributes).unwrap().into();
-        self.init(window);
-    }
-
-    fn user_event(
-        &mut self,
-        _event_loop: &winit::event_loop::ActiveEventLoop,
-        event: App::Message,
-    ) {
-        self.message(event);
-    }
-
-    fn window_event(
-        &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
-        _window_id: winit::window::WindowId,
-        event: winit::event::WindowEvent,
-    ) {
-        self.event(event, event_loop);
     }
 }

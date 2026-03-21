@@ -1,5 +1,5 @@
 use iced_wgpu::{
-    core::{Font, Rectangle, Renderer as _},
+    core::{Color, Font, Rectangle, Renderer as _},
     graphics::{Antialiasing, Shell, Viewport},
     Engine,
 };
@@ -49,7 +49,7 @@ impl crate::wgpu::Renderer for Renderer {
             Viewport::with_physical_size((0, 0).into(), config.scale);
         let clear_color = config
             .clear_color
-            .map(|c| iced_wgpu::core::Color::from_rgba(c.x, c.y, c.z, c.w));
+            .map(|c| Color::from_rgba(c.x, c.y, c.z, c.w));
 
         Self {
             renderer,
@@ -75,7 +75,7 @@ impl crate::wgpu::Renderer for Renderer {
     }
 }
 
-impl crate::Renderer for crate::iced_wgpu::Renderer {
+impl crate::Renderer for Renderer {
     type Inner = iced_wgpu::Renderer;
 
     fn reset(&mut self, size: Vec2<u32>) {

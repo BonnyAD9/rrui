@@ -11,6 +11,7 @@ pub trait Renderer {
         queue: Queue,
         format: TextureFormat,
     ) -> Self;
+
     fn render(
         &mut self,
         size: Vec2<u32>,
