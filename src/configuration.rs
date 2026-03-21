@@ -2,35 +2,39 @@ use std::marker::PhantomData;
 
 use crate::{
     application::Application, event::Event, AppState, EventLoop, RenderState,
+    Window,
 };
 
 #[derive(Debug)]
-pub struct Configuration<App, Rend, RendState, Evt, Window, EvtLoop>
+pub struct Configuration<App, Rend, RendState, Evt, Win, EvtLoop>
 where
+    Win: Window,
     Evt: Event,
-    RendState: RenderState<Window, Rend>,
+    RendState: RenderState<Win, Rend>,
     EvtLoop: EventLoop<
         App::Message,
-        AppState<App, Rend, RendState, Evt, Window>,
+        AppState<App, Rend, RendState, Evt, Win>,
         Event = Evt,
-        Window = Window,
+        Window = Win,
     >,
     App: Application<Rend, Evt>,
 {
     pub render_config: RendState::Config,
-    pub _p: PhantomData<(App, Evt, EvtLoop)>,
+    pub window_config: Win::Config,
+    _p: PhantomData<(App, Evt, EvtLoop)>,
 }
 
-impl<App, Rend, RendState, Evt, Window, EvtLoop> Default
-    for Configuration<App, Rend, RendState, Evt, Window, EvtLoop>
+impl<App, Rend, RendState, Evt, Win, EvtLoop> Default
+    for Configuration<App, Rend, RendState, Evt, Win, EvtLoop>
 where
     Evt: Event,
-    RendState: RenderState<Window, Rend>,
+    Win: Window,
+    RendState: RenderState<Win, Rend>,
     EvtLoop: EventLoop<
         App::Message,
-        AppState<App, Rend, RendState, Evt, Window>,
+        AppState<App, Rend, RendState, Evt, Win>,
         Event = Evt,
-        Window = Window,
+        Window = Win,
     >,
     App: Application<Rend, Evt>,
     RendState::Config: Default,
@@ -38,6 +42,7 @@ where
     fn default() -> Self {
         Self {
             render_config: Default::default(),
+            window_config: Default::default(),
             _p: Default::default(),
         }
     }

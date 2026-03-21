@@ -7,38 +7,41 @@ pub mod event;
 mod event_loop;
 mod event_loop_proxy;
 pub mod iced_wgpu;
+mod may_init;
 mod render_state;
 mod renderer;
 mod shell;
 pub mod wgpu;
 mod widget;
 pub mod widgets;
+mod window;
 pub mod winit;
 
 use crate::event::Event;
 
 pub use self::{
     app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
-    event_loop::*, event_loop_proxy::*, render_state::*, renderer::*,
-    shell::*, widget::*,
+    event_loop::*, event_loop_proxy::*, may_init::*, render_state::*,
+    renderer::*, shell::*, widget::*, window::*,
 };
 
-pub fn run<App, Rend, RendState, Evt, Window, EvtLoop>(
+pub fn run<App, Rend, RendState, Evt, Win, EvtLoop>(
     app: App,
-    config: Configuration<App, Rend, RendState, Evt, Window, EvtLoop>,
+    config: Configuration<App, Rend, RendState, Evt, Win, EvtLoop>,
 ) -> Result<(), EvtLoop::Error>
 where
     Evt: Event,
-    RendState: RenderState<Window, Rend> + 'static,
+    Win: Window,
+    RendState: RenderState<Win, Rend> + 'static,
     EvtLoop: EventLoop<
         App::Message,
-        AppState<App, Rend, RendState, Evt, Window>,
+        AppState<App, Rend, RendState, Evt, Win>,
         Event = Evt,
-        Window = Window,
+        Window = Win,
     >,
     App: Application<Rend, Evt>,
 {
-    let mut state = AppState::new(app, config.render_config);
+    let mut state = AppState::new(app, config);
     EvtLoop::create()?.run(&mut state)
 }
 

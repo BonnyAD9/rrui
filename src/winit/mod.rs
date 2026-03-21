@@ -4,14 +4,14 @@ use minlin::Vec2;
 use smol_str::SmolStr;
 use winit::{
     application::ApplicationHandler,
-    error::EventLoopError,
+    error::{EventLoopError, OsError},
     event::{
         ElementState, KeyEvent, Modifiers, MouseButton, MouseScrollDelta,
         WindowEvent,
     },
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
     keyboard::ModifiersKeyState,
-    window::{Window, WindowId},
+    window::{Window, WindowAttributes, WindowId},
 };
 
 use crate::{
@@ -208,9 +208,23 @@ impl crate::wgpu::Window for Arc<Window> {
     }
 }
 
+impl crate::Window for Arc<Window> {
+    type Config = WindowAttributes;
+}
+
 impl AppCtrl for &ActiveEventLoop {
+    type Window = Arc<Window>;
+    type Error = OsError;
+
     fn exit(self) {
         self.exit();
+    }
+
+    fn create_window(
+        self,
+        cfg: <Self::Window as crate::Window>::Config,
+    ) -> Result<Self::Window, Self::Error> {
+        self.create_window(cfg).map(Arc::new)
     }
 }
 
@@ -221,10 +235,7 @@ where
     RendState: RenderState<Arc<Window>, Rend> + 'static,
 {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let window_attributes = Window::default_attributes();
-        let window =
-            event_loop.create_window(window_attributes).unwrap().into();
-        self.init(window);
+        self.init(event_loop);
     }
 
     fn user_event(

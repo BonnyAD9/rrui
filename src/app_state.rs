@@ -4,44 +4,55 @@ use crate::{
     application::Application,
     event::{Event, EventType},
     widgets::Nothing,
-    AppCtrl, Element, RenderState, Shell, Widget,
+    AppCtrl, Configuration, Element, EventLoop, MayInit, RenderState, Shell,
+    Widget, Window,
 };
 
-pub struct AppState<App, Rend, RendState, Evt, Window>
+pub struct AppState<App, Rend, RendState, Evt, Win>
 where
+    Win: Window,
     App: Application<Rend, Evt>,
-    RendState: RenderState<Window, Rend>,
+    RendState: RenderState<Win, Rend>,
     Evt: Event,
 {
     app: App,
-    config: Option<RendState::Config>,
-    render_state: Option<RendState>,
+    render_state: MayInit<RendState::Config, RendState>,
+    window_config: Option<Win::Config>,
     root: Element<Rend, App::Message, Evt>,
     shell: Shell,
-    _phantom: PhantomData<(Rend, Evt, Window)>,
+    _phantom: PhantomData<(Rend, Evt, Win)>,
 }
 
-impl<App, Rend, RendState, Evt, Window>
-    AppState<App, Rend, RendState, Evt, Window>
+impl<App, Rend, RendState, Evt, Win> AppState<App, Rend, RendState, Evt, Win>
 where
+    Win: Window,
     App: Application<Rend, Evt>,
-    RendState: RenderState<Window, Rend>,
+    RendState: RenderState<Win, Rend>,
     Evt: Event,
 {
-    pub fn new(app: App, config: RendState::Config) -> Self {
+    pub fn new<EvtLoop>(
+        app: App,
+        config: Configuration<App, Rend, RendState, Evt, Win, EvtLoop>,
+    ) -> Self
+    where
+        EvtLoop: EventLoop<App::Message, Self, Event = Evt, Window = Win>,
+    {
         Self {
             app,
-            render_state: None,
-            config: Some(config),
+            render_state: MayInit::Uninitialized(config.render_config),
+            window_config: Some(config.window_config),
             root: Nothing.into(),
             shell: Shell::default(),
             _phantom: PhantomData,
         }
     }
 
-    pub fn init(&mut self, window: Window) {
-        let config = self.config.take().unwrap();
-        self.render_state = Some(RendState::create(config, window).unwrap());
+    pub fn init(&mut self, ctrl: impl AppCtrl<Window = Win>) {
+        self.render_state.init(|rc| {
+            let win_cfg = self.window_config.take().unwrap();
+            let win = ctrl.create_window(win_cfg).unwrap();
+            RendState::create(rc, win).unwrap()
+        });
         self.root = self.app.root();
         self.shell.request_redraw();
     }
@@ -51,9 +62,10 @@ where
     }
 
     pub fn event(&mut self, event: Evt, ctrl: impl AppCtrl) {
-        let Some(state) = &mut self.render_state else {
+        let MayInit::Initialized(state) = &mut self.render_state else {
             return;
         };
+
         match event.get_type() {
             EventType::CloseRequest => ctrl.exit(),
             EventType::Resize(size) => {
