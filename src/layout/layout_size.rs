@@ -74,7 +74,7 @@ impl LayoutSize {
         self.range.x = (self.range.x - v.x).max(0.);
         self.range.y = (self.range.y - v.y).max(0.);
         self.range.z = (self.range.z - v.x).max(0.);
-        self.range.w = (self.range.w - v.x).max(0.);
+        self.range.w = (self.range.w - v.y).max(0.);
         if let Some(b) = &mut self.best {
             *b -= v;
         }
