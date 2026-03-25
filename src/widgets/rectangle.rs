@@ -4,6 +4,7 @@ use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Background, Border, Element, LayoutBounds, QuadRenderer, Shell, Widget,
+    WidgetExt,
 };
 
 #[derive(Debug)]
@@ -64,3 +65,5 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> From<Rectangle>
         Element::new(value)
     }
 }
+
+impl WidgetExt for Rectangle {}

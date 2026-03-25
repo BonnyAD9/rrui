@@ -7,7 +7,7 @@ use std::fmt::Debug;
 
 use minlin::{MapExt, Rect, RectExt, Vec2};
 
-use crate::{Element, LayoutBounds, QuadRenderer, Shell, Widget};
+use crate::{Element, LayoutBounds, QuadRenderer, Shell, Widget, WidgetExt};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Container<W, S> {
@@ -98,3 +98,5 @@ where
         Element::new(value)
     }
 }
+
+impl<W, S> WidgetExt for Container<W, S> {}

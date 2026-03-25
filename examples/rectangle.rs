@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use rrui::{
     Application, Border, Color, Element, QuadRenderer, Theme,
     config::IcedWgpuWinit,
-    widgets::{Container, Rectangle},
+    widgets::{Container, MarginExt, Rectangle},
 };
 use winit::error::EventLoopError;
 
@@ -42,7 +42,8 @@ impl<R: QuadRenderer, E: Debug> Application<R, E> for App {
                 (500., 500.),
                 Color::xrgb(0x123456),
                 Border::new(Color::xrgb(0xdd5555), 5., 10.),
-            ),
+            )
+            .marge([10., 5.]),
         )
         .into()
     }

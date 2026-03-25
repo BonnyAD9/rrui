@@ -16,6 +16,7 @@ mod shell;
 mod theme;
 pub mod wgpu;
 mod widget;
+mod widget_ext;
 pub mod widgets;
 mod window;
 pub mod winit;
@@ -25,7 +26,8 @@ use crate::event::Event;
 pub use self::{
     app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
     event_loop::*, event_loop_proxy::*, layout::*, may_init::*, primitives::*,
-    render_state::*, renderer::*, shell::*, theme::*, widget::*, window::*,
+    render_state::*, renderer::*, shell::*, theme::*, widget::*,
+    widget_ext::*, window::*,
 };
 
 pub type Color = minlin::Rgba<f32>;
