@@ -6,21 +6,24 @@ use crate::{Element, Shell, Widget};
 
 pub struct Nothing;
 
-impl<Rend, Msg, Evt: Debug> Widget<Rend, Msg, Evt> for Nothing {
+impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
     fn layout(
         &mut self,
         _: &mut Shell,
+        _: &Theme,
         bounds: &crate::LayoutBounds,
     ) -> Rect<f32> {
         bounds.best_min()
     }
 
-    fn event(&mut self, _: &mut Shell, _: &Evt) {}
+    fn event(&mut self, _: &mut Shell, _: &Theme, _: &Evt) {}
 
-    fn draw(&mut self, _: &mut Shell, _: &mut Rend) {}
+    fn draw(&mut self, _: &mut Shell, _: &Theme, _: &mut Rend) {}
 }
 
-impl<Rend, Msg, Evt: Debug> From<Nothing> for Element<Rend, Msg, Evt> {
+impl<Rend, Msg, Evt: Debug, Theme> From<Nothing>
+    for Element<Rend, Msg, Evt, Theme>
+{
     fn from(value: Nothing) -> Self {
         Self::new(value)
     }

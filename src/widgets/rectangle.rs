@@ -28,23 +28,28 @@ impl Rectangle {
     }
 }
 
-impl<Rend: QuadRenderer, Msg, Evt: Debug> Widget<Rend, Msg, Evt>
+impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
     for Rectangle
 {
-    fn layout(&mut self, _: &mut Shell, bounds: &LayoutBounds) -> Rect<f32> {
+    fn layout(
+        &mut self,
+        _: &mut Shell,
+        _: &Theme,
+        bounds: &LayoutBounds,
+    ) -> Rect<f32> {
         self.bounds = bounds.clamp(self.size);
         self.bounds
     }
 
-    fn event(&mut self, _: &mut Shell, _: &Evt) {}
+    fn event(&mut self, _: &mut Shell, _: &Theme, _: &Evt) {}
 
-    fn draw(&mut self, _: &mut Shell, renderer: &mut Rend) {
+    fn draw(&mut self, _: &mut Shell, _: &Theme, renderer: &mut Rend) {
         renderer.draw_border(self.bounds, self.border, &self.background);
     }
 }
 
-impl<Rend: QuadRenderer, Msg, Evt: Debug> From<Rectangle>
-    for Element<Rend, Msg, Evt>
+impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> From<Rectangle>
+    for Element<Rend, Msg, Evt, Theme>
 {
     fn from(value: Rectangle) -> Self {
         Element::new(value)

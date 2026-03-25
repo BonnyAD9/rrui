@@ -20,7 +20,7 @@ where
     app: App,
     render_state: MayInit<RendState::Config, RendState>,
     window_config: Option<Win::Config>,
-    root: Element<Rend, App::Message, Evt>,
+    root: Element<Rend, App::Message, Evt, App::Theme>,
     shell: Shell,
     pending_redraw: bool,
     _phantom: PhantomData<(Rend, Evt, Win)>,
@@ -87,12 +87,16 @@ where
                     self.pending_redraw = false;
                     let rend = state.renderer();
                     rend.reset(self.shell.window_bounds.size().cast());
-                    self.root.draw(&mut self.shell, state.renderer());
+                    self.root.draw(
+                        &mut self.shell,
+                        self.app.theme(),
+                        state.renderer(),
+                    );
                 }
                 state.render();
             }
             _ if !event.is_window() => {
-                self.root.event(&mut self.shell, &event);
+                self.root.event(&mut self.shell, self.app.theme(), &event);
             }
             _ => {}
         }
@@ -101,7 +105,7 @@ where
             self.shell.redraw = true;
             self.shell.relayout = false;
             let bounds = LayoutBounds::filling(self.shell.window_bounds);
-            self.root.layout(&mut self.shell, &bounds);
+            self.root.layout(&mut self.shell, self.app.theme(), &bounds);
         }
 
         if self.shell.redraw && self.pending_redraw {

@@ -1,33 +1,34 @@
-use std::{cell::RefCell, rc::Rc};
-
 use minlin::Rect;
 
 use crate::{LayoutBounds, Shell, Widget};
 
-pub struct Element<Rend, Msg, Evt>(
-    pub Rc<RefCell<dyn Widget<Rend, Msg, Evt>>>,
+pub struct Element<Rend, Msg, Evt, Theme>(
+    Box<dyn Widget<Rend, Msg, Evt, Theme>>,
 );
 
-impl<Rend, Msg, Evt> Element<Rend, Msg, Evt> {
-    pub fn new(w: impl Widget<Rend, Msg, Evt> + 'static) -> Self {
-        Self(Rc::new(RefCell::new(w)))
+impl<Rend, Msg, Evt, Theme> Element<Rend, Msg, Evt, Theme> {
+    pub fn new(w: impl Widget<Rend, Msg, Evt, Theme> + 'static) -> Self {
+        Self(Box::new(w))
     }
 }
 
-impl<Rend, Msg, Evt> Widget<Rend, Msg, Evt> for Element<Rend, Msg, Evt> {
+impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
+    for Element<Rend, Msg, Evt, Theme>
+{
     fn layout(
         &mut self,
         shell: &mut Shell,
+        theme: &Theme,
         bounds: &LayoutBounds,
     ) -> Rect<f32> {
-        self.0.borrow_mut().layout(shell, bounds)
+        self.0.layout(shell, theme, bounds)
     }
 
-    fn event(&mut self, shell: &mut Shell, event: &Evt) {
-        self.0.borrow_mut().event(shell, event);
+    fn event(&mut self, shell: &mut Shell, theme: &Theme, event: &Evt) {
+        self.0.event(shell, theme, event);
     }
 
-    fn draw(&mut self, shell: &mut Shell, renderer: &mut Rend) {
-        self.0.borrow_mut().draw(shell, renderer);
+    fn draw(&mut self, shell: &mut Shell, theme: &Theme, renderer: &mut Rend) {
+        self.0.draw(shell, theme, renderer);
     }
 }

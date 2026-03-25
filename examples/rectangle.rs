@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use rrui::{
-    config::IcedWgpuWinit, widgets, Application, Border, Color, QuadRenderer,
+    Application, Border, Color, Element, QuadRenderer, config::IcedWgpuWinit, widgets
 };
 use winit::error::EventLoopError;
 
@@ -19,15 +19,20 @@ pub struct App;
 
 impl<R: QuadRenderer, E: Debug> Application<R, E> for App {
     type Message = ();
+    type Theme = ();
 
     fn message(&mut self, _msg: Self::Message) {}
 
-    fn root(&mut self) -> rrui::Element<R, Self::Message, E> {
+    fn root(&mut self) -> Element<R, Self::Message, E, Self::Theme> {
         widgets::Rectangle::new(
             (500., 500.),
             Color::xrgb(0x123456),
             Border::new(Color::xrgb(0xdd5555), 5., 10.),
         )
         .into()
+    }
+
+    fn theme(&self) -> &Self::Theme {
+        &()
     }
 }
