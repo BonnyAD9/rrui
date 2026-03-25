@@ -108,7 +108,7 @@ where
             self.root.layout(&mut self.shell, self.app.theme(), &bounds);
         }
 
-        if self.shell.redraw && self.pending_redraw {
+        if self.shell.redraw && !self.pending_redraw {
             self.pending_redraw = true;
             state.request_redraw();
         }
