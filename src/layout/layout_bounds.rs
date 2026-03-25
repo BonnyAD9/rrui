@@ -36,6 +36,12 @@ impl LayoutBounds {
         self.size.shrink_by(p.size());
     }
 
+    pub fn padded(&self, padding: impl Into<Padding<f32>>) -> Self {
+        let mut s = *self;
+        s.pad(padding);
+        s
+    }
+
     pub fn unite(&self, size: &LayoutSize) -> Self {
         Self::new(self.pos, self.size.unite(size))
     }

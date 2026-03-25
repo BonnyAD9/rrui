@@ -3,11 +3,11 @@ use std::marker::PhantomData;
 use minlin::{MapExt, RectExt};
 
 use crate::{
+    AppCtrl, Configuration, Element, EventLoop, LayoutBounds, MayInit,
+    RenderState, Renderer, Shell, Widget, Window,
     application::Application,
     event::{Event, EventType},
     widgets::Nothing,
-    AppCtrl, Configuration, Element, EventLoop, LayoutBounds, MayInit,
-    RenderState, Renderer, Shell, Widget, Window,
 };
 
 pub struct AppState<App, Rend, RendState, Evt, Win>

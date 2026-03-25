@@ -10,9 +10,9 @@ pub trait Widget<Rend, Msg, Evt, Theme> {
         bounds: &LayoutBounds,
     ) -> Rect<f32>;
 
-    fn size(&self) -> Vec2<f32>;
+    fn size(&self, theme: &Theme) -> Vec2<f32>;
 
-    fn reposition(&mut self, pos: Vec2<f32>);
+    fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>);
 
     fn event(&mut self, shell: &mut Shell, theme: &Theme, event: &Evt);
 

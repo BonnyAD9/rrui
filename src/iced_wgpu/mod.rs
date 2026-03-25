@@ -1,8 +1,8 @@
 mod renderer;
 
 use iced_wgpu::core::{
-    border::Radius, renderer::Quad, Background, Border, Color, Rectangle,
-    Shadow, Vector,
+    Background, Border, Color, Rectangle, Shadow, Vector, border::Radius,
+    renderer::Quad,
 };
 use minlin::Rect;
 
@@ -66,7 +66,8 @@ impl From<&crate::Quad> for Quad {
 impl From<crate::Background> for Background {
     fn from(value: crate::Background) -> Self {
         match value {
-            crate::Background::Solid(c) => Background::Color(color(c)),
+            crate::Background::Solid(c) => Self::Color(color(c)),
+            crate::Background::None => Self::Color(Color::TRANSPARENT),
         }
     }
 }

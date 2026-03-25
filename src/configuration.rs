@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::{
-    application::Application, event::Event, AppState, EventLoop, RenderState,
-    Window,
+    AppState, EventLoop, RenderState, Window, application::Application,
+    event::Event,
 };
 
 #[derive(Debug)]
@@ -13,11 +13,11 @@ where
     Rend: crate::Renderer,
     RendState: RenderState<Win, Rend>,
     EvtLoop: EventLoop<
-        App::Message,
-        AppState<App, Rend, RendState, Evt, Win>,
-        Event = Evt,
-        Window = Win,
-    >,
+            App::Message,
+            AppState<App, Rend, RendState, Evt, Win>,
+            Event = Evt,
+            Window = Win,
+        >,
     App: Application<Rend, Evt>,
 {
     pub render_config: RendState::Config,
@@ -33,11 +33,11 @@ where
     Rend: crate::Renderer,
     RendState: RenderState<Win, Rend>,
     EvtLoop: EventLoop<
-        App::Message,
-        AppState<App, Rend, RendState, Evt, Win>,
-        Event = Evt,
-        Window = Win,
-    >,
+            App::Message,
+            AppState<App, Rend, RendState, Evt, Win>,
+            Event = Evt,
+            Window = Win,
+        >,
     App: Application<Rend, Evt>,
     RendState::Config: Default,
 {
@@ -53,7 +53,7 @@ where
 pub mod config {
     use std::sync::Arc;
 
-    use crate::{application::Application, Configuration};
+    use crate::{Configuration, application::Application};
 
     #[allow(type_alias_bounds)]
     pub type IcedWgpuWinit<

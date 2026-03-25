@@ -6,6 +6,7 @@ use crate::{
     Background, Border, Element, LayoutBounds, QuadRenderer, Shell, Widget,
 };
 
+#[derive(Debug)]
 pub struct Rectangle {
     background: Background,
     border: Border,
@@ -47,11 +48,11 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
         renderer.draw_border(self.bounds, self.border, &self.background);
     }
 
-    fn size(&self) -> Vec2<f32> {
+    fn size(&self, _: &Theme) -> Vec2<f32> {
         self.size
     }
 
-    fn reposition(&mut self, pos: Vec2<f32>) {
+    fn reposition(&mut self, _: &Theme, pos: Vec2<f32>) {
         self.bounds.set_pos(pos);
     }
 }

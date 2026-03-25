@@ -32,11 +32,11 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
         self.0.draw(shell, theme, renderer);
     }
 
-    fn size(&self) -> Vec2<f32> {
-        self.0.size()
+    fn size(&self, theme: &Theme) -> Vec2<f32> {
+        self.0.size(theme)
     }
 
-    fn reposition(&mut self, pos: Vec2<f32>) {
-        self.0.reposition(pos);
+    fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>) {
+        self.0.reposition(theme, pos);
     }
 }

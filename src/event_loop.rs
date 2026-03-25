@@ -1,4 +1,4 @@
-use crate::{event::Event, EventLoopProxy};
+use crate::{EventLoopProxy, event::Event};
 
 pub trait EventLoop<Message, AppState>: Sized {
     type Event: Event;

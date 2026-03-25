@@ -3,15 +3,14 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::executor::block_on;
 use iced_wgpu::{
+    Engine, Renderer,
     core::{
-        alignment,
+        Background, Border, Color, Font, Point, Rectangle, Renderer as _,
+        Shadow, Size, Text, alignment,
         renderer::Quad,
         text::{Alignment, LineHeight, Renderer as _, Shaping, Wrapping},
-        Background, Border, Color, Font, Point, Rectangle, Renderer as _,
-        Shadow, Size, Text,
     },
     graphics::{Antialiasing, Shell, Viewport},
-    Engine, Renderer,
 };
 use log::error;
 use wgpu::{

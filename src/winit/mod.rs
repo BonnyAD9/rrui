@@ -15,8 +15,8 @@ use winit::{
 };
 
 use crate::{
-    event::{Event, EventType, ScrollDelta},
     AppCtrl, AppState, Application, RenderState,
+    event::{Event, EventType, ScrollDelta},
 };
 
 impl Event for WindowEvent {

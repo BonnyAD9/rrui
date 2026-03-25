@@ -12,8 +12,8 @@ use wgpu::{
 };
 
 use crate::{
-    wgpu::{Renderer, Window},
     RenderState,
+    wgpu::{Renderer, Window},
 };
 
 #[derive(Debug, Error)]

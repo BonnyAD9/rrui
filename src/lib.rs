@@ -13,6 +13,7 @@ mod primitives;
 mod render_state;
 mod renderer;
 mod shell;
+mod theme;
 pub mod wgpu;
 mod widget;
 pub mod widgets;
@@ -24,7 +25,7 @@ use crate::event::Event;
 pub use self::{
     app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
     event_loop::*, event_loop_proxy::*, layout::*, may_init::*, primitives::*,
-    render_state::*, renderer::*, shell::*, widget::*, window::*,
+    render_state::*, renderer::*, shell::*, theme::*, widget::*, window::*,
 };
 
 pub type Color = minlin::Rgba<f32>;
@@ -39,11 +40,11 @@ where
     Rend: crate::Renderer,
     RendState: RenderState<Win, Rend> + 'static,
     EvtLoop: EventLoop<
-        App::Message,
-        AppState<App, Rend, RendState, Evt, Win>,
-        Event = Evt,
-        Window = Win,
-    >,
+            App::Message,
+            AppState<App, Rend, RendState, Evt, Win>,
+            Event = Evt,
+            Window = Win,
+        >,
     App: Application<Rend, Evt>,
 {
     let mut state = AppState::new(app, config);

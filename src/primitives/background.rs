@@ -1,7 +1,9 @@
 use crate::Color;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Background {
+    #[default]
+    None,
     Solid(Color),
 }
 

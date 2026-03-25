@@ -4,6 +4,7 @@ use minlin::{Rect, Vec2};
 
 use crate::{Element, Shell, Widget};
 
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Nothing;
 
 impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
@@ -20,11 +21,11 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
 
     fn draw(&mut self, _: &mut Shell, _: &Theme, _: &mut Rend) {}
 
-    fn size(&self) -> Vec2<f32> {
+    fn size(&self, _: &Theme) -> Vec2<f32> {
         Vec2::ZERO
     }
 
-    fn reposition(&mut self, _: minlin::Vec2<f32>) {}
+    fn reposition(&mut self, _: &Theme, _: Vec2<f32>) {}
 }
 
 impl<Rend, Msg, Evt: Debug, Theme> From<Nothing>

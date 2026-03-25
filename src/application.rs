@@ -7,7 +7,7 @@ pub trait Application<Renderer, Event> {
     fn message(&mut self, msg: Self::Message);
 
     fn root(&mut self)
-        -> Element<Renderer, Self::Message, Event, Self::Theme>;
+    -> Element<Renderer, Self::Message, Event, Self::Theme>;
 
     fn theme(&self) -> &Self::Theme;
 }

@@ -1,9 +1,9 @@
 use iced_wgpu::{
+    Engine,
     core::{
-        renderer::Quad, Border, Color, Font, Rectangle, Renderer as _, Shadow,
+        Border, Color, Font, Rectangle, Renderer as _, Shadow, renderer::Quad,
     },
     graphics::{Antialiasing, Shell, Viewport},
-    Engine,
 };
 use minlin::{MapExt, Vec2};
 
