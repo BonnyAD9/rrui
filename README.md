@@ -1,2 +1,3 @@
 # rrui
-Retained Rust User Interface.
+
+Retained Rust User Interface. Not yet ready.
