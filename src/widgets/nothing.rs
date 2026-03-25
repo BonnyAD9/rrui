@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use minlin::Rect;
+use minlin::{Rect, Vec2};
 
 use crate::{Element, Shell, Widget};
 
@@ -19,6 +19,12 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
     fn event(&mut self, _: &mut Shell, _: &Theme, _: &Evt) {}
 
     fn draw(&mut self, _: &mut Shell, _: &Theme, _: &mut Rend) {}
+
+    fn size(&self) -> Vec2<f32> {
+        Vec2::ZERO
+    }
+
+    fn reposition(&mut self, _: minlin::Vec2<f32>) {}
 }
 
 impl<Rend, Msg, Evt: Debug, Theme> From<Nothing>

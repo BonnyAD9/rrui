@@ -1,7 +1,8 @@
 use std::fmt::Debug;
 
 use rrui::{
-    Application, Border, Color, Element, QuadRenderer, config::IcedWgpuWinit, widgets
+    config::IcedWgpuWinit, widgets, Application, Border, Color, Element,
+    QuadRenderer,
 };
 use winit::error::EventLoopError;
 

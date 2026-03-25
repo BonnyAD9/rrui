@@ -1,4 +1,4 @@
-use minlin::Rect;
+use minlin::{Rect, Vec2};
 
 use crate::{LayoutBounds, Shell, Widget};
 
@@ -30,5 +30,13 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
 
     fn draw(&mut self, shell: &mut Shell, theme: &Theme, renderer: &mut Rend) {
         self.0.draw(shell, theme, renderer);
+    }
+
+    fn size(&self) -> Vec2<f32> {
+        self.0.size()
+    }
+
+    fn reposition(&mut self, pos: Vec2<f32>) {
+        self.0.reposition(pos);
     }
 }

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use minlin::{Rect, Vec2};
+use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Background, Border, Element, LayoutBounds, QuadRenderer, Shell, Widget,
@@ -45,6 +45,14 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
 
     fn draw(&mut self, _: &mut Shell, _: &Theme, renderer: &mut Rend) {
         renderer.draw_border(self.bounds, self.border, &self.background);
+    }
+
+    fn size(&self) -> Vec2<f32> {
+        self.size
+    }
+
+    fn reposition(&mut self, pos: Vec2<f32>) {
+        self.bounds.set_pos(pos);
     }
 }
 
