@@ -30,6 +30,10 @@ impl<W> Margin<W> {
         self.margin = total.into();
         self
     }
+
+    pub fn set_margin(&mut self, total: impl Into<Padding<f32>>) -> &mut Self {
+        self.margin(total)
+    }
 }
 
 impl<W> Deref for Margin<W> {
@@ -55,8 +59,10 @@ where
         shell: &mut Shell,
         theme: &Theme,
         bounds: &LayoutBounds,
+        renderer: &Rend,
     ) -> Rect<f32> {
-        self.child.layout(shell, theme, &bounds.padded(self.margin))
+        self.child
+            .layout(shell, theme, &bounds.padded(self.margin), renderer)
             - self.margin
     }
 

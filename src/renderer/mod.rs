@@ -1,6 +1,7 @@
 mod quad_renderer;
+mod text_renderer;
 
-pub use self::quad_renderer::*;
+pub use self::{quad_renderer::*, text_renderer::*};
 
 use minlin::Vec2;
 

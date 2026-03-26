@@ -20,8 +20,9 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
         shell: &mut Shell,
         theme: &Theme,
         bounds: &LayoutBounds,
+        renderer: &Rend,
     ) -> Rect<f32> {
-        self.0.layout(shell, theme, bounds)
+        self.0.layout(shell, theme, bounds, renderer)
     }
 
     fn event(&mut self, shell: &mut Shell, theme: &Theme, event: &Evt) {

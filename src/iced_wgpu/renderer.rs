@@ -1,11 +1,13 @@
 use iced_wgpu::{
     Engine,
     core::{
-        Border, Color, Font, Rectangle, Renderer as _, Shadow, renderer::Quad,
+        Border, Color, Font, Point, Rectangle, Renderer as _, Shadow,
+        renderer::Quad,
+        text::{Paragraph as _, Renderer as _},
     },
-    graphics::{Antialiasing, Shell, Viewport},
+    graphics::{Antialiasing, Shell, Viewport, text::Paragraph},
 };
-use minlin::{MapExt, Vec2};
+use minlin::{MapExt, Rect, Vec2};
 
 #[derive(Debug)]
 pub struct RendererConfig {
@@ -146,6 +148,64 @@ impl crate::QuadRenderer for Renderer {
                 snap: false,
             },
             bg.into(),
+        );
+    }
+}
+
+impl crate::TextRenderer for Renderer {
+    type Font = Font;
+    type LayedText = Paragraph;
+
+    fn default_font(&self) -> Self::Font {
+        self.renderer.default_font()
+    }
+
+    fn default_font_size(&self) -> f32 {
+        self.renderer.default_size().0
+    }
+
+    fn draw_clipped_text(
+        &mut self,
+        text: &Self::LayedText,
+        pos: impl Into<Vec2<f32>>,
+        fg: impl Into<crate::Color>,
+        clip_bounds: impl Into<Rect<f32>>,
+    ) {
+        let p = pos.into();
+        let f = fg.into();
+        let c = clip_bounds.into();
+        self.renderer.fill_paragraph(
+            text,
+            Point::new(p.x, p.y),
+            Color::from_rgba(f.x, f.y, f.z, f.w),
+            Rectangle {
+                x: c.x,
+                y: c.y,
+                width: c.z,
+                height: c.w,
+            },
+        );
+    }
+
+    fn draw_text(
+        &mut self,
+        text: &Self::LayedText,
+        pos: impl Into<Vec2<f32>>,
+        fg: impl Into<crate::Color>,
+    ) {
+        let p = pos.into();
+        let f = fg.into();
+        let s = text.bounds();
+        self.renderer.fill_paragraph(
+            text,
+            Point::new(p.x, p.y),
+            Color::from_rgba(f.x, f.y, f.z, f.w),
+            Rectangle {
+                x: p.x,
+                y: p.y,
+                width: s.width,
+                height: s.height,
+            },
         );
     }
 }

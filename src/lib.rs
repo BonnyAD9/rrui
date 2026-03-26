@@ -6,6 +6,7 @@ mod element;
 pub mod event;
 mod event_loop;
 mod event_loop_proxy;
+mod font;
 pub mod iced_wgpu;
 mod layout;
 mod may_init;
@@ -25,9 +26,9 @@ use crate::event::Event;
 
 pub use self::{
     app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
-    event_loop::*, event_loop_proxy::*, layout::*, may_init::*, primitives::*,
-    render_state::*, renderer::*, shell::*, theme::*, widget::*,
-    widget_ext::*, window::*,
+    event_loop::*, event_loop_proxy::*, font::*, layout::*, may_init::*,
+    primitives::*, render_state::*, renderer::*, shell::*, theme::*,
+    widget::*, widget_ext::*, window::*,
 };
 
 pub type Color = minlin::Rgba<f32>;

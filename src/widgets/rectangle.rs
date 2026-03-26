@@ -38,6 +38,7 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
         _: &mut Shell,
         _: &Theme,
         bounds: &LayoutBounds,
+        _: &Rend,
     ) -> Rect<f32> {
         self.bounds = bounds.clamp(self.size);
         self.bounds

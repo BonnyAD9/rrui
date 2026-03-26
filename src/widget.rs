@@ -8,6 +8,7 @@ pub trait Widget<Rend, Msg, Evt, Theme> {
         shell: &mut Shell,
         theme: &Theme,
         bounds: &LayoutBounds,
+        renderer: &Rend,
     ) -> Rect<f32>;
 
     fn size(&self, theme: &Theme) -> Vec2<f32>;

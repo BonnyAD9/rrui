@@ -1,12 +1,13 @@
 use crate::{
     Background, Border, Color, Radius,
-    widgets::{ContainerAppereance, ContainerTheme},
+    widgets::{ContainerAppereance, ContainerTheme, TextBlockTheme},
 };
 
 #[derive(Debug, Clone)]
 pub struct Theme {
     pub border: Border,
     pub bg: Background,
+    pub fg: Color,
 }
 
 impl Theme {
@@ -18,6 +19,7 @@ impl Theme {
                 radius: Radius::same(5.),
             },
             bg: Color::xrgb(0x222222).into(),
+            fg: Color::xrgb(0xeeeeee),
         }
     }
 }
@@ -38,5 +40,13 @@ impl ContainerTheme for Theme {
         } else {
             None
         }
+    }
+}
+
+impl TextBlockTheme for Theme {
+    type Style = ();
+
+    fn foreground(&self, _: &Self::Style) -> Color {
+        self.fg
     }
 }

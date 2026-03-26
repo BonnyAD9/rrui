@@ -105,7 +105,12 @@ where
             self.shell.redraw = true;
             self.shell.relayout = false;
             let bounds = LayoutBounds::filling(self.shell.window_bounds);
-            self.root.layout(&mut self.shell, self.app.theme(), &bounds);
+            self.root.layout(
+                &mut self.shell,
+                self.app.theme(),
+                &bounds,
+                state.renderer(),
+            );
         }
 
         if self.shell.redraw && !self.pending_redraw {

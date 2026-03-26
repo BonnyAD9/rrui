@@ -13,6 +13,7 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
         _: &mut Shell,
         _: &Theme,
         bounds: &crate::LayoutBounds,
+        _: &Rend,
     ) -> Rect<f32> {
         bounds.best_min()
     }

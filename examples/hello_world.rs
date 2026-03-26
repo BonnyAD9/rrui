@@ -1,9 +1,10 @@
 use std::fmt::Debug;
 
 use rrui::{
-    Application, Border, Color, Element, QuadRenderer, Theme,
+    Application, Color, Element, QuadRenderer, TextAlign, TextRenderer,
+    TextWrap, Theme,
     config::IcedWgpuWinit,
-    widgets::{Container, MarginExt, Rectangle},
+    widgets::{Container, MarginExt, TextBlock},
 };
 use winit::error::EventLoopError;
 
@@ -29,23 +30,21 @@ impl App {
     }
 }
 
-impl<R: QuadRenderer, E: Debug> Application<R, E> for App {
+impl<R: QuadRenderer + TextRenderer, E: Debug> Application<R, E> for App {
     type Message = ();
     type Theme = Theme;
 
     fn message(&mut self, _msg: Self::Message) {}
 
     fn root(&mut self) -> Element<R, Self::Message, E, Self::Theme> {
-        Container::styled(
-            true,
-            Rectangle::new(
-                (500., 500.),
-                Color::xrgb(0x123456),
-                Border::new(Color::xrgb(0xdd5555), 5., 10.),
-            )
-            .margin([10., 5.]),
-        )
-        .into()
+        let mut text = TextBlock::new(
+            "Hello rrui! Or maybe some longer text to try here.\n\
+            Even on multiple lines!",
+        );
+        text.wrapping = TextWrap::WordOrGlyph;
+        text.align_x = TextAlign::Center;
+
+        Container::styled(true, text.margin(5.)).into()
     }
 
     fn theme(&self) -> &Self::Theme {

@@ -50,15 +50,18 @@ where
         shell: &mut Shell,
         theme: &Theme,
         bounds: &LayoutBounds,
+        renderer: &Rend,
     ) -> Rect<f32> {
         let bw = theme.border_width(&self.style);
         if bw != 0. {
             let bounds = bounds.padded(bw);
-            self.bounds =
-                self.child.layout(shell, theme, &bounds).extend_rect(bw);
+            self.bounds = self
+                .child
+                .layout(shell, theme, &bounds, renderer)
+                .extend_rect(bw);
             self.bounds
         } else {
-            self.bounds = self.child.layout(shell, theme, bounds);
+            self.bounds = self.child.layout(shell, theme, bounds, renderer);
             self.bounds
         }
     }
