@@ -1,7 +1,3 @@
-mod mode;
-
-pub use self::mode::*;
-
 use crate::{
     Background, Border, Color, Radius,
     widgets::{ContainerAppereance, ContainerTheme},
@@ -10,6 +6,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Theme {
     pub border: Border,
+    pub bg: Background,
 }
 
 impl Theme {
@@ -20,6 +17,7 @@ impl Theme {
                 width: 1.,
                 radius: Radius::same(5.),
             },
+            bg: Color::xrgb(0x222222).into(),
         }
     }
 }
@@ -35,7 +33,7 @@ impl ContainerTheme for Theme {
         if *style && self.border.width != 0. {
             Some(ContainerAppereance {
                 border: self.border,
-                background: Background::None,
+                background: self.bg.clone(),
             })
         } else {
             None

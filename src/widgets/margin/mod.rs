@@ -1,9 +1,11 @@
 mod margin_ext;
+use std::ops::{Deref, DerefMut};
+
 pub use self::margin_ext::*;
 
 use minlin::{Padding, Rect, Vec2};
 
-use crate::{LayoutBounds, Shell, Widget};
+use crate::{Element, LayoutBounds, Shell, Widget, WidgetExt};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Margin<W> {
@@ -27,6 +29,20 @@ impl<W> Margin<W> {
     pub fn margin(&mut self, total: impl Into<Padding<f32>>) -> &mut Self {
         self.margin = total.into();
         self
+    }
+}
+
+impl<W> Deref for Margin<W> {
+    type Target = W;
+
+    fn deref(&self) -> &Self::Target {
+        &self.child
+    }
+}
+
+impl<W> DerefMut for Margin<W> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.child
     }
 }
 
@@ -65,3 +81,15 @@ where
         self.child.draw(shell, theme, renderer)
     }
 }
+
+impl<W, Rend, Msg, Evt, Theme> From<Margin<W>>
+    for Element<Rend, Msg, Evt, Theme>
+where
+    W: Widget<Rend, Msg, Evt, Theme> + 'static,
+{
+    fn from(value: Margin<W>) -> Self {
+        Element::new(value)
+    }
+}
+
+impl<W> WidgetExt for Margin<W> {}

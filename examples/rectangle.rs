@@ -43,7 +43,7 @@ impl<R: QuadRenderer, E: Debug> Application<R, E> for App {
                 Color::xrgb(0x123456),
                 Border::new(Color::xrgb(0xdd5555), 5., 10.),
             )
-            .marge([10., 5.]),
+            .margin([10., 5.]),
         )
         .into()
     }
