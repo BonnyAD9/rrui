@@ -1,6 +1,6 @@
 use minlin::{Rect, Vec2};
 
-use crate::event::Modifiers;
+use crate::event::{Modifiers, MouseState};
 
 #[derive(Debug)]
 pub struct Shell<Msg> {
@@ -10,6 +10,7 @@ pub struct Shell<Msg> {
     pub(crate) mouse_pos: Option<Vec2<f32>>,
     pub(crate) modifiers: Modifiers,
     pub(crate) messages: Vec<Msg>,
+    pub(crate) mouse_state: MouseState,
 }
 
 impl<Msg> Shell<Msg> {
@@ -36,6 +37,14 @@ impl<Msg> Shell<Msg> {
     pub fn modifiers(&self) -> Modifiers {
         self.modifiers
     }
+
+    pub fn msgs(&mut self, i: impl IntoIterator<Item = Msg>) {
+        self.messages.extend(i)
+    }
+
+    pub fn mouse_state(&self) -> MouseState {
+        self.mouse_state
+    }
 }
 
 impl<Msg> Default for Shell<Msg> {
@@ -47,6 +56,7 @@ impl<Msg> Default for Shell<Msg> {
             mouse_pos: Default::default(),
             modifiers: Default::default(),
             messages: Default::default(),
+            mouse_state: Default::default(),
         }
     }
 }

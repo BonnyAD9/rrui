@@ -13,7 +13,7 @@ pub struct EventInfo<E> {
 
 impl<E: Event> EventInfo<E> {
     pub fn new(event: E, old_mouse: Option<Vec2<f32>>) -> Self {
-        let kind = event.get_type();
+        let kind = event.get_kind();
         let flags = event.get_flags();
 
         let new_mouse = match kind {
@@ -71,7 +71,7 @@ impl<E: Event> EventInfo<E> {
 }
 
 impl<E: Event> Event for EventInfo<E> {
-    fn get_type(&self) -> EventKind {
+    fn get_kind(&self) -> EventKind {
         self.kind
     }
 

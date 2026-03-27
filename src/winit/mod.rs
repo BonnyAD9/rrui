@@ -20,7 +20,7 @@ use crate::{
 };
 
 impl Event for WindowEvent {
-    fn get_type(&self) -> EventKind {
+    fn get_kind(&self) -> EventKind {
         match self {
             Self::Resized(s) => {
                 EventKind::Resize(Vec2::new(s.width, s.height))

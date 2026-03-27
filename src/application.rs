@@ -21,7 +21,7 @@ pub trait Application<Renderer, Event> {
     fn post_event(
         &mut self,
         shell: &mut Shell<Self::Message>,
-        event: EventInfo<Event>,
+        event: &EventInfo<Event>,
     ) {
         _ = shell;
         _ = event;

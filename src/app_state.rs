@@ -90,7 +90,7 @@ where
             .pre_event(&mut self.shell, &event_info, &mut evt_ctrl);
 
         if !evt_ctrl.ignore {
-            match event_info.get_type() {
+            match event_info.get_kind() {
                 EventKind::CloseRequest => ctrl.exit(),
                 EventKind::Resize(size) => {
                     self.shell.relayout = true;
@@ -120,6 +120,12 @@ where
                 EventKind::ModifiersChange(modifiers) => {
                     self.shell.modifiers = modifiers;
                 }
+                EventKind::MousePress(m) => {
+                    self.shell.mouse_state.press(m);
+                }
+                EventKind::MouseRelease(m) => {
+                    self.shell.mouse_state.release(m);
+                }
                 _ => {}
             }
 
@@ -127,11 +133,15 @@ where
                 .for_widgets
                 .unwrap_or_else(|| event_info.is_for_widgets())
             {
-                self.root.event(
+                let handled = self.root.event(
                     &mut self.shell,
                     self.app.theme(),
                     &event_info,
                 );
+
+                if !handled {
+                    self.app.post_event(&mut self.shell, &event_info);
+                }
             }
         }
 

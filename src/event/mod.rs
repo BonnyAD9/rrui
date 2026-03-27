@@ -5,6 +5,7 @@ mod event_kind;
 mod modifiers;
 mod mouse_button;
 mod mouse_relation;
+mod mouse_state;
 mod scroll_delta;
 
 use std::fmt::Debug;
@@ -13,11 +14,11 @@ use smol_str::SmolStr;
 
 pub use self::{
     event_ctx::*, event_flags::*, event_info::*, event_kind::*, modifiers::*,
-    mouse_button::*, mouse_relation::*, scroll_delta::*,
+    mouse_button::*, mouse_relation::*, mouse_state::*, scroll_delta::*,
 };
 
 pub trait Event: Debug {
-    fn get_type(&self) -> EventKind;
+    fn get_kind(&self) -> EventKind;
 
     fn is_window(&self) -> bool {
         self.get_flags().contains(EventFlags::WINDOW)
@@ -42,7 +43,7 @@ pub trait Event: Debug {
     fn key_char(&self) -> Option<SmolStr>;
 
     fn get_flags(&self) -> EventFlags {
-        match self.get_type() {
+        match self.get_kind() {
             EventKind::Resize(_)
             | EventKind::WindowFocus(_)
             | EventKind::ScaleFactorChange(_)

@@ -1,13 +1,18 @@
 use crate::{
     Background, Border, Color, Radius,
-    widgets::{ContainerAppereance, ContainerTheme, TextBlockTheme},
+    widgets::{
+        ButtonState, ButtonTheme, ContainerAppereance, ContainerTheme,
+        TextBlockTheme,
+    },
 };
 
 #[derive(Debug, Clone)]
 pub struct Theme {
     pub border: Border,
-    pub bg: Background,
+    pub bg_dark: Background,
+    pub bg_norm: Background,
     pub fg: Color,
+    pub accent: Color,
 }
 
 impl Theme {
@@ -18,8 +23,10 @@ impl Theme {
                 width: 1.,
                 radius: Radius::same(5.),
             },
-            bg: Color::xrgb(0x222222).into(),
+            bg_dark: Color::xrgb(0x181818).into(),
+            bg_norm: Color::xrgb(0x222222).into(),
             fg: Color::xrgb(0xeeeeee),
+            accent: Color::xrgb(0xffd553),
         }
     }
 }
@@ -35,7 +42,7 @@ impl ContainerTheme for Theme {
         if *style && self.border.width != 0. {
             Some(ContainerAppereance {
                 border: self.border,
-                background: self.bg.clone(),
+                background: self.bg_norm.clone(),
             })
         } else {
             None
@@ -48,5 +55,39 @@ impl TextBlockTheme for Theme {
 
     fn foreground(&self, _: &Self::Style) -> Color {
         self.fg
+    }
+}
+
+impl ButtonTheme for Theme {
+    type Style = ();
+
+    fn appereance(
+        &self,
+        _: &Self::Style,
+        state: ButtonState,
+    ) -> Option<ContainerAppereance> {
+        match state {
+            ButtonState::Normal => Some(ContainerAppereance {
+                border: self.border,
+                background: self.bg_norm.clone(),
+            }),
+            ButtonState::Hover => Some(ContainerAppereance {
+                border: self.border.with_color(self.accent.rgb_mul(0.7)),
+                background: self.bg_norm.clone(),
+            }),
+            ButtonState::Pressed => Some(ContainerAppereance {
+                border: self.border.with_color(self.accent.rgb_mul(0.7)),
+                background: self.accent.rgb_mul(0.3).into(),
+            }),
+        }
+    }
+
+    fn is_different(
+        &self,
+        _: &Self::Style,
+        a: ButtonState,
+        b: ButtonState,
+    ) -> bool {
+        a != b
     }
 }
