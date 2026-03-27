@@ -33,7 +33,12 @@ impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
     type Message = ();
     type Theme = Theme;
 
-    fn message(&mut self, _msg: Self::Message) {}
+    fn message(
+        &mut self,
+        _: &mut rrui::Shell<Self::Message>,
+        _: Self::Message,
+    ) {
+    }
 
     fn root(&mut self) -> Element<R, Self::Message, E, Self::Theme> {
         let mut text = TextBlock::new(

@@ -17,7 +17,7 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
 {
     fn layout(
         &mut self,
-        shell: &mut Shell,
+        shell: &mut Shell<Msg>,
         theme: &Theme,
         bounds: &LayoutBounds,
         renderer: &Rend,
@@ -27,14 +27,19 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
 
     fn event(
         &mut self,
-        shell: &mut Shell,
+        shell: &mut Shell<Msg>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> bool {
         self.0.event(shell, theme, event)
     }
 
-    fn draw(&mut self, shell: &mut Shell, theme: &Theme, renderer: &mut Rend) {
+    fn draw(
+        &mut self,
+        shell: &mut Shell<Msg>,
+        theme: &Theme,
+        renderer: &mut Rend,
+    ) {
         self.0.draw(shell, theme, renderer);
     }
 

@@ -10,7 +10,7 @@ pub struct Nothing;
 impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
     fn layout(
         &mut self,
-        _: &mut Shell,
+        _: &mut Shell<Msg>,
         _: &Theme,
         bounds: &crate::LayoutBounds,
         _: &Rend,
@@ -18,11 +18,16 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
         bounds.best_min()
     }
 
-    fn event(&mut self, _: &mut Shell, _: &Theme, _: &EventInfo<Evt>) -> bool {
+    fn event(
+        &mut self,
+        _: &mut Shell<Msg>,
+        _: &Theme,
+        _: &EventInfo<Evt>,
+    ) -> bool {
         false
     }
 
-    fn draw(&mut self, _: &mut Shell, _: &Theme, _: &mut Rend) {}
+    fn draw(&mut self, _: &mut Shell<Msg>, _: &Theme, _: &mut Rend) {}
 
     fn size(&self, _: &Theme) -> Vec2<f32> {
         Vec2::ZERO

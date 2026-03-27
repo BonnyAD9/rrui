@@ -35,7 +35,7 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
 {
     fn layout(
         &mut self,
-        _: &mut Shell,
+        _: &mut Shell<Msg>,
         _: &Theme,
         bounds: &LayoutBounds,
         _: &Rend,
@@ -44,11 +44,16 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
         self.bounds
     }
 
-    fn event(&mut self, _: &mut Shell, _: &Theme, _: &EventInfo<Evt>) -> bool {
+    fn event(
+        &mut self,
+        _: &mut Shell<Msg>,
+        _: &Theme,
+        _: &EventInfo<Evt>,
+    ) -> bool {
         false
     }
 
-    fn draw(&mut self, _: &mut Shell, _: &Theme, renderer: &mut Rend) {
+    fn draw(&mut self, _: &mut Shell<Msg>, _: &Theme, renderer: &mut Rend) {
         renderer.draw_border(self.bounds, self.border, &self.background);
     }
 

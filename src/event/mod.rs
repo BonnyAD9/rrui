@@ -1,3 +1,4 @@
+mod event_ctx;
 mod event_flags;
 mod event_info;
 mod event_kind;
@@ -11,7 +12,7 @@ use std::fmt::Debug;
 use smol_str::SmolStr;
 
 pub use self::{
-    event_flags::*, event_info::*, event_kind::*, modifiers::*,
+    event_ctx::*, event_flags::*, event_info::*, event_kind::*, modifiers::*,
     mouse_button::*, mouse_relation::*, scroll_delta::*,
 };
 

@@ -2,16 +2,17 @@ use minlin::{Rect, Vec2};
 
 use crate::event::Modifiers;
 
-#[derive(Debug, Default)]
-pub struct Shell {
+#[derive(Debug)]
+pub struct Shell<Msg> {
     pub(crate) window_bounds: Rect<f32>,
     pub(crate) redraw: bool,
     pub(crate) relayout: bool,
     pub(crate) mouse_pos: Option<Vec2<f32>>,
     pub(crate) modifiers: Modifiers,
+    pub(crate) messages: Vec<Msg>,
 }
 
-impl Shell {
+impl<Msg> Shell<Msg> {
     pub fn request_redraw(&mut self) {
         self.redraw = true;
     }
@@ -34,5 +35,18 @@ impl Shell {
 
     pub fn modifiers(&self) -> Modifiers {
         self.modifiers
+    }
+}
+
+impl<Msg> Default for Shell<Msg> {
+    fn default() -> Self {
+        Self {
+            window_bounds: Default::default(),
+            redraw: Default::default(),
+            relayout: Default::default(),
+            mouse_pos: Default::default(),
+            modifiers: Default::default(),
+            messages: Default::default(),
+        }
     }
 }

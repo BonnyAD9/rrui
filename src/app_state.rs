@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, mem};
 
 use minlin::{MapExt, RectExt};
 
@@ -6,7 +6,7 @@ use crate::{
     AppCtrl, Configuration, Element, EventLoop, LayoutBounds, MayInit,
     RenderState, Renderer, Shell, Widget, Window,
     application::Application,
-    event::{Event, EventInfo, EventKind},
+    event::{Event, EventCtrl, EventInfo, EventKind},
     widgets::Nothing,
 };
 
@@ -21,7 +21,7 @@ where
     render_state: MayInit<RendState::Config, RendState>,
     window_config: Option<Win::Config>,
     root: Element<Rend, App::Message, Evt, App::Theme>,
-    shell: Shell,
+    shell: Shell<App::Message>,
     pending_redraw: bool,
     _phantom: PhantomData<(Rend, Evt, Win)>,
 }
@@ -46,7 +46,7 @@ where
             render_state: MayInit::Uninitialized(config.render_config),
             window_config: Some(config.window_config),
             root: Nothing.into(),
-            shell: Shell::default(),
+            shell: Shell::<App::Message>::default(),
             pending_redraw: true,
             _phantom: PhantomData,
         }
@@ -66,7 +66,16 @@ where
     }
 
     pub fn message(&mut self, msg: App::Message) {
-        self.app.message(msg);
+        self.shell.messages.push(msg);
+        self.flush_messages();
+    }
+
+    fn flush_messages(&mut self) {
+        let mut msgs = mem::take(&mut self.shell.messages);
+        self.app.messages(&mut self.shell, &mut msgs);
+        if self.shell.messages.is_empty() {
+            self.shell.messages = msgs;
+        }
     }
 
     pub fn event(&mut self, event: Evt, ctrl: impl AppCtrl) {
@@ -76,43 +85,61 @@ where
 
         let event_info = EventInfo::new(event, self.shell.mouse_pos);
 
-        match event_info.get_type() {
-            EventKind::CloseRequest => ctrl.exit(),
-            EventKind::Resize(size) => {
-                self.shell.relayout = true;
-                self.shell.window_bounds.set_size(size.cast());
-                state.resize(size);
-            }
-            EventKind::RedrawRequest => {
-                if self.shell.redraw {
-                    self.shell.redraw = false;
-                    self.pending_redraw = false;
-                    let rend = state.renderer();
-                    rend.reset(self.shell.window_bounds.size().cast());
-                    self.root.draw(
-                        &mut self.shell,
-                        self.app.theme(),
-                        state.renderer(),
-                    );
+        let mut evt_ctrl = EventCtrl::new();
+        self.app
+            .pre_event(&mut self.shell, &event_info, &mut evt_ctrl);
+
+        if !evt_ctrl.ignore {
+            match event_info.get_type() {
+                EventKind::CloseRequest => ctrl.exit(),
+                EventKind::Resize(size) => {
+                    self.shell.relayout = true;
+                    self.shell.window_bounds.set_size(size.cast());
+                    state.resize(size);
                 }
-                state.render();
+                EventKind::RedrawRequest => {
+                    if self.shell.redraw {
+                        self.shell.redraw = false;
+                        self.pending_redraw = false;
+                        let rend = state.renderer();
+                        rend.reset(self.shell.window_bounds.size().cast());
+                        self.root.draw(
+                            &mut self.shell,
+                            self.app.theme(),
+                            state.renderer(),
+                        );
+                    }
+                    state.render();
+                }
+                EventKind::MouseMove(pos) => {
+                    self.shell.mouse_pos = Some(pos);
+                }
+                EventKind::MouseLeaveWindow => {
+                    self.shell.mouse_pos = None;
+                }
+                EventKind::ModifiersChange(modifiers) => {
+                    self.shell.modifiers = modifiers;
+                }
+                _ => {}
             }
-            EventKind::MouseMove(pos) => {
-                self.shell.mouse_pos = Some(pos);
+
+            if evt_ctrl
+                .for_widgets
+                .unwrap_or_else(|| event_info.is_for_widgets())
+            {
+                self.root.event(
+                    &mut self.shell,
+                    self.app.theme(),
+                    &event_info,
+                );
             }
-            EventKind::MouseLeaveWindow => {
-                self.shell.mouse_pos = None;
-            }
-            EventKind::ModifiersChange(modifiers) => {
-                self.shell.modifiers = modifiers;
-            }
-            _ => {}
         }
 
-        if event_info.is_for_widgets() {
-            self.root
-                .event(&mut self.shell, self.app.theme(), &event_info);
-        }
+        self.flush_messages();
+
+        let MayInit::Initialized(state) = &mut self.render_state else {
+            return;
+        };
 
         if self.shell.relayout {
             self.shell.redraw = true;

@@ -50,7 +50,7 @@ where
 {
     fn layout(
         &mut self,
-        shell: &mut Shell,
+        shell: &mut Shell<Msg>,
         theme: &Theme,
         bounds: &LayoutBounds,
         renderer: &Rend,
@@ -81,7 +81,7 @@ where
 
     fn event(
         &mut self,
-        shell: &mut Shell,
+        shell: &mut Shell<Msg>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> bool {
@@ -98,7 +98,12 @@ where
         }
     }
 
-    fn draw(&mut self, shell: &mut Shell, theme: &Theme, renderer: &mut Rend) {
+    fn draw(
+        &mut self,
+        shell: &mut Shell<Msg>,
+        theme: &Theme,
+        renderer: &mut Rend,
+    ) {
         if let Some(a) = theme.appereance(&self.style) {
             renderer.draw_border(self.bounds, a.border, a.background);
         }
