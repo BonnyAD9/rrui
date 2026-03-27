@@ -161,7 +161,7 @@ impl<Style, Font: crate::Font, LText: LayedText<Font>>
             TextAlign::Right => {
                 pos.x = self.bounds.x + self.bounds.width() - tbounds.x;
             }
-            TextAlign::Center | TextAlign::Justified => {
+            TextAlign::Center => {
                 pos.x = self.bounds.x + (self.bounds.width() - tbounds.x) / 2.;
             }
             _ => {}
