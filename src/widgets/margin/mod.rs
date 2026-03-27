@@ -5,7 +5,9 @@ pub use self::margin_ext::*;
 
 use minlin::{Padding, Rect, Vec2};
 
-use crate::{Element, LayoutBounds, Shell, Widget, WidgetExt};
+use crate::{
+    Element, LayoutBounds, Shell, Widget, WidgetExt, event::EventInfo,
+};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Margin<W> {
@@ -74,7 +76,12 @@ where
         self.child.reposition(theme, pos + self.margin.offset());
     }
 
-    fn event(&mut self, shell: &mut crate::Shell, theme: &Theme, event: &Evt) {
+    fn event(
+        &mut self,
+        shell: &mut crate::Shell,
+        theme: &Theme,
+        event: &EventInfo<Evt>,
+    ) -> bool {
         self.child.event(shell, theme, event)
     }
 

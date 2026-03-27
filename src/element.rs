@@ -1,6 +1,6 @@
 use minlin::{Rect, Vec2};
 
-use crate::{LayoutBounds, Shell, Widget};
+use crate::{LayoutBounds, Shell, Widget, event::EventInfo};
 
 pub struct Element<Rend, Msg, Evt, Theme>(
     Box<dyn Widget<Rend, Msg, Evt, Theme>>,
@@ -25,8 +25,13 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
         self.0.layout(shell, theme, bounds, renderer)
     }
 
-    fn event(&mut self, shell: &mut Shell, theme: &Theme, event: &Evt) {
-        self.0.event(shell, theme, event);
+    fn event(
+        &mut self,
+        shell: &mut Shell,
+        theme: &Theme,
+        event: &EventInfo<Evt>,
+    ) -> bool {
+        self.0.event(shell, theme, event)
     }
 
     fn draw(&mut self, shell: &mut Shell, theme: &Theme, renderer: &mut Rend) {

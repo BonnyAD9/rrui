@@ -7,7 +7,10 @@ use std::fmt::Debug;
 
 use minlin::{MapExt, Rect, RectExt, Vec2};
 
-use crate::{Element, LayoutBounds, QuadRenderer, Shell, Widget, WidgetExt};
+use crate::{
+    Element, LayoutBounds, QuadRenderer, Shell, Widget, WidgetExt,
+    event::{Event, EventInfo},
+};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Container<W, S> {
@@ -42,7 +45,7 @@ impl<W, Rend, Msg, Evt, Theme, Style> Widget<Rend, Msg, Evt, Theme>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
     Rend: QuadRenderer,
-    Evt: Debug,
+    Evt: Event,
     Theme: ContainerTheme<Style = Style>,
 {
     fn layout(
@@ -76,8 +79,23 @@ where
         self.child.reposition(theme, pos.map(|a| a + bw));
     }
 
-    fn event(&mut self, shell: &mut Shell, theme: &Theme, event: &Evt) {
-        self.child.event(shell, theme, event)
+    fn event(
+        &mut self,
+        shell: &mut Shell,
+        theme: &Theme,
+        event: &EventInfo<Evt>,
+    ) -> bool {
+        let bw = theme.border_width(&self.style);
+        let cb = if bw == 0. {
+            self.bounds
+        } else {
+            self.bounds.pad_rect(bw)
+        };
+        if event.is_for(cb) {
+            self.child.event(shell, theme, event)
+        } else {
+            false
+        }
     }
 
     fn draw(&mut self, shell: &mut Shell, theme: &Theme, renderer: &mut Rend) {
@@ -93,7 +111,7 @@ impl<W, Rend, Msg, Evt, Theme, Style> From<Container<W, Style>>
 where
     W: Widget<Rend, Msg, Evt, Theme> + 'static,
     Rend: QuadRenderer,
-    Evt: Debug,
+    Evt: Event,
     Theme: ContainerTheme<Style = Style>,
     Style: 'static,
 {

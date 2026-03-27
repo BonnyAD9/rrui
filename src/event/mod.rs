@@ -1,6 +1,9 @@
-mod event_type;
+mod event_flags;
+mod event_info;
+mod event_kind;
 mod modifiers;
 mod mouse_button;
+mod mouse_relation;
 mod scroll_delta;
 
 use std::fmt::Debug;
@@ -8,58 +11,68 @@ use std::fmt::Debug;
 use smol_str::SmolStr;
 
 pub use self::{
-    event_type::*, modifiers::*, mouse_button::*, scroll_delta::*,
+    event_flags::*, event_info::*, event_kind::*, modifiers::*,
+    mouse_button::*, mouse_relation::*, scroll_delta::*,
 };
 
 pub trait Event: Debug {
-    fn get_type(&self) -> EventType;
+    fn get_type(&self) -> EventKind;
 
     fn is_window(&self) -> bool {
-        matches!(
-            self.get_type(),
-            EventType::Resize(_)
-                | EventType::CloseRequest
-                | EventType::Focus(_)
-                | EventType::ScaleFactorChange(_)
-                | EventType::RedrawRequest
-        )
+        self.get_flags().contains(EventFlags::WINDOW)
     }
 
     fn is_keyboard(&self) -> bool {
-        matches!(
-            self.get_type(),
-            EventType::KeyPress
-                | EventType::KeyRelease
-                | EventType::ModifiersChange(_)
-        )
+        self.get_flags().contains(EventFlags::KEYBOARD)
     }
 
     fn is_mouse(&self) -> bool {
-        matches!(
-            self.get_type(),
-            EventType::MouseMove(_)
-                | EventType::MousePress(_)
-                | EventType::MouseRelease(_)
-                | EventType::MouseScroll(_)
-        )
+        self.get_flags().contains(EventFlags::MOUSE)
     }
 
     fn is_input(&self) -> bool {
-        matches!(
-            self.get_type(),
-            EventType::KeyPress
-                | EventType::KeyRelease
-                | EventType::ModifiersChange(_)
-                | EventType::MouseMove(_)
-                | EventType::MousePress(_)
-                | EventType::MouseRelease(_)
-                | EventType::MouseScroll(_)
-        )
+        self.get_flags().contains(EventFlags::INPUT)
+    }
+
+    fn is_for_widgets(&self) -> bool {
+        self.get_flags().contains(EventFlags::FOR_WIDGETS)
     }
 
     fn key_char(&self) -> Option<SmolStr>;
 
+    fn get_flags(&self) -> EventFlags {
+        match self.get_type() {
+            EventKind::Resize(_)
+            | EventKind::WindowFocus(_)
+            | EventKind::ScaleFactorChange(_)
+            | EventKind::RedrawRequest => EventFlags::WINDOW,
+            EventKind::CloseRequest => EventFlags::WINDOW | EventFlags::INPUT,
+            EventKind::KeyPress
+            | EventKind::KeyRelease
+            | EventKind::ModifiersChange(_) => {
+                EventFlags::KEYBOARD
+                    | EventFlags::INPUT
+                    | EventFlags::FOR_WIDGETS
+            }
+            EventKind::MouseMove(_)
+            | EventKind::MousePress(_)
+            | EventKind::MouseRelease(_)
+            | EventKind::MouseScroll(_) => {
+                EventFlags::MOUSE | EventFlags::INPUT | EventFlags::FOR_WIDGETS
+            }
+            EventKind::MouseLeaveWindow => {
+                EventFlags::MOUSE
+                    | EventFlags::WINDOW
+                    | EventFlags::FOR_WIDGETS
+            }
+            EventKind::MouseEnterWindow => {
+                EventFlags::MOUSE | EventFlags::WINDOW
+            }
+            EventKind::Other => EventFlags::OTHER,
+        }
+    }
+
     fn is_other(&self) -> bool {
-        matches!(self.get_type(), EventType::Other)
+        self.get_flags().contains(EventFlags::OTHER)
     }
 }

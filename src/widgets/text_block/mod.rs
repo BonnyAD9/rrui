@@ -8,7 +8,7 @@ use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Align, Element, LayedText, Size, Text, TextAlign, TextRenderer, TextWrap,
-    Widget, WidgetExt,
+    Widget, WidgetExt, event::EventInfo,
 };
 
 #[derive(Debug, Clone)]
@@ -110,7 +110,14 @@ where
         self.bounds.set_pos(pos);
     }
 
-    fn event(&mut self, _: &mut crate::Shell, _: &Theme, _: &Evt) {}
+    fn event(
+        &mut self,
+        _: &mut crate::Shell,
+        _: &Theme,
+        _: &EventInfo<Evt>,
+    ) -> bool {
+        false
+    }
 
     fn draw(
         &mut self,

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use minlin::{Rect, Vec2};
 
-use crate::{Element, Shell, Widget};
+use crate::{Element, Shell, Widget, event::EventInfo};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Nothing;
@@ -18,7 +18,9 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
         bounds.best_min()
     }
 
-    fn event(&mut self, _: &mut Shell, _: &Theme, _: &Evt) {}
+    fn event(&mut self, _: &mut Shell, _: &Theme, _: &EventInfo<Evt>) -> bool {
+        false
+    }
 
     fn draw(&mut self, _: &mut Shell, _: &Theme, _: &mut Rend) {}
 

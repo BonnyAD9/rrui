@@ -4,7 +4,7 @@ use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Background, Border, Element, LayoutBounds, QuadRenderer, Shell, Widget,
-    WidgetExt,
+    WidgetExt, event::EventInfo,
 };
 
 #[derive(Debug)]
@@ -44,7 +44,9 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
         self.bounds
     }
 
-    fn event(&mut self, _: &mut Shell, _: &Theme, _: &Evt) {}
+    fn event(&mut self, _: &mut Shell, _: &Theme, _: &EventInfo<Evt>) -> bool {
+        false
+    }
 
     fn draw(&mut self, _: &mut Shell, _: &Theme, renderer: &mut Rend) {
         renderer.draw_border(self.bounds, self.border, &self.background);

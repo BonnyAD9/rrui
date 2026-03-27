@@ -3,11 +3,11 @@ use minlin::Vec2;
 use crate::event::{Modifiers, MouseButton, ScrollDelta};
 
 #[derive(Debug, Clone, PartialEq, Copy)]
-pub enum EventType {
+pub enum EventKind {
     // Window
     Resize(Vec2<u32>),
     CloseRequest,
-    Focus(bool),
+    WindowFocus(bool),
     ScaleFactorChange(f32),
     RedrawRequest,
 
@@ -21,6 +21,8 @@ pub enum EventType {
     MousePress(MouseButton),
     MouseRelease(MouseButton),
     MouseScroll(ScrollDelta),
+    MouseLeaveWindow,
+    MouseEnterWindow,
 
     // Other
     Other,

@@ -1,9 +1,8 @@
-use std::fmt::Debug;
-
 use rrui::{
     Application, Color, Element, QuadRenderer, TextAlign, TextRenderer,
     TextWrap, Theme,
     config::IcedWgpuWinit,
+    event::Event,
     widgets::{Container, MarginExt, TextBlock},
 };
 use winit::error::EventLoopError;
@@ -30,7 +29,7 @@ impl App {
     }
 }
 
-impl<R: QuadRenderer + TextRenderer, E: Debug> Application<R, E> for App {
+impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
     type Message = ();
     type Theme = Theme;
 

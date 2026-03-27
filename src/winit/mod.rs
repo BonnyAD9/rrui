@@ -16,17 +16,17 @@ use winit::{
 
 use crate::{
     AppCtrl, AppState, Application, RenderState,
-    event::{Event, EventType, ScrollDelta},
+    event::{Event, EventKind, ScrollDelta},
 };
 
 impl Event for WindowEvent {
-    fn get_type(&self) -> EventType {
+    fn get_type(&self) -> EventKind {
         match self {
             Self::Resized(s) => {
-                EventType::Resize(Vec2::new(s.width, s.height))
+                EventKind::Resize(Vec2::new(s.width, s.height))
             }
-            Self::CloseRequested => EventType::CloseRequest,
-            Self::Focused(f) => EventType::Focus(*f),
+            Self::CloseRequested => EventKind::CloseRequest,
+            Self::Focused(f) => EventKind::WindowFocus(*f),
             Self::KeyboardInput {
                 event:
                     KeyEvent {
@@ -34,7 +34,7 @@ impl Event for WindowEvent {
                         ..
                     },
                 ..
-            } => EventType::KeyPress,
+            } => EventKind::KeyPress,
             Self::KeyboardInput {
                 event:
                     KeyEvent {
@@ -42,31 +42,33 @@ impl Event for WindowEvent {
                         ..
                     },
                 ..
-            } => EventType::KeyRelease,
+            } => EventKind::KeyRelease,
             Self::ModifiersChanged(m) => {
-                EventType::ModifiersChange((*m).into())
+                EventKind::ModifiersChange((*m).into())
             }
             Self::CursorMoved { position, .. } => {
-                EventType::MouseMove(Vec2::new(position.x, position.y).cast())
+                EventKind::MouseMove(Vec2::new(position.x, position.y).cast())
             }
             Self::MouseWheel { delta, .. } => {
-                EventType::MouseScroll((*delta).into())
+                EventKind::MouseScroll((*delta).into())
             }
             Self::MouseInput {
                 state: ElementState::Pressed,
                 button,
                 ..
-            } => EventType::MousePress((*button).into()),
+            } => EventKind::MousePress((*button).into()),
             Self::MouseInput {
                 state: ElementState::Released,
                 button,
                 ..
-            } => EventType::MouseRelease((*button).into()),
+            } => EventKind::MouseRelease((*button).into()),
             Self::ScaleFactorChanged { scale_factor, .. } => {
-                EventType::ScaleFactorChange(*scale_factor as f32)
+                EventKind::ScaleFactorChange(*scale_factor as f32)
             }
-            Self::RedrawRequested => EventType::RedrawRequest,
-            _ => EventType::Other,
+            Self::RedrawRequested => EventKind::RedrawRequest,
+            Self::CursorLeft { .. } => EventKind::MouseLeaveWindow,
+            Self::CursorEntered { .. } => EventKind::MouseEnterWindow,
+            _ => EventKind::Other,
         }
     }
 
@@ -133,6 +135,68 @@ impl Event for WindowEvent {
                 | Self::AxisMotion { .. }
                 | Self::Touch(..)
         )
+    }
+
+    fn get_flags(&self) -> crate::event::EventFlags {
+        match self {
+            Self::Resized(_)
+            | Self::Focused(_)
+            | Self::ScaleFactorChanged { .. }
+            | Self::RedrawRequested => crate::event::EventFlags::WINDOW,
+            Self::Moved(_)
+            | Self::Destroyed
+            | Self::ThemeChanged(_)
+            | Self::Occluded(_) => {
+                crate::event::EventFlags::WINDOW
+                    | crate::event::EventFlags::OTHER
+            }
+            Self::CloseRequested => {
+                crate::event::EventFlags::INPUT
+                    | crate::event::EventFlags::WINDOW
+            }
+            Self::DroppedFile(_)
+            | Self::HoveredFile(_)
+            | Self::HoveredFileCancelled => {
+                crate::event::EventFlags::WINDOW
+                    | crate::event::EventFlags::MOUSE
+                    | crate::event::EventFlags::OTHER
+                    | crate::event::EventFlags::FOR_WIDGETS
+            }
+            Self::KeyboardInput { .. } | Self::ModifiersChanged(_) => {
+                crate::event::EventFlags::KEYBOARD
+                    | crate::event::EventFlags::INPUT
+                    | crate::event::EventFlags::FOR_WIDGETS
+            }
+            Self::Ime(_)
+            | Self::PinchGesture { .. }
+            | Self::PanGesture { .. }
+            | Self::DoubleTapGesture { .. }
+            | Self::RotationGesture { .. }
+            | Self::TouchpadPressure { .. }
+            | Self::AxisMotion { .. }
+            | Self::Touch { .. } => {
+                crate::event::EventFlags::INPUT
+                    | crate::event::EventFlags::OTHER
+                    | crate::event::EventFlags::FOR_WIDGETS
+            }
+            Self::CursorMoved { .. }
+            | Self::MouseWheel { .. }
+            | Self::MouseInput { .. } => {
+                crate::event::EventFlags::MOUSE
+                    | crate::event::EventFlags::INPUT
+                    | crate::event::EventFlags::FOR_WIDGETS
+            }
+            Self::CursorEntered { .. } => {
+                crate::event::EventFlags::MOUSE
+                    | crate::event::EventFlags::WINDOW
+            }
+            Self::CursorLeft { .. } => {
+                crate::event::EventFlags::MOUSE
+                    | crate::event::EventFlags::WINDOW
+                    | crate::event::EventFlags::FOR_WIDGETS
+            }
+            _ => crate::event::EventFlags::OTHER,
+        }
     }
 }
 

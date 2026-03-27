@@ -6,7 +6,7 @@ use crate::{
     AppCtrl, Configuration, Element, EventLoop, LayoutBounds, MayInit,
     RenderState, Renderer, Shell, Widget, Window,
     application::Application,
-    event::{Event, EventType},
+    event::{Event, EventInfo, EventKind},
     widgets::Nothing,
 };
 
@@ -74,14 +74,16 @@ where
             return;
         };
 
-        match event.get_type() {
-            EventType::CloseRequest => ctrl.exit(),
-            EventType::Resize(size) => {
+        let event_info = EventInfo::new(event, self.shell.mouse_pos);
+
+        match event_info.get_type() {
+            EventKind::CloseRequest => ctrl.exit(),
+            EventKind::Resize(size) => {
                 self.shell.relayout = true;
                 self.shell.window_bounds.set_size(size.cast());
                 state.resize(size);
             }
-            EventType::RedrawRequest => {
+            EventKind::RedrawRequest => {
                 if self.shell.redraw {
                     self.shell.redraw = false;
                     self.pending_redraw = false;
@@ -95,10 +97,21 @@ where
                 }
                 state.render();
             }
-            _ if !event.is_window() => {
-                self.root.event(&mut self.shell, self.app.theme(), &event);
+            EventKind::MouseMove(pos) => {
+                self.shell.mouse_pos = Some(pos);
+            }
+            EventKind::MouseLeaveWindow => {
+                self.shell.mouse_pos = None;
+            }
+            EventKind::ModifiersChange(modifiers) => {
+                self.shell.modifiers = modifiers;
             }
             _ => {}
+        }
+
+        if event_info.is_for_widgets() {
+            self.root
+                .event(&mut self.shell, self.app.theme(), &event_info);
         }
 
         if self.shell.relayout {
