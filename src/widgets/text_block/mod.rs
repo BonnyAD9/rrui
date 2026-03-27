@@ -81,8 +81,8 @@ where
                 let text = self.make_text(renderer, self.bounds.size());
                 self.layed.insert(LayedText::from_text(&text))
             };
-            let min_bounds = t.min_bounds();
-            self.pos = self.get_text_pos(min_bounds);
+            let align_bounds = t.align_bounds();
+            self.pos = self.get_text_pos(align_bounds);
             self.bounds
         } else {
             let b = bounds.best_max();
@@ -96,7 +96,8 @@ where
             let min_bounds = t.min_bounds();
             self.bounds = bounds.best_at_least(min_bounds);
             t.set_bounds(self.bounds.size());
-            self.pos = self.get_text_pos(min_bounds);
+            let align_bounds = t.align_bounds();
+            self.pos = self.get_text_pos(align_bounds);
             self.bounds
         }
     }

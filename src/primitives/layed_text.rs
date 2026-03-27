@@ -25,6 +25,8 @@ pub trait LayedText<Font>: Sized + 'static {
 
     fn min_bounds(&self) -> Vec2<f32>;
 
+    fn align_bounds(&self) -> Vec2<f32>;
+
     fn hit_test(&self, pos: impl Into<Vec2<f32>>) -> Option<usize>;
 
     fn create<'a>(

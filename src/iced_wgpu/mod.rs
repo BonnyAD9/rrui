@@ -134,6 +134,11 @@ impl LayedText<Font> for Paragraph {
         minlin::Vec2::new(s.width, s.height)
     }
 
+    fn align_bounds(&self) -> minlin::Vec2<f32> {
+        let s = <Self as ParagraphTrait>::min_bounds(self);
+        minlin::Vec2::new(s.width, s.height)
+    }
+
     fn hit_test(&self, pos: impl Into<minlin::Vec2<f32>>) -> Option<usize> {
         let p = pos.into();
         let h = <Self as ParagraphTrait>::hit_test(self, Point::new(p.x, p.y));
