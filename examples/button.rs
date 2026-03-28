@@ -2,7 +2,7 @@ use rrui::{
     Application, Color, Element, QuadRenderer, TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container, Stack, TextBlock},
+    widgets::{Button, Container, MarginExt, Stack, TextBlock},
 };
 use winit::error::EventLoopError;
 
@@ -27,23 +27,6 @@ impl App {
         }
     }
 }
-
-/*type Renderer = rrui::iced_wgpu::Renderer;
-type TextBlock = widgets::TextBlock<
-    <Theme as TextBlockTheme>::Style,
-    <Renderer as TextRenderer>::Font,
-    <Renderer as TextRenderer>::LayedText,
->;
-type Button<W> = widgets::Button<
-    W,
-    <Theme as ButtonTheme>::Style,
-    (),
->;
-
-type Container<W> = widgets::Container<
-    W,
-    <Theme as ContainerTheme>::Style,
->;*/
 
 impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
     Application<R, E> for App
@@ -70,8 +53,12 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
 
         let but = Container::center_styled(true, but);
 
-        Stack::<Element<_, _, _, _>>::from_top([text.into(), but.into()])
-            .into()
+        let stack = Stack::<Element<_, _, _, _>>::from_right([
+            text.into(),
+            but.into(),
+        ]);
+
+        Stack::from_left([Container::styled(true, stack.margin(50.))]).into()
     }
 
     fn theme(&self) -> &Self::Theme {

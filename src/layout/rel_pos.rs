@@ -121,6 +121,6 @@ impl RelPosInner {
     fn get(&self) -> Vec2<f32> {
         self.pos
             .get()
-            .unwrap_or_else(|| self.parent.borrow_mut().get())
+            .unwrap_or_else(|| self.parent.borrow_mut().get() + self.rel.get())
     }
 }

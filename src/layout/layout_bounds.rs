@@ -95,8 +95,28 @@ impl LayoutBounds {
         )
     }
 
+    pub fn max_right(&self) -> f32 {
+        self.pos.x + self.size.range.z
+    }
+
+    pub fn max_bot(&self) -> f32 {
+        self.pos.y + self.size.range.w
+    }
+
     pub fn shrink_top(&mut self, amt: f32) {
         self.pos.y += self.size.shrink_tb(amt);
+    }
+
+    pub fn shrink_left(&mut self, amt: f32) {
+        self.pos.x += self.size.shrink_lr(amt);
+    }
+
+    pub fn shrink_right(&mut self, amt: f32) {
+        self.size.shrink_lr(amt);
+    }
+
+    pub fn shrink_bot(&mut self, amt: f32) {
+        self.size.shrink_tb(amt);
     }
 }
 

@@ -1,4 +1,4 @@
-use minlin::{Infinity, Rect, Vec2};
+use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
     Direction, Element, LayoutParams, RelPos, RelPosSrc, Widget, WidgetExt,
@@ -11,6 +11,7 @@ pub struct Stack<W> {
     pub direction: Direction,
     pub spacing: f32,
     rel_pos: Option<RelPosSrc>,
+    rel_off: Vec2<f32>,
     bounds: Rect<f32>,
 }
 
@@ -24,6 +25,7 @@ impl<W> Stack<W> {
             direction: direction.into(),
             spacing: 0.,
             bounds: Rect::default(),
+            rel_off: Vec2::default(),
             rel_pos: None,
         }
     }
@@ -69,6 +71,7 @@ impl<W> Default for Stack<W> {
             direction: Direction::Top,
             spacing: 0.,
             bounds: Default::default(),
+            rel_off: Default::default(),
             rel_pos: None,
         }
     }
@@ -86,18 +89,29 @@ where
         rel_pos: RelPos,
     ) -> Rect<f32> {
         let rel_pos = self.update_rel_pos(rel_pos, bounds.pos);
-        let mut bounds = *bounds;
-        bounds.pos = Vec2::ZERO;
+        let mut rbounds = *bounds;
+        rbounds.pos = Vec2::ZERO;
 
         self.bounds = layout::stack(
             &mut self.children,
             self.spacing,
             self.direction,
             lp,
-            &bounds,
+            &rbounds,
             rel_pos,
         );
-        self.bounds
+
+        if self.direction.is_from_end() {
+            let fill_size = bounds.size.best_at_least(self.bounds.size());
+            let dsize = fill_size - self.bounds.size();
+            self.bounds.set_size(fill_size);
+            self.rel_off = -self.bounds.pos() + dsize;
+
+            self.rel_pos.as_mut().unwrap().move_by(self.rel_off);
+        } else {
+            self.rel_off = Vec2::ZERO;
+        }
+        Rect::from_pos_size(bounds.pos, self.bounds.size())
     }
 
     fn size(&self, _: &Theme) -> minlin::Vec2<f32> {
@@ -106,7 +120,7 @@ where
 
     fn reposition(&mut self, _: &Theme, pos: minlin::Vec2<f32>) {
         if let Some(rp) = &self.rel_pos {
-            rp.move_to(pos);
+            rp.move_to(pos + self.rel_off);
         }
     }
 
@@ -139,6 +153,8 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
+        let _rp = self.rel_pos.as_mut().unwrap().get();
+
         for c in &mut self.children {
             c.draw(shell, theme, renderer);
         }
@@ -153,6 +169,7 @@ impl<W> Stack<W> {
     ) -> RelPos {
         if let Some(rp) = &mut self.rel_pos {
             rp.update(rel_pos);
+            rp.move_to(rel);
             rp.rel_pos()
         } else {
             let rp = rel_pos.relate(rel);

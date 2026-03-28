@@ -88,6 +88,14 @@ impl LayoutSize {
         res
     }
 
+    pub fn shrink_lr(&mut self, amt: f32) -> f32 {
+        self.range.x = (self.range.x - amt).max(0.);
+        let newz = (self.range.z - amt).max(0.);
+        let res = self.range.z - newz;
+        self.range.z = newz;
+        res
+    }
+
     pub fn shrink(&mut self) {
         self.best = Some(self.min());
     }

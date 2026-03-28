@@ -5,3 +5,9 @@ pub enum Direction {
     Right,
     Bottom,
 }
+
+impl Direction {
+    pub fn is_from_end(&self) -> bool {
+        matches!(self, Direction::Right | Direction::Bottom)
+    }
+}
