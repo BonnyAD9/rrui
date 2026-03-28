@@ -38,7 +38,7 @@ impl LayoutSize {
     }
 
     pub fn max(&self) -> Vec2<f32> {
-        self.range.top_right()
+        self.range.bot_right()
     }
 
     pub fn best_min(&self) -> Vec2<f32> {

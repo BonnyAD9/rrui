@@ -2,7 +2,7 @@ use rrui::{
     Application, Color, Element, QuadRenderer, TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container, MarginExt},
+    widgets::{Button, Container},
 };
 use winit::error::EventLoopError;
 
@@ -47,7 +47,7 @@ impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
             None
         });
 
-        Container::styled(true, but.margin(200.)).into()
+        Container::center_styled(true, but).into()
     }
 
     fn theme(&self) -> &Self::Theme {

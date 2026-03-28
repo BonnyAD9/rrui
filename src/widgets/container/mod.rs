@@ -5,10 +5,10 @@ pub use self::{container_appereance::*, container_theme::*};
 
 use std::fmt::Debug;
 
-use minlin::{MapExt, Rect, RectExt, Vec2};
+use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, LayoutBounds, QuadRenderer, Shell, Widget, WidgetExt,
+    Element, LayoutBounds, QuadRenderer, Shell, Size, Widget, WidgetExt,
     event::{Event, EventInfo},
 };
 
@@ -16,6 +16,8 @@ use crate::{
 pub struct Container<W, S> {
     pub child: W,
     pub style: S,
+    pub padding: Padding<Size>,
+    child_offset: Vec2<f32>,
     bounds: Rect<f32>,
 }
 
@@ -24,6 +26,18 @@ impl<W, S> Container<W, S> {
         Self {
             child,
             style,
+            padding: Padding::default(),
+            child_offset: Vec2::default(),
+            bounds: Rect::default(),
+        }
+    }
+
+    pub fn center_styled(style: S, child: W) -> Self {
+        Self {
+            child,
+            style,
+            padding: Size::Relative(1.).into(),
+            child_offset: Vec2::default(),
             bounds: Rect::default(),
         }
     }
@@ -32,11 +46,30 @@ impl<W, S> Container<W, S> {
         self.style = style;
         self
     }
+
+    pub fn padding(&mut self, total: impl Into<Padding<Size>>) -> &mut Self {
+        self.padding = total.into();
+        self
+    }
+
+    pub fn pad_abs(&mut self, absolute: impl Into<Padding<f32>>) -> &mut Self {
+        self.padding = absolute.into().map(Size::Absolute);
+        self
+    }
+
+    pub fn pad_rel(&mut self, relative: impl Into<Padding<f32>>) -> &mut Self {
+        self.padding = relative.into().map(Size::Relative);
+        self
+    }
 }
 
 impl<W, S: Default> Container<W, S> {
     pub fn new(child: W) -> Self {
         Self::styled(S::default(), child)
+    }
+
+    pub fn center(child: W) -> Self {
+        Self::center_styled(S::default(), child)
     }
 }
 
@@ -56,27 +89,47 @@ where
         renderer: &Rend,
     ) -> Rect<f32> {
         let bw = theme.border_width(&self.style);
-        if bw != 0. {
-            let bounds = bounds.padded(bw);
-            self.bounds = self
-                .child
-                .layout(shell, theme, &bounds, renderer)
-                .extend_rect(bw);
-            self.bounds
-        } else {
-            self.bounds = self.child.layout(shell, theme, bounds, renderer);
-            self.bounds
+        let abs_pad = self.padding.map(|a| a.to_parts().x + bw);
+
+        let cbounds = bounds.padded(abs_pad);
+        let cbounds =
+            self.child.layout(shell, theme, &cbounds, renderer) - abs_pad;
+
+        let remaining = bounds.best_max().size() - cbounds.size();
+        let rel_pad = self.padding.map(|a| a.to_parts().y);
+        let pad = Self::resolve_padding(remaining, rel_pad);
+
+        let offset = pad.offset();
+        self.child_offset = offset + abs_pad.offset();
+
+        if offset.x != 0. || offset.y != 0. {
+            self.child.reposition(theme, self.child_offset);
         }
+
+        self.bounds =
+            Rect::from_pos_size(cbounds.pos(), cbounds.size() + pad.size());
+        self.bounds
     }
 
     fn size(&self, theme: &Theme) -> Vec2<f32> {
+        let size = self.padding.size();
+        let rel = size.map(|a| a.y != 0.);
+
+        if rel.x && rel.y {
+            return Vec2::INFINITY;
+        }
+
+        let mut cs = self.child.size(theme);
         let bw = theme.border_width(&self.style) * 2.;
-        self.child.size(theme).map(|a| a + bw)
+        cs.x += size.x.x + bw;
+        cs.y += size.y.x + bw;
+
+        cs.combine(Vec2::INFINITY, rel)
     }
 
     fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>) {
-        let bw = theme.border_width(&self.style);
-        self.child.reposition(theme, pos.map(|a| a + bw));
+        self.bounds.set_pos(pos);
+        self.child.reposition(theme, pos + self.child_offset);
     }
 
     fn event(
@@ -108,6 +161,38 @@ where
             renderer.draw_border(self.bounds, a.border, a.background);
         }
         self.child.draw(shell, theme, renderer);
+    }
+}
+
+impl<W, Style> Container<W, Style> {
+    fn resolve_padding1d(
+        available: f32,
+        rstart: f32,
+        rend: f32,
+    ) -> (f32, f32) {
+        let rel = rstart + rend;
+        if rel == 0. {
+            return (0., 0.);
+        }
+        let unit = available / rel;
+        (rstart * unit, rend * unit)
+    }
+
+    fn resolve_padding(
+        available: Vec2<f32>,
+        rel_pad: Padding<f32>,
+    ) -> Padding<f32> {
+        let (l, r) = Self::resolve_padding1d(
+            available.x,
+            rel_pad.left(),
+            rel_pad.right(),
+        );
+        let (t, b) = Self::resolve_padding1d(
+            available.y,
+            rel_pad.top(),
+            rel_pad.bottom(),
+        );
+        Padding::new(l, t, r, b)
     }
 }
 

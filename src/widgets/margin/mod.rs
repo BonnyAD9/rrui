@@ -63,9 +63,9 @@ where
         bounds: &LayoutBounds,
         renderer: &Rend,
     ) -> Rect<f32> {
-        self.child
-            .layout(shell, theme, &bounds.padded(self.margin), renderer)
-            - self.margin
+        let cbounds = bounds.padded(self.margin);
+        let cbounds = self.child.layout(shell, theme, &cbounds, renderer);
+        bounds.extend_rect_within(cbounds, self.margin)
     }
 
     fn size(&self, theme: &Theme) -> Vec2<f32> {

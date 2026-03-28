@@ -1,4 +1,4 @@
-use minlin::{Padding, Rect, RectExt, Vec2};
+use minlin::{CompArithm, Padding, Rect, RectExt, Vec2};
 
 use crate::LayoutSize;
 
@@ -80,6 +80,19 @@ impl LayoutBounds {
 
     pub fn filling(bounds: Rect<f32>) -> Self {
         Self::new(bounds.pos(), LayoutSize::filling(bounds.size()))
+    }
+
+    pub fn extend_rect_within(
+        &self,
+        rect: Rect<f32>,
+        pad: impl Into<Padding<f32>>,
+    ) -> Rect<f32> {
+        let p = pad.into();
+        let tl = rect.top_left() - self.pos;
+        let br = self.pos + self.size.max() - rect.bot_right();
+        rect - Padding(
+            p.cjoin((tl.x, tl.y, br.x, br.y), |a, b| a.min(b).max(0.)),
+        )
     }
 }
 

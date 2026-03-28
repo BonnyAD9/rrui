@@ -131,7 +131,12 @@ where
         };
 
         let fg = theme.foreground(&self.style);
-        renderer.draw_clipped_text(text, self.pos, fg, self.bounds);
+        renderer.draw_clipped_text(
+            text,
+            self.bounds.pos() + self.pos,
+            fg,
+            self.bounds,
+        );
     }
 }
 
@@ -162,14 +167,14 @@ impl<Style, Font: crate::Font, LText: LayedText<Font>>
     }
 
     fn get_text_pos(&self, tbounds: Vec2<f32>) -> Vec2<f32> {
-        let mut pos = self.bounds.pos();
+        let mut pos = Vec2::ZERO;
 
         match self.align_x {
             TextAlign::Right => {
-                pos.x = self.bounds.x + self.bounds.width() - tbounds.x;
+                pos.x = self.bounds.width() - tbounds.x;
             }
             TextAlign::Center => {
-                pos.x = self.bounds.x + (self.bounds.width() - tbounds.x) / 2.;
+                pos.x = (self.bounds.width() - tbounds.x) / 2.;
             }
             _ => {}
         }
@@ -177,11 +182,10 @@ impl<Style, Font: crate::Font, LText: LayedText<Font>>
         match self.align_y {
             Align::Start => {}
             Align::Center => {
-                pos.y =
-                    self.bounds.y + (self.bounds.height() - tbounds.y) / 2.;
+                pos.y = (self.bounds.height() - tbounds.y) / 2.;
             }
             Align::End => {
-                pos.y = self.bounds.y + self.bounds.height() - tbounds.y;
+                pos.y = self.bounds.height() - tbounds.y;
             }
         }
         pos
