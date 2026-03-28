@@ -116,7 +116,9 @@ where
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
-        let bounds = self.rel_pos_bounds();
+        let rp = self.rel_pos.as_mut().unwrap().get();
+        let bounds = rp.position_rect(self.bounds);
+
         if !event.is_for(bounds) {
             return false;
         }
@@ -149,7 +151,7 @@ impl<W> Stack<W> {
         rel_pos: RelPos,
         rel: Vec2<f32>,
     ) -> RelPos {
-        if let Some(rp) = &self.rel_pos {
+        if let Some(rp) = &mut self.rel_pos {
             rp.update(rel_pos);
             rp.rel_pos()
         } else {
@@ -157,14 +159,6 @@ impl<W> Stack<W> {
             let res = rp.rel_pos();
             self.rel_pos = Some(rp);
             res
-        }
-    }
-
-    pub fn rel_pos_bounds(&self) -> Rect<f32> {
-        if let Some(rp) = &self.rel_pos {
-            rp.position_rect(self.bounds)
-        } else {
-            self.bounds
         }
     }
 }

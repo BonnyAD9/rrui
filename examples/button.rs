@@ -2,10 +2,7 @@ use rrui::{
     Application, Color, Element, QuadRenderer, TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{
-        self, Button, ButtonTheme, Container, ContainerTheme, Stack,
-        TextBlock, TextBlockTheme,
-    },
+    widgets::{Button, Container, Stack, TextBlock},
 };
 use winit::error::EventLoopError;
 
