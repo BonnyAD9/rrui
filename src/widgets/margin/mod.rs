@@ -6,7 +6,8 @@ pub use self::margin_ext::*;
 use minlin::{Padding, Rect, Vec2};
 
 use crate::{
-    Element, LayoutBounds, Shell, Widget, WidgetExt, event::EventInfo,
+    Element, LayoutBounds, LayoutParams, RelPos, Widget, WidgetExt,
+    event::EventInfo,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -58,13 +59,12 @@ where
 {
     fn layout(
         &mut self,
-        shell: &mut Shell<Msg>,
-        theme: &Theme,
+        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &LayoutBounds,
-        renderer: &Rend,
+        rel_pos: RelPos,
     ) -> Rect<f32> {
         let cbounds = bounds.padded(self.margin);
-        let cbounds = self.child.layout(shell, theme, &cbounds, renderer);
+        let cbounds = self.child.layout(lp, &cbounds, rel_pos);
         bounds.extend_rect_within(cbounds, self.margin)
     }
 

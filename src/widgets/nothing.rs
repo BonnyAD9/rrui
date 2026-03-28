@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use minlin::{Rect, Vec2};
 
-use crate::{Element, Shell, Widget, event::EventInfo};
+use crate::{Element, LayoutParams, RelPos, Shell, Widget, event::EventInfo};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Nothing;
@@ -10,10 +10,9 @@ pub struct Nothing;
 impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
     fn layout(
         &mut self,
-        _: &mut Shell<Msg>,
-        _: &Theme,
+        _: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
-        _: &Rend,
+        _: RelPos,
     ) -> Rect<f32> {
         bounds.best_min()
     }

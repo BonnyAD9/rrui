@@ -94,6 +94,10 @@ impl LayoutBounds {
             p.cjoin((tl.x, tl.y, br.x, br.y), |a, b| a.min(b).max(0.)),
         )
     }
+
+    pub fn shrink_top(&mut self, amt: f32) {
+        self.pos.y += self.size.shrink_tb(amt);
+    }
 }
 
 impl From<Rect<f32>> for LayoutBounds {

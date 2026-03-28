@@ -3,8 +3,8 @@ use std::{marker::PhantomData, mem};
 use minlin::{MapExt, RectExt};
 
 use crate::{
-    AppCtrl, Configuration, Element, EventLoop, LayoutBounds, MayInit,
-    RenderState, Renderer, Shell, Widget, Window,
+    AppCtrl, Configuration, Element, EventLoop, LayoutBounds, LayoutParams,
+    MayInit, RelPos, RenderState, Renderer, Shell, Widget, Window,
     application::Application,
     event::{Event, EventCtrl, EventInfo, EventKind},
     widgets::Nothing,
@@ -156,10 +156,13 @@ where
             self.shell.relayout = false;
             let bounds = LayoutBounds::filling(self.shell.window_bounds);
             self.root.layout(
-                &mut self.shell,
-                self.app.theme(),
+                &mut LayoutParams::new(
+                    &mut self.shell,
+                    self.app.theme(),
+                    state.renderer(),
+                ),
                 &bounds,
-                state.renderer(),
+                RelPos::new(),
             );
         }
 

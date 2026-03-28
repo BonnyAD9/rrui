@@ -3,16 +3,17 @@ use std::fmt::Debug;
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    Background, Border, Element, LayoutBounds, QuadRenderer, Shell, Widget,
-    WidgetExt, event::EventInfo,
+    Background, Border, Element, LayoutBounds, LayoutParams, QuadRenderer,
+    RelPos, Shell, Widget, WidgetExt, event::EventInfo,
 };
 
 #[derive(Debug)]
 pub struct Rectangle {
-    background: Background,
-    border: Border,
-    size: Vec2<f32>,
-    bounds: Rect<f32>,
+    pub background: Background,
+    pub border: Border,
+    pub size: Vec2<f32>,
+    pub bounds: Rect<f32>,
+    rel_pos: RelPos,
 }
 
 impl Rectangle {
@@ -26,6 +27,7 @@ impl Rectangle {
             border: border.into(),
             size: size.into(),
             bounds: Rect::default(),
+            rel_pos: RelPos::new(),
         }
     }
 }
@@ -35,11 +37,11 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
 {
     fn layout(
         &mut self,
-        _: &mut Shell<Msg>,
-        _: &Theme,
+        _: &mut LayoutParams<Rend, Msg, Theme>,
         bounds: &LayoutBounds,
-        _: &Rend,
+        rel_pos: RelPos,
     ) -> Rect<f32> {
+        self.rel_pos.update(rel_pos);
         self.bounds = bounds.clamp(self.size);
         self.bounds
     }

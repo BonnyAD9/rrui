@@ -1,6 +1,8 @@
 use minlin::{Rect, Vec2};
 
-use crate::{LayoutBounds, Shell, Widget, event::EventInfo};
+use crate::{
+    LayoutBounds, LayoutParams, RelPos, Shell, Widget, event::EventInfo,
+};
 
 pub struct Element<Rend, Msg, Evt, Theme>(
     Box<dyn Widget<Rend, Msg, Evt, Theme>>,
@@ -17,12 +19,11 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
 {
     fn layout(
         &mut self,
-        shell: &mut Shell<Msg>,
-        theme: &Theme,
+        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &LayoutBounds,
-        renderer: &Rend,
+        pos_base: RelPos,
     ) -> Rect<f32> {
-        self.0.layout(shell, theme, bounds, renderer)
+        self.0.layout(lp, bounds, pos_base)
     }
 
     fn event(

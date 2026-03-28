@@ -2,7 +2,10 @@ use rrui::{
     Application, Color, Element, QuadRenderer, TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container},
+    widgets::{
+        self, Button, ButtonTheme, Container, ContainerTheme, Stack,
+        TextBlock, TextBlockTheme,
+    },
 };
 use winit::error::EventLoopError;
 
@@ -28,7 +31,26 @@ impl App {
     }
 }
 
-impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
+/*type Renderer = rrui::iced_wgpu::Renderer;
+type TextBlock = widgets::TextBlock<
+    <Theme as TextBlockTheme>::Style,
+    <Renderer as TextRenderer>::Font,
+    <Renderer as TextRenderer>::LayedText,
+>;
+type Button<W> = widgets::Button<
+    W,
+    <Theme as ButtonTheme>::Style,
+    (),
+>;
+
+type Container<W> = widgets::Container<
+    W,
+    <Theme as ContainerTheme>::Style,
+>;*/
+
+impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
+    Application<R, E> for App
+{
     type Message = ();
     type Theme = Theme;
 
@@ -40,6 +62,8 @@ impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
     }
 
     fn root(&mut self) -> Element<R, Self::Message, E, Self::Theme> {
+        let text = TextBlock::new("Hello there!");
+
         let mut but = Button::text("Click me!");
         but.size([100., 30.]);
         but.on_press(|_| {
@@ -47,7 +71,10 @@ impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
             None
         });
 
-        Container::center_styled(true, but).into()
+        let but = Container::center_styled(true, but);
+
+        Stack::<Element<_, _, _, _>>::from_top([text.into(), but.into()])
+            .into()
     }
 
     fn theme(&self) -> &Self::Theme {

@@ -7,8 +7,8 @@ use std::borrow::Cow;
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    Align, Element, LayedText, Size, Text, TextAlign, TextRenderer, TextWrap,
-    Widget, WidgetExt, event::EventInfo,
+    Align, Element, LayedText, LayoutParams, RelPos, Size, Text, TextAlign,
+    TextRenderer, TextWrap, Widget, WidgetExt, event::EventInfo,
 };
 
 #[derive(Debug, Clone)]
@@ -25,6 +25,7 @@ pub struct TextBlock<Style, Font, LText> {
     pos: Vec2<f32>,
     bounds: Rect<f32>,
     layed: Option<LText>,
+    rel_pos: RelPos,
 }
 
 impl<Style, Font, LText> TextBlock<Style, Font, LText> {
@@ -42,6 +43,7 @@ impl<Style, Font, LText> TextBlock<Style, Font, LText> {
             pos: Vec2::default(),
             bounds: Rect::default(),
             layed: None,
+            rel_pos: RelPos::default(),
         }
     }
 
@@ -67,18 +69,18 @@ where
 {
     fn layout(
         &mut self,
-        _: &mut crate::Shell<Msg>,
-        _: &Theme,
+        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
-        renderer: &Rend,
+        rel_pos: RelPos,
     ) -> Rect<f32> {
+        self.rel_pos.update(rel_pos);
         if let Some(s) = self.size {
             self.bounds = bounds.clamp(s);
             let t = if let Some(t) = &mut self.layed {
                 t.set_bounds(self.bounds.size());
                 t
             } else {
-                let text = self.make_text(renderer, self.bounds.size());
+                let text = self.make_text(lp.renderer, self.bounds.size());
                 self.layed.insert(LayedText::from_text(&text))
             };
             let align_bounds = t.align_bounds();
@@ -90,7 +92,7 @@ where
                 t.set_bounds(b.size());
                 t
             } else {
-                let text = self.make_text(renderer, b.size());
+                let text = self.make_text(lp.renderer, b.size());
                 self.layed.insert(LayedText::from_text(&text))
             };
             let min_bounds = t.min_bounds();
@@ -131,12 +133,8 @@ where
         };
 
         let fg = theme.foreground(&self.style);
-        renderer.draw_clipped_text(
-            text,
-            self.bounds.pos() + self.pos,
-            fg,
-            self.bounds,
-        );
+        let bounds = self.rel_pos.position_rect(self.bounds);
+        renderer.draw_clipped_text(text, bounds.pos() + self.pos, fg, bounds);
     }
 }
 

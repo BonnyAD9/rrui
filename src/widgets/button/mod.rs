@@ -4,7 +4,8 @@ mod button_theme;
 use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
-    Element, LayoutBounds, QuadRenderer, TextAlign, Widget, WidgetExt,
+    Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, TextAlign,
+    Widget, WidgetExt,
     event::{Event, EventKind, MouseButton, MouseRelation, MouseState},
     widgets::TextBlock,
 };
@@ -22,6 +23,7 @@ pub struct Button<W, Style, Msg> {
     pub react: MouseState,
     bounds: Rect<f32>,
     state: ButtonState,
+    rel_pos: RelPos,
 }
 
 impl<W, Style, Msg> Button<W, Style, Msg> {
@@ -35,6 +37,7 @@ impl<W, Style, Msg> Button<W, Style, Msg> {
             state: ButtonState::Normal,
             react: MouseState::LEFT,
             on_press: Box::new(|_| None),
+            rel_pos: RelPos::default(),
         }
     }
 
@@ -104,23 +107,24 @@ where
 {
     fn layout(
         &mut self,
-        shell: &mut crate::Shell<Msg>,
-        theme: &Theme,
+        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
-        renderer: &Rend,
+        rel_pos: RelPos,
     ) -> Rect<f32> {
+        self.rel_pos.update(rel_pos.clone());
+
         if let Some(s) = self.size {
             self.bounds = bounds.clamp(s);
             let mut bounds =
                 LayoutBounds::at_most(self.bounds.pad_rect(self.padding));
             bounds.fill();
-            self.child.layout(shell, theme, &bounds, renderer);
+            self.child.layout(lp, &bounds, rel_pos);
             self.bounds
         } else {
             let bounds = bounds.padded(self.padding);
             self.bounds = self
                 .child
-                .layout(shell, theme, &bounds, renderer)
+                .layout(lp, &bounds, rel_pos)
                 .extend_rect(self.padding);
             self.bounds
         }
@@ -145,7 +149,9 @@ where
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
-        let new_state = match event.mouse_relate_to(self.bounds) {
+        let bounds = self.rel_pos.position_rect(self.bounds);
+
+        let new_state = match event.mouse_relate_to(bounds) {
             MouseRelation::None | MouseRelation::Elswhere => return false,
             MouseRelation::Hover
             | MouseRelation::Move
@@ -187,7 +193,8 @@ where
         renderer: &mut Rend,
     ) {
         if let Some(a) = theme.appereance(&self.style, self.state) {
-            renderer.draw_border(self.bounds, a.border, a.background);
+            let bounds = self.rel_pos.position_rect(self.bounds);
+            renderer.draw_border(bounds, a.border, a.background);
         }
         self.child.draw(shell, theme, renderer);
     }

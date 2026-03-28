@@ -76,8 +76,16 @@ impl LayoutSize {
         self.range.z = (self.range.z - v.x).max(0.);
         self.range.w = (self.range.w - v.y).max(0.);
         if let Some(b) = &mut self.best {
-            *b -= v;
+            *b = b.cjoin(v, |a, b| (a - b).max(0.));
         }
+    }
+
+    pub fn shrink_tb(&mut self, amt: f32) -> f32 {
+        self.range.y = (self.range.y - amt).max(0.);
+        let neww = (self.range.w - amt).max(0.);
+        let res = self.range.w - neww;
+        self.range.w = neww;
+        res
     }
 
     pub fn shrink(&mut self) {

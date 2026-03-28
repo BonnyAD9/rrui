@@ -8,17 +8,19 @@ use std::fmt::Debug;
 use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, LayoutBounds, QuadRenderer, Shell, Size, Widget, WidgetExt,
+    Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, Shell, Size,
+    Widget, WidgetExt,
     event::{Event, EventInfo},
 };
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Container<W, S> {
     pub child: W,
     pub style: S,
     pub padding: Padding<Size>,
     child_offset: Vec2<f32>,
     bounds: Rect<f32>,
+    rel_pos: RelPos,
 }
 
 impl<W, S> Container<W, S> {
@@ -29,6 +31,7 @@ impl<W, S> Container<W, S> {
             padding: Padding::default(),
             child_offset: Vec2::default(),
             bounds: Rect::default(),
+            rel_pos: RelPos::default(),
         }
     }
 
@@ -39,6 +42,7 @@ impl<W, S> Container<W, S> {
             padding: Size::Relative(1.).into(),
             child_offset: Vec2::default(),
             bounds: Rect::default(),
+            rel_pos: RelPos::default(),
         }
     }
 
@@ -83,19 +87,20 @@ where
 {
     fn layout(
         &mut self,
-        shell: &mut Shell<Msg>,
-        theme: &Theme,
+        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &LayoutBounds,
-        renderer: &Rend,
+        rel_pos: RelPos,
     ) -> Rect<f32> {
-        let bw = theme.border_width(&self.style);
+        self.rel_pos.update(rel_pos.clone());
+
+        let bw = lp.theme.border_width(&self.style);
         let abs_pad = self.padding.map(|a| a.to_parts().x + bw);
 
         let cbounds = bounds.padded(abs_pad);
-        let cbounds =
-            self.child.layout(shell, theme, &cbounds, renderer) - abs_pad;
+        let cbounds = self.child.layout(lp, &cbounds, rel_pos) - abs_pad;
 
-        let remaining = bounds.best_max().size() - cbounds.size();
+        let remaining =
+            bounds.size.best_at_least(cbounds.size()) - cbounds.size();
         let rel_pad = self.padding.map(|a| a.to_parts().y);
         let pad = Self::resolve_padding(remaining, rel_pad);
 
@@ -103,7 +108,8 @@ where
         self.child_offset = offset + abs_pad.offset();
 
         if offset.x != 0. || offset.y != 0. {
-            self.child.reposition(theme, self.child_offset);
+            self.child
+                .reposition(lp.theme, self.child_offset + bounds.pos);
         }
 
         self.bounds =
@@ -139,10 +145,11 @@ where
         event: &EventInfo<Evt>,
     ) -> bool {
         let bw = theme.border_width(&self.style);
+        let bounds = self.rel_pos.position_rect(self.bounds);
         let cb = if bw == 0. {
-            self.bounds
+            bounds
         } else {
-            self.bounds.pad_rect(bw)
+            bounds.pad_rect(bw)
         };
         if event.is_for(cb) {
             self.child.event(shell, theme, event)
@@ -158,7 +165,8 @@ where
         renderer: &mut Rend,
     ) {
         if let Some(a) = theme.appereance(&self.style) {
-            renderer.draw_border(self.bounds, a.border, a.background);
+            let bounds = self.rel_pos.position_rect(self.bounds);
+            renderer.draw_border(bounds, a.border, a.background);
         }
         self.child.draw(shell, theme, renderer);
     }
