@@ -4,15 +4,16 @@ use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Background, Border, Element, LayoutBounds, LayoutParams, QuadRenderer,
-    RelPos, Shell, Widget, WidgetExt, event::EventInfo,
+    RelPos, Shell, VariableAction, VariableSlot, Widget, WidgetExt,
+    event::EventInfo,
 };
 
 #[derive(Debug)]
 pub struct Rectangle {
-    pub background: Background,
-    pub border: Border,
-    pub size: Vec2<f32>,
-    pub bounds: Rect<f32>,
+    pub background: VariableSlot<Background>,
+    pub border: VariableSlot<Border>,
+    pub size: VariableSlot<Vec2<f32>>,
+    bounds: Rect<f32>,
     rel_pos: RelPos,
 }
 
@@ -23,9 +24,9 @@ impl Rectangle {
         border: impl Into<Border>,
     ) -> Self {
         Self {
-            background: bg.into(),
-            border: border.into(),
-            size: size.into(),
+            background: bg.into().into(),
+            border: border.into().into(),
+            size: size.into().into(),
             bounds: Rect::default(),
             rel_pos: RelPos::new(),
         }
@@ -35,14 +36,22 @@ impl Rectangle {
 impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
     for Rectangle
 {
+    fn init(&mut self) {
+        self.background.on_change(VariableAction::Redraw);
+        self.border.on_change(VariableAction::Redraw);
+        self.size.on_change(VariableAction::Relayout);
+    }
+
     fn layout(
         &mut self,
         _: &mut LayoutParams<Rend, Msg, Theme>,
         bounds: &LayoutBounds,
         rel_pos: RelPos,
     ) -> Rect<f32> {
+        self.size.update();
+
         self.rel_pos.update(rel_pos);
-        self.bounds = bounds.clamp(self.size);
+        self.bounds = bounds.clamp(*self.size);
         self.bounds
     }
 
@@ -56,11 +65,15 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
     }
 
     fn draw(&mut self, _: &mut Shell<Msg>, _: &Theme, renderer: &mut Rend) {
-        renderer.draw_border(self.bounds, self.border, &self.background);
+        self.background.update();
+        self.border.update();
+
+        renderer.draw_border(self.bounds, *self.border, &*self.background);
     }
 
-    fn size(&self, _: &Theme) -> Vec2<f32> {
-        self.size
+    fn size(&mut self, _: &Theme) -> Vec2<f32> {
+        self.size.update();
+        *self.size
     }
 
     fn reposition(&mut self, _: &Theme, pos: Vec2<f32>) {

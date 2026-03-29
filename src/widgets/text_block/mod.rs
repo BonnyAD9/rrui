@@ -8,12 +8,13 @@ use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Align, Element, LayedText, LayoutParams, RelPos, Size, Text, TextAlign,
-    TextRenderer, TextWrap, Widget, WidgetExt, event::EventInfo,
+    TextRenderer, TextWrap, VariableAction, VariableSlot, Widget, WidgetExt,
+    event::EventInfo,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TextBlock<Style, Font, LText> {
-    pub text: Cow<'static, str>,
+    pub text: VariableSlot<Cow<'static, str>>,
     pub font: Option<Font>,
     pub font_size: Option<f32>,
     pub align_x: TextAlign,
@@ -21,7 +22,7 @@ pub struct TextBlock<Style, Font, LText> {
     pub line_height: Size,
     pub wrapping: TextWrap,
     pub size: Option<Vec2<f32>>,
-    pub style: Style,
+    pub style: VariableSlot<Style>,
     pos: Vec2<f32>,
     bounds: Rect<f32>,
     layed: Option<LText>,
@@ -30,6 +31,20 @@ pub struct TextBlock<Style, Font, LText> {
 
 impl<Style, Font, LText> TextBlock<Style, Font, LText> {
     pub fn styled(style: Style, text: impl Into<Cow<'static, str>>) -> Self {
+        Self::styled_variable(style, text.into())
+    }
+
+    pub fn new(text: impl Into<Cow<'static, str>>) -> Self
+    where
+        Style: Default,
+    {
+        Self::styled(Style::default(), text)
+    }
+
+    pub fn styled_variable(
+        style: Style,
+        text: impl Into<VariableSlot<Cow<'static, str>>>,
+    ) -> Self {
         Self {
             text: text.into(),
             font: None,
@@ -39,7 +54,7 @@ impl<Style, Font, LText> TextBlock<Style, Font, LText> {
             line_height: Text::<Font>::DEFAULT_LINE_HEIGHT,
             wrapping: TextWrap::None,
             size: None,
-            style,
+            style: style.into(),
             pos: Vec2::default(),
             bounds: Rect::default(),
             layed: None,
@@ -47,11 +62,11 @@ impl<Style, Font, LText> TextBlock<Style, Font, LText> {
         }
     }
 
-    pub fn new(text: impl Into<Cow<'static, str>>) -> Self
+    pub fn variable(text: impl Into<VariableSlot<Cow<'static, str>>>) -> Self
     where
         Style: Default,
     {
-        Self::styled(Style::default(), text)
+        Self::styled_variable(Style::default(), text.into())
     }
 }
 
@@ -67,6 +82,11 @@ where
     Rend: TextRenderer,
     Theme: TextBlockTheme<Style = Style>,
 {
+    fn init(&mut self) {
+        self.text.on_change(VariableAction::Relayout);
+        self.style.on_change(VariableAction::Redraw);
+    }
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
@@ -74,6 +94,10 @@ where
         rel_pos: RelPos,
     ) -> Rect<f32> {
         self.rel_pos.update(rel_pos);
+        if self.text.update() {
+            self.layed = None;
+        }
+
         if let Some(s) = self.size {
             self.bounds = bounds.clamp(s);
             let t = if let Some(t) = &mut self.layed {
@@ -104,7 +128,7 @@ where
         }
     }
 
-    fn size(&self, _: &Theme) -> Vec2<f32> {
+    fn size(&mut self, _: &Theme) -> Vec2<f32> {
         self.size.unwrap_or(Vec2::new(f32::INFINITY, f32::INFINITY))
     }
 
@@ -127,6 +151,8 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
+        self.style.update();
+
         assert!(self.layed.is_some());
         let Some(text) = &self.layed else {
             unreachable!()

@@ -1,12 +1,15 @@
 use minlin::{Rect, Vec2};
 
-use crate::event::{Modifiers, MouseState};
+use crate::{
+    ShellProxy, VariableIn, VariableOut,
+    event::{Modifiers, MouseState},
+    new_variable,
+};
 
 #[derive(Debug)]
 pub struct Shell<Msg> {
     pub(crate) window_bounds: Rect<f32>,
-    pub(crate) redraw: bool,
-    pub(crate) relayout: bool,
+    pub(crate) proxy: ShellProxy,
     pub(crate) mouse_pos: Option<Vec2<f32>>,
     pub(crate) modifiers: Modifiers,
     pub(crate) messages: Vec<Msg>,
@@ -15,19 +18,38 @@ pub struct Shell<Msg> {
 
 impl<Msg> Shell<Msg> {
     pub fn request_redraw(&mut self) {
-        self.redraw = true;
+        self.proxy.request_redraw();
     }
 
     pub fn redraw_requested(&self) -> bool {
-        self.redraw
+        self.proxy.redraw_requested()
+    }
+
+    pub(crate) fn reset_redraw(&self) {
+        self.proxy.0.redraw.set(false);
     }
 
     pub fn request_relayout(&mut self) {
-        self.relayout = true;
+        self.proxy.request_relayout();
     }
 
     pub fn relayout_requested(&self) -> bool {
-        self.relayout
+        self.proxy.relayout_requested()
+    }
+
+    pub(crate) fn reset_relayout(&self) {
+        self.proxy.0.relayout.set(false);
+    }
+
+    pub fn proxy(&self) -> ShellProxy {
+        self.proxy.clone()
+    }
+
+    pub fn make_variable<T>(
+        &self,
+        value: impl Into<T>,
+    ) -> (VariableIn<T>, VariableOut<T>) {
+        new_variable(self.proxy.clone(), value.into())
     }
 
     pub fn mouse_pos(&self) -> Option<Vec2<f32>> {
@@ -51,8 +73,7 @@ impl<Msg> Default for Shell<Msg> {
     fn default() -> Self {
         Self {
             window_bounds: Default::default(),
-            redraw: Default::default(),
-            relayout: Default::default(),
+            proxy: Default::default(),
             mouse_pos: Default::default(),
             modifiers: Default::default(),
             messages: Default::default(),

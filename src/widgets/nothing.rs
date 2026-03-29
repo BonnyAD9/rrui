@@ -28,7 +28,7 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
 
     fn draw(&mut self, _: &mut Shell<Msg>, _: &Theme, _: &mut Rend) {}
 
-    fn size(&self, _: &Theme) -> Vec2<f32> {
+    fn size(&mut self, _: &Theme) -> Vec2<f32> {
         Vec2::ZERO
     }
 

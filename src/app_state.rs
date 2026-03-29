@@ -60,9 +60,10 @@ where
             RendState::create(rc, win).unwrap()
         });
         s.request_redraw();
-        self.root = self.app.root();
         self.shell.request_redraw();
         self.shell.request_relayout();
+        self.root = self.app.root(&mut self.shell);
+        self.root.init();
     }
 
     pub fn message(&mut self, msg: App::Message) {
@@ -93,13 +94,13 @@ where
             match event_info.get_kind() {
                 EventKind::CloseRequest => ctrl.exit(),
                 EventKind::Resize(size) => {
-                    self.shell.relayout = true;
+                    self.shell.request_relayout();
                     self.shell.window_bounds.set_size(size.cast());
                     state.resize(size);
                 }
                 EventKind::RedrawRequest => {
-                    if self.shell.redraw {
-                        self.shell.redraw = false;
+                    if self.shell.redraw_requested() {
+                        self.shell.reset_redraw();
                         self.pending_redraw = false;
                         let rend = state.renderer();
                         rend.reset(self.shell.window_bounds.size().cast());
@@ -151,9 +152,9 @@ where
             return;
         };
 
-        if self.shell.relayout {
-            self.shell.redraw = true;
-            self.shell.relayout = false;
+        if self.shell.relayout_requested() {
+            self.shell.request_redraw();
+            self.shell.reset_relayout();
             let bounds = LayoutBounds::filling(self.shell.window_bounds);
             self.root.layout(
                 &mut LayoutParams::new(
@@ -166,7 +167,7 @@ where
             );
         }
 
-        if self.shell.redraw && !self.pending_redraw {
+        if self.shell.redraw_requested() && !self.pending_redraw {
             self.pending_redraw = true;
             state.request_redraw();
         }

@@ -57,6 +57,10 @@ impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme> for Margin<W>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
+    fn init(&mut self) {
+        self.child.init();
+    }
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
@@ -68,7 +72,7 @@ where
         bounds.extend_rect_within(cbounds, self.margin)
     }
 
-    fn size(&self, theme: &Theme) -> Vec2<f32> {
+    fn size(&mut self, theme: &Theme) -> Vec2<f32> {
         self.child.size(theme) + self.margin.size()
     }
 

@@ -9,14 +9,14 @@ use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
     Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, Shell, Size,
-    Widget, WidgetExt,
+    VariableAction, VariableSlot, Widget, WidgetExt,
     event::{Event, EventInfo},
 };
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct Container<W, S> {
     pub child: W,
-    pub style: S,
+    pub style: VariableSlot<S>,
     pub padding: Padding<Size>,
     child_offset: Vec2<f32>,
     bounds: Rect<f32>,
@@ -27,7 +27,7 @@ impl<W, S> Container<W, S> {
     pub fn styled(style: S, child: W) -> Self {
         Self {
             child,
-            style,
+            style: style.into(),
             padding: Padding::default(),
             child_offset: Vec2::default(),
             bounds: Rect::default(),
@@ -38,17 +38,12 @@ impl<W, S> Container<W, S> {
     pub fn center_styled(style: S, child: W) -> Self {
         Self {
             child,
-            style,
+            style: style.into(),
             padding: Size::Relative(1.).into(),
             child_offset: Vec2::default(),
             bounds: Rect::default(),
             rel_pos: RelPos::default(),
         }
-    }
-
-    pub fn style(&mut self, style: S) -> &mut Self {
-        self.style = style;
-        self
     }
 
     pub fn padding(&mut self, total: impl Into<Padding<Size>>) -> &mut Self {
@@ -85,6 +80,11 @@ where
     Evt: Event,
     Theme: ContainerTheme<Style = Style>,
 {
+    fn init(&mut self) {
+        self.style.on_change(VariableAction::Relayout);
+        self.child.init();
+    }
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
@@ -117,7 +117,7 @@ where
         self.bounds
     }
 
-    fn size(&self, theme: &Theme) -> Vec2<f32> {
+    fn size(&mut self, theme: &Theme) -> Vec2<f32> {
         let size = self.padding.size();
         let rel = size.map(|a| a.y != 0.);
 

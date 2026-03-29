@@ -43,8 +43,10 @@ pub trait Application<Renderer, Event> {
         }
     }
 
-    fn root(&mut self)
-    -> Element<Renderer, Self::Message, Event, Self::Theme>;
+    fn root(
+        &mut self,
+        shell: &mut Shell<Self::Message>,
+    ) -> Element<Renderer, Self::Message, Event, Self::Theme>;
 
     fn theme(&self) -> &Self::Theme;
 }

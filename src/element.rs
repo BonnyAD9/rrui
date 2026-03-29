@@ -17,6 +17,10 @@ impl<Rend, Msg, Evt, Theme> Element<Rend, Msg, Evt, Theme> {
 impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
     for Element<Rend, Msg, Evt, Theme>
 {
+    fn init(&mut self) {
+        self.0.init();
+    }
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
@@ -44,7 +48,7 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
         self.0.draw(shell, theme, renderer);
     }
 
-    fn size(&self, theme: &Theme) -> Vec2<f32> {
+    fn size(&mut self, theme: &Theme) -> Vec2<f32> {
         self.0.size(theme)
     }
 

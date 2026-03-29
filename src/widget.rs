@@ -3,6 +3,8 @@ use minlin::{Rect, Vec2};
 use crate::{LayoutBounds, LayoutParams, RelPos, Shell, event::EventInfo};
 
 pub trait Widget<Rend, Msg, Evt, Theme> {
+    fn init(&mut self) {}
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
@@ -10,7 +12,7 @@ pub trait Widget<Rend, Msg, Evt, Theme> {
         pos_base: RelPos,
     ) -> Rect<f32>;
 
-    fn size(&self, theme: &Theme) -> Vec2<f32>;
+    fn size(&mut self, theme: &Theme) -> Vec2<f32>;
 
     fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>);
 

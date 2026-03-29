@@ -1,15 +1,15 @@
 use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
-    Direction, Element, LayoutParams, RelPos, RelPosSrc, Widget, WidgetExt,
-    event::Event, layout,
+    Direction, Element, LayoutParams, RelPos, RelPosSrc, VariableAction,
+    VariableSlot, Widget, WidgetExt, event::Event, layout,
 };
 
 #[derive(Debug)]
 pub struct Stack<W> {
     pub children: Vec<W>,
-    pub direction: Direction,
-    pub spacing: f32,
+    pub direction: VariableSlot<Direction>,
+    pub spacing: VariableSlot<f32>,
     rel_pos: Option<RelPosSrc>,
     rel_off: Vec2<f32>,
     bounds: Rect<f32>,
@@ -22,8 +22,8 @@ impl<W> Stack<W> {
     ) -> Self {
         Self {
             children: children.into(),
-            direction: direction.into(),
-            spacing: 0.,
+            direction: direction.into().into(),
+            spacing: 0_f32.into(),
             bounds: Rect::default(),
             rel_off: Vec2::default(),
             rel_pos: None,
@@ -68,8 +68,8 @@ impl<W> Default for Stack<W> {
     fn default() -> Self {
         Self {
             children: Default::default(),
-            direction: Direction::Top,
-            spacing: 0.,
+            direction: Direction::Top.into(),
+            spacing: 0_f32.into(),
             bounds: Default::default(),
             rel_off: Default::default(),
             rel_pos: None,
@@ -82,20 +82,31 @@ where
     W: Widget<Rend, Msg, Evt, Theme>,
     Evt: Event,
 {
+    fn init(&mut self) {
+        self.spacing.on_change(VariableAction::Relayout);
+        self.direction.on_change(VariableAction::Relayout);
+        for c in &mut self.children {
+            c.init();
+        }
+    }
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
         rel_pos: RelPos,
     ) -> Rect<f32> {
+        self.spacing.update();
+        self.direction.update();
+
         let rel_pos = self.update_rel_pos(rel_pos, bounds.pos);
         let mut rbounds = *bounds;
         rbounds.pos = Vec2::ZERO;
 
         self.bounds = layout::stack(
             &mut self.children,
-            self.spacing,
-            self.direction,
+            *self.spacing,
+            *self.direction,
             lp,
             &rbounds,
             rel_pos,
@@ -114,7 +125,7 @@ where
         Rect::from_pos_size(bounds.pos, self.bounds.size())
     }
 
-    fn size(&self, _: &Theme) -> minlin::Vec2<f32> {
+    fn size(&mut self, _: &Theme) -> minlin::Vec2<f32> {
         Vec2::INFINITY
     }
 

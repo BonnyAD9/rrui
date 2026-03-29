@@ -1,8 +1,10 @@
+use minlin::Vec2;
 use rrui::{
-    Application, Color, Element, QuadRenderer, TextRenderer, Theme,
+    Application, Color, Element, QuadRenderer, Shell, TextAlign, TextRenderer,
+    Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container, MarginExt, Stack, TextBlock},
+    widgets::{Button, Container, Stack, TextBlock},
 };
 use winit::error::EventLoopError;
 
@@ -41,24 +43,30 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
     ) {
     }
 
-    fn root(&mut self) -> Element<R, Self::Message, E, Self::Theme> {
-        let text = TextBlock::new("Hello there!");
+    fn root(
+        &mut self,
+        shell: &mut Shell<Self::Message>,
+    ) -> Element<R, Self::Message, E, Self::Theme> {
+        let (text_in, text_out) = shell.make_variable("You clicked 0 times!");
+
+        let mut text = TextBlock::variable(text_out);
+        text.size = Some(Vec2::new(f32::INFINITY, 300.));
+        text.align_x = TextAlign::Center;
 
         let mut but = Button::text("Click me!");
         but.size([100., 30.]);
-        but.on_press(|_| {
-            println!("Hello there!");
+
+        let mut counter: u32 = 0;
+        but.on_press(move |_| {
+            counter += 1;
+            text_in.set(format!("You clicked {counter} times!"));
             None
         });
 
-        let but = Container::center_styled(true, but);
+        let but = Container::center(but);
 
-        let stack = Stack::<Element<_, _, _, _>>::from_right([
-            text.into(),
-            but.into(),
-        ]);
-
-        Stack::from_left([Container::styled(true, stack.margin(50.))]).into()
+        Stack::<Element<_, _, _, _>>::from_top([text.into(), but.into()])
+            .into()
     }
 
     fn theme(&self) -> &Self::Theme {

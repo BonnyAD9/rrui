@@ -1,5 +1,5 @@
 use rrui::{
-    Application, Color, Element, QuadRenderer, TextAlign, TextRenderer,
+    Application, Color, Element, QuadRenderer, Shell, TextAlign, TextRenderer,
     TextWrap, Theme,
     config::IcedWgpuWinit,
     event::Event,
@@ -40,7 +40,10 @@ impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
     ) {
     }
 
-    fn root(&mut self) -> Element<R, Self::Message, E, Self::Theme> {
+    fn root(
+        &mut self,
+        _: &mut Shell<Self::Message>,
+    ) -> Element<R, Self::Message, E, Self::Theme> {
         let mut text = TextBlock::new(
             "Hello rrui! Or maybe some longer text to try here.\n\
             Even on multiple lines!",

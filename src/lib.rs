@@ -14,7 +14,10 @@ mod primitives;
 mod render_state;
 mod renderer;
 mod shell;
+mod shell_proxy;
 mod theme;
+mod variable;
+mod variable_slot;
 pub mod wgpu;
 mod widget;
 mod widget_ext;
@@ -27,8 +30,9 @@ use crate::event::Event;
 pub use self::{
     app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
     event_loop::*, event_loop_proxy::*, font::*, layout::*, may_init::*,
-    primitives::*, render_state::*, renderer::*, shell::*, theme::*,
-    widget::*, widget_ext::*, window::*,
+    primitives::*, render_state::*, renderer::*, shell::*, shell_proxy::*,
+    theme::*, variable::*, variable_slot::*, widget::*, widget_ext::*,
+    window::*,
 };
 
 pub type Color = minlin::Rgba<f32>;

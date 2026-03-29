@@ -5,7 +5,7 @@ use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
     Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, TextAlign,
-    Widget, WidgetExt,
+    VariableAction, VariableSlot, Widget, WidgetExt,
     event::{Event, EventKind, MouseButton, MouseRelation, MouseState},
     widgets::TextBlock,
 };
@@ -16,7 +16,7 @@ use minlin::{Padding, Rect, RectExt, Vec2};
 
 pub struct Button<W, Style, Msg> {
     pub child: W,
-    pub style: Style,
+    pub style: VariableSlot<Style>,
     pub size: Option<Vec2<f32>>,
     pub padding: Padding<f32>,
     pub on_press: Box<dyn FnMut(MouseButton) -> Option<Msg>>,
@@ -30,7 +30,7 @@ impl<W, Style, Msg> Button<W, Style, Msg> {
     pub fn styled(style: Style, child: W) -> Self {
         Self {
             child,
-            style,
+            style: style.into(),
             size: None,
             padding: Padding::uniform(5.),
             bounds: Rect::default(),
@@ -105,6 +105,10 @@ where
     Evt: Event,
     Theme: ButtonTheme<Style = Style>,
 {
+    fn init(&mut self) {
+        self.style.on_change(VariableAction::Redraw);
+    }
+
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
@@ -130,7 +134,7 @@ where
         }
     }
 
-    fn size(&self, theme: &Theme) -> Vec2<f32> {
+    fn size(&mut self, theme: &Theme) -> Vec2<f32> {
         if let Some(s) = self.size {
             s
         } else {
@@ -192,6 +196,8 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
+        self.style.update();
+
         if let Some(a) = theme.appereance(&self.style, self.state) {
             let bounds = self.rel_pos.position_rect(self.bounds);
             renderer.draw_border(bounds, a.border, a.background);
