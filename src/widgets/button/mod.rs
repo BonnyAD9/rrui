@@ -4,8 +4,8 @@ mod button_theme;
 use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
-    Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, TextAlign,
-    VariableAction, VariableSlot, Widget, WidgetExt,
+    Element, LayoutBounds, LayoutParams, QuadRenderer, RedrawSlot, RelPos,
+    TextAlign, Widget, WidgetExt,
     event::{Event, EventKind, MouseButton, MouseRelation, MouseState},
     widgets::TextBlock,
 };
@@ -16,7 +16,7 @@ use minlin::{Padding, Rect, RectExt, Vec2};
 
 pub struct Button<W, Style, Msg> {
     pub child: W,
-    pub style: VariableSlot<Style>,
+    pub style: RedrawSlot<Style>,
     pub size: Option<Vec2<f32>>,
     pub padding: Padding<f32>,
     pub on_press: Box<dyn FnMut(MouseButton) -> Option<Msg>>,
@@ -105,10 +105,6 @@ where
     Evt: Event,
     Theme: ButtonTheme<Style = Style>,
 {
-    fn init(&mut self) {
-        self.style.on_change(VariableAction::Redraw);
-    }
-
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,

@@ -8,18 +8,6 @@ pub enum VariableSlot<T> {
     Variable(VariableOut<T>),
 }
 
-impl<T> From<T> for VariableSlot<T> {
-    fn from(value: T) -> Self {
-        Self::Value(value)
-    }
-}
-
-impl<T> From<VariableOut<T>> for VariableSlot<T> {
-    fn from(value: VariableOut<T>) -> Self {
-        Self::Variable(value)
-    }
-}
-
 impl<T> VariableSlot<T> {
     pub fn update(&mut self) -> bool {
         match self {
@@ -59,5 +47,17 @@ impl<T> DerefMut for VariableSlot<T> {
 impl<T: Default> Default for VariableSlot<T> {
     fn default() -> Self {
         Self::Value(Default::default())
+    }
+}
+
+impl<T> From<T> for VariableSlot<T> {
+    fn from(value: T) -> Self {
+        Self::Value(value)
+    }
+}
+
+impl<T> From<VariableOut<T>> for VariableSlot<T> {
+    fn from(value: VariableOut<T>) -> Self {
+        Self::Variable(value)
     }
 }

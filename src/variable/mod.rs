@@ -1,3 +1,9 @@
+mod redraw_slot;
+mod relayout_slot;
+mod variable_slot;
+
+pub use self::{redraw_slot::*, relayout_slot::*, variable_slot::*};
+
 use std::{
     cell::Cell,
     fmt::Debug,

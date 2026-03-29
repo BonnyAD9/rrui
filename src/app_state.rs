@@ -63,7 +63,6 @@ where
         self.shell.request_redraw();
         self.shell.request_relayout();
         self.root = self.app.root(&mut self.shell);
-        self.root.init();
     }
 
     pub fn message(&mut self, msg: App::Message) {

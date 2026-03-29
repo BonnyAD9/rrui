@@ -17,10 +17,6 @@ impl<Rend, Msg, Evt, Theme> Element<Rend, Msg, Evt, Theme> {
 impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
     for Element<Rend, Msg, Evt, Theme>
 {
-    fn init(&mut self) {
-        self.0.init();
-    }
-
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,

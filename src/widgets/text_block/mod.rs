@@ -7,14 +7,14 @@ use std::borrow::Cow;
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    Align, Element, LayedText, LayoutParams, RelPos, Size, Text, TextAlign,
-    TextRenderer, TextWrap, VariableAction, VariableSlot, Widget, WidgetExt,
+    Align, Element, LayedText, LayoutParams, RedrawSlot, RelPos, RelayoutSlot,
+    Size, Text, TextAlign, TextRenderer, TextWrap, Widget, WidgetExt,
     event::EventInfo,
 };
 
 #[derive(Debug)]
 pub struct TextBlock<Style, Font, LText> {
-    pub text: VariableSlot<Cow<'static, str>>,
+    pub text: RelayoutSlot<Cow<'static, str>>,
     pub font: Option<Font>,
     pub font_size: Option<f32>,
     pub align_x: TextAlign,
@@ -22,7 +22,7 @@ pub struct TextBlock<Style, Font, LText> {
     pub line_height: Size,
     pub wrapping: TextWrap,
     pub size: Option<Vec2<f32>>,
-    pub style: VariableSlot<Style>,
+    pub style: RedrawSlot<Style>,
     pos: Vec2<f32>,
     bounds: Rect<f32>,
     layed: Option<LText>,
@@ -43,7 +43,7 @@ impl<Style, Font, LText> TextBlock<Style, Font, LText> {
 
     pub fn styled_variable(
         style: Style,
-        text: impl Into<VariableSlot<Cow<'static, str>>>,
+        text: impl Into<RelayoutSlot<Cow<'static, str>>>,
     ) -> Self {
         Self {
             text: text.into(),
@@ -62,7 +62,7 @@ impl<Style, Font, LText> TextBlock<Style, Font, LText> {
         }
     }
 
-    pub fn variable(text: impl Into<VariableSlot<Cow<'static, str>>>) -> Self
+    pub fn variable(text: impl Into<RelayoutSlot<Cow<'static, str>>>) -> Self
     where
         Style: Default,
     {
@@ -82,11 +82,6 @@ where
     Rend: TextRenderer,
     Theme: TextBlockTheme<Style = Style>,
 {
-    fn init(&mut self) {
-        self.text.on_change(VariableAction::Relayout);
-        self.style.on_change(VariableAction::Redraw);
-    }
-
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,

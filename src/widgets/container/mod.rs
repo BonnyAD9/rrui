@@ -8,15 +8,15 @@ use std::fmt::Debug;
 use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, Shell, Size,
-    VariableAction, VariableSlot, Widget, WidgetExt,
+    Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, RelayoutSlot,
+    Shell, Size, Widget, WidgetExt,
     event::{Event, EventInfo},
 };
 
 #[derive(Debug, Default)]
 pub struct Container<W, S> {
     pub child: W,
-    pub style: VariableSlot<S>,
+    pub style: RelayoutSlot<S>,
     pub padding: Padding<Size>,
     child_offset: Vec2<f32>,
     bounds: Rect<f32>,
@@ -80,11 +80,6 @@ where
     Evt: Event,
     Theme: ContainerTheme<Style = Style>,
 {
-    fn init(&mut self) {
-        self.style.on_change(VariableAction::Relayout);
-        self.child.init();
-    }
-
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,

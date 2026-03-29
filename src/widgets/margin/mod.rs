@@ -57,10 +57,6 @@ impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme> for Margin<W>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
-    fn init(&mut self) {
-        self.child.init();
-    }
-
     fn layout(
         &mut self,
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,

@@ -4,15 +4,15 @@ use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
     Background, Border, Element, LayoutBounds, LayoutParams, QuadRenderer,
-    RelPos, Shell, VariableAction, VariableSlot, Widget, WidgetExt,
+    RedrawSlot, RelPos, RelayoutSlot, Shell, Widget, WidgetExt,
     event::EventInfo,
 };
 
 #[derive(Debug)]
 pub struct Rectangle {
-    pub background: VariableSlot<Background>,
-    pub border: VariableSlot<Border>,
-    pub size: VariableSlot<Vec2<f32>>,
+    pub background: RedrawSlot<Background>,
+    pub border: RedrawSlot<Border>,
+    pub size: RelayoutSlot<Vec2<f32>>,
     bounds: Rect<f32>,
     rel_pos: RelPos,
 }
@@ -36,12 +36,6 @@ impl Rectangle {
 impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
     for Rectangle
 {
-    fn init(&mut self) {
-        self.background.on_change(VariableAction::Redraw);
-        self.border.on_change(VariableAction::Redraw);
-        self.size.on_change(VariableAction::Relayout);
-    }
-
     fn layout(
         &mut self,
         _: &mut LayoutParams<Rend, Msg, Theme>,
