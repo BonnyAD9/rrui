@@ -1,8 +1,19 @@
 mod redraw_slot;
+mod ref_redraw_slot;
+mod ref_relayout_slot;
+mod ref_variable;
+mod ref_variable_slot;
 mod relayout_slot;
+mod slot_ref;
+mod slot_ref_mut;
+mod variable_action;
 mod variable_slot;
 
-pub use self::{redraw_slot::*, relayout_slot::*, variable_slot::*};
+pub use self::{
+    redraw_slot::*, ref_redraw_slot::*, ref_relayout_slot::*, ref_variable::*,
+    ref_variable_slot::*, relayout_slot::*, slot_ref::*, slot_ref_mut::*,
+    variable_action::*, variable_slot::*,
+};
 
 use std::{
     cell::Cell,
@@ -12,14 +23,6 @@ use std::{
 };
 
 use crate::ShellProxy;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum VariableAction {
-    #[default]
-    None,
-    Redraw,
-    Relayout,
-}
 
 #[derive(Debug)]
 pub struct VariableOut<T> {
@@ -80,11 +83,7 @@ impl<T> DerefMut for VariableOut<T> {
 impl<T> VariableIn<T> {
     pub fn set(&self, value: impl Into<T>) {
         self.0.value.set(Some(value.into()));
-        match self.0.on_change.get() {
-            VariableAction::None => {}
-            VariableAction::Redraw => self.0.proxy.request_redraw(),
-            VariableAction::Relayout => self.0.proxy.request_relayout(),
-        }
+        self.0.on_change.get().apply(&self.0.proxy);
     }
 }
 

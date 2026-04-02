@@ -12,7 +12,7 @@ flexi_logger = "0.31.8"
 futures = "0.3.32"
 iced_wgpu = "0.14.0"
 log = "0.4.29"
-minlin = { path = "../minlin" }
+minlin = "0.4.0"
 smol_str = "0.2.2"
 thiserror = "2.0.18"
 wgpu = "27.0.0"
