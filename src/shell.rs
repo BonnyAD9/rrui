@@ -1,9 +1,9 @@
 use minlin::{Rect, Vec2};
 
 use crate::{
-    ShellProxy, VariableIn, VariableOut,
+    RefVariableIn, RefVariableOut, ShellProxy, VariableIn, VariableOut,
     event::{Modifiers, MouseState},
-    new_variable,
+    new_ref_variable, new_variable,
 };
 
 #[derive(Debug)]
@@ -50,6 +50,13 @@ impl<Msg> Shell<Msg> {
         value: impl Into<T>,
     ) -> (VariableIn<T>, VariableOut<T>) {
         new_variable(self.proxy.clone(), value.into())
+    }
+
+    pub fn make_ref_variable<T>(
+        &self,
+        value: impl Into<T>,
+    ) -> (RefVariableIn<T>, RefVariableOut<T>) {
+        new_ref_variable(self.proxy.clone(), value.into())
     }
 
     pub fn mouse_pos(&self) -> Option<Vec2<f32>> {

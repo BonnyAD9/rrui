@@ -8,6 +8,7 @@ use iced_wgpu::{
         Vector,
         alignment::Vertical,
         border::Radius,
+        font::Family,
         renderer::Quad,
         text::{
             Alignment, Hit, LineHeight, Paragraph as ParagraphTrait, Shaping,
@@ -271,4 +272,43 @@ impl From<Wrapping> for crate::TextWrap {
     }
 }
 
-impl crate::Font for Font {}
+impl crate::Font for Font {
+    fn name_static(name: &'static str) -> Self {
+        Self::with_name(name)
+    }
+
+    fn serif() -> Self {
+        Self {
+            family: Family::Serif,
+            ..Self::DEFAULT
+        }
+    }
+
+    fn sans_serif() -> Self {
+        Self {
+            family: Family::SansSerif,
+            ..Self::DEFAULT
+        }
+    }
+
+    fn cursive() -> Self {
+        Self {
+            family: Family::Cursive,
+            ..Self::DEFAULT
+        }
+    }
+
+    fn fantasy() -> Self {
+        Self {
+            family: Family::Fantasy,
+            ..Self::DEFAULT
+        }
+    }
+
+    fn monospace() -> Self {
+        Self {
+            family: Family::Monospace,
+            ..Self::DEFAULT
+        }
+    }
+}

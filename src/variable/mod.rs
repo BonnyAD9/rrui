@@ -30,7 +30,7 @@ pub struct VariableOut<T> {
     value: T,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct VariableIn<T>(Rc<VariableInner<T>>);
 
 struct VariableInner<T> {
@@ -84,6 +84,12 @@ impl<T> VariableIn<T> {
     pub fn set(&self, value: impl Into<T>) {
         self.0.value.set(Some(value.into()));
         self.0.on_change.get().apply(&self.0.proxy);
+    }
+}
+
+impl<T> Clone for VariableIn<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }
 

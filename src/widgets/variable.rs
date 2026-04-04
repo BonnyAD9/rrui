@@ -1,6 +1,13 @@
-use crate::{RefVariableOut, Widget};
+use crate::{Element, RefVariableOut, VariableAction, Widget, WidgetExt};
 
 pub struct Variable<W>(RefVariableOut<W>);
+
+impl<W> Variable<W> {
+    pub fn new(child: RefVariableOut<W>) -> Self {
+        child.on_change(VariableAction::Relayout);
+        Self(child)
+    }
+}
 
 impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme> for Variable<W>
 where
@@ -41,3 +48,15 @@ where
         self.0.borrow_mut().draw(shell, theme, renderer);
     }
 }
+
+impl<W, Rend, Msg, Evt, Theme> From<Variable<W>>
+    for Element<Rend, Msg, Evt, Theme>
+where
+    W: Widget<Rend, Msg, Evt, Theme> + 'static,
+{
+    fn from(value: Variable<W>) -> Self {
+        Self::new(value)
+    }
+}
+
+impl<W> WidgetExt for Variable<W> {}

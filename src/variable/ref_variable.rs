@@ -8,7 +8,7 @@ use crate::{ShellProxy, VariableAction};
 #[derive(Debug)]
 pub struct RefVariableOut<T>(Rc<RefVariableInner<T>>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct RefVariableIn<T>(Rc<RefVariableInner<T>>);
 
 #[derive(Debug)]
@@ -59,5 +59,11 @@ impl<T> RefVariableIn<T> {
         self.0.changed.set(true);
         self.0.on_change.get().apply(&self.0.proxy);
         self.0.value.borrow_mut()
+    }
+}
+
+impl<T> Clone for RefVariableIn<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }
