@@ -21,6 +21,8 @@ These are the currently implemented widgets:
 - `Button`: Clickable container.
 - `Container`: Simple container with relative and absolute padding for its
   child.
+- `Grid`: Layouting widget showing children in absolute or relative sized rows
+  and columns.
 - `Margin`: Simple layouting container that adds absolute padding to its child.
 - `TextBlock`: Widget for displaying text.
 - `Nothing`: The simplest widget. Does nothing, takes no space.
