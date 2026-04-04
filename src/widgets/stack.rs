@@ -62,8 +62,11 @@ impl<W> Stack<W> {
         self.children.extend(children);
         self
     }
-    
-    pub fn spacing(&mut self, spacing: impl Into<RelayoutSlot<f32>>) -> &mut Self {
+
+    pub fn spacing(
+        &mut self,
+        spacing: impl Into<RelayoutSlot<f32>>,
+    ) -> &mut Self {
         self.spacing = spacing.into();
         self
     }

@@ -4,7 +4,7 @@ use rrui::{
     TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container, Stack, TextBlock, TextBlockTheme, Variable},
+    widgets::{Button, Container, Stack, TextBlock, Variable},
 };
 use winit::error::EventLoopError;
 
@@ -47,21 +47,12 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
         &mut self,
         shell: &mut Shell<Self::Message>,
     ) -> Element<R, Self::Message, E, Self::Theme> {
-        let mut text: TextBlock<
-            <Self::Theme as TextBlockTheme>::Style,
-            <R as TextRenderer>::Font,
-            <R as TextRenderer>::LayedText,
-        > = TextBlock::new("A quick brown fox jumped over the lazy dog.");
+        let mut text =
+            TextBlock::new("A quick brown fox jumped over the lazy dog.");
         text.size = Some(Vec2::new(f32::INFINITY, 300.));
         text.align_x = TextAlign::Center;
         let (text_in, text_out) = shell.make_ref_variable(text);
-        let text: Variable<
-            TextBlock<
-                <Self::Theme as TextBlockTheme>::Style,
-                <R as TextRenderer>::Font,
-                <R as TextRenderer>::LayedText,
-            >,
-        > = Variable::new(text_out);
+        let text: Variable<TextBlock<_, R::Font, _>> = Variable::new(text_out);
 
         let db_text = text_in.clone();
         let mut def_but = Button::text("Default");
