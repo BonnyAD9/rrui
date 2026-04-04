@@ -2,7 +2,7 @@ use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
     Direction, Element, LayoutFlags, LayoutParams, RelPos, RelPosSrc,
-    RelayoutSlot, Widget, WidgetExt, event::Event, layout,
+    RelayoutSlot, Widget, WidgetExt, event::Event, layout, update_rel_pos,
 };
 
 #[derive(Debug)]
@@ -180,16 +180,7 @@ impl<W> Stack<W> {
         rel_pos: RelPos,
         rel: Vec2<f32>,
     ) -> RelPos {
-        if let Some(rp) = &mut self.rel_pos {
-            rp.update(rel_pos);
-            rp.move_to(rel);
-            rp.rel_pos()
-        } else {
-            let rp = rel_pos.relate(rel);
-            let res = rp.rel_pos();
-            self.rel_pos = Some(rp);
-            res
-        }
+        update_rel_pos(&mut self.rel_pos, rel_pos, rel)
     }
 }
 

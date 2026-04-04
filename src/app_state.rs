@@ -62,8 +62,19 @@ where
         });
         s.request_redraw();
         self.shell.request_redraw();
-        self.shell.request_relayout();
         self.root = self.app.root(&mut self.shell);
+        self.shell.reset_relayout();
+        let bounds = LayoutBounds::filling(self.shell.window_bounds);
+        self.root.layout(
+            &mut LayoutParams::new(
+                &mut self.shell,
+                self.app.theme(),
+                s.renderer(),
+            ),
+            &bounds,
+            RelPos::new(),
+            LayoutFlags::WIDGET_MODIFIED,
+        );
     }
 
     pub fn message(&mut self, msg: App::Message) {

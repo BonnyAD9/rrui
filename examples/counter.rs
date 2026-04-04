@@ -1,10 +1,10 @@
-use minlin::Vec2;
+use minlin::{Infinity, Vec2};
 use rrui::{
-    Application, Color, Element, QuadRenderer, Shell, TextAlign, TextRenderer,
-    Theme,
+    Application, Color, Element, QuadRenderer, Shell, Size, TextAlign,
+    TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container, Stack, TextBlock},
+    widgets::{Button, Container, Grid, TextBlock},
 };
 use winit::error::EventLoopError;
 
@@ -50,7 +50,7 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
         let (text_in, text_out) = shell.make_variable("You clicked 0 times!");
 
         let mut text = TextBlock::variable(text_out);
-        text.size = Some(Vec2::new(f32::INFINITY, 300.));
+        text.size = Some(Vec2::INFINITY);
         text.align_x = TextAlign::Center;
 
         let mut but = Button::text("Click me!");
@@ -63,10 +63,17 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
             None
         });
 
-        let but = Container::center(but);
+        let mut but = Container::new(but);
+        but.pad_rel([1., 1., 1., 4.]);
 
-        Stack::<Element<_, _, _, _>>::from_top([text.into(), but.into()])
-            .into()
+        let mut grid = Grid::<Element<_, _, _, _>>::new(
+            [],
+            [Size::Relative(1.), Size::Relative(1.)],
+        );
+        grid.add([0, 0], text.into());
+        grid.add([0, 1], but.into());
+
+        grid.into()
     }
 
     fn theme(&self) -> &Self::Theme {

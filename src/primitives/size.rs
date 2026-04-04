@@ -38,3 +38,9 @@ impl Default for Size {
         Self::Absolute(0.)
     }
 }
+
+impl AsRef<Size> for Size {
+    fn as_ref(&self) -> &Size {
+        self
+    }
+}

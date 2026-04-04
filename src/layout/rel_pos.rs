@@ -30,6 +30,23 @@ struct RelPosInner {
     pos: Cell<Option<Vec2<f32>>>,
 }
 
+pub fn update_rel_pos(
+    cur: &mut Option<RelPosSrc>,
+    new: RelPos,
+    rel: Vec2<f32>,
+) -> RelPos {
+    if let Some(rp) = cur {
+        rp.update(new);
+        rp.move_to(rel);
+        rp.rel_pos()
+    } else {
+        let rp = new.relate(rel);
+        let res = rp.rel_pos();
+        *cur = Some(rp);
+        res
+    }
+}
+
 impl RelPos {
     pub fn new() -> Self {
         Self::default()

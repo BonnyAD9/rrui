@@ -96,8 +96,7 @@ where
         let cbounds =
             self.child.layout(lp, &cbounds, rel_pos, flags) - abs_pad;
 
-        let remaining =
-            bounds.size.best_at_least(cbounds.size()) - cbounds.size();
+        let remaining = bounds.size.best_max() - cbounds.size();
         let rel_pad = self.padding.map(|a| a.to_parts().y);
         let pad = Self::resolve_padding(remaining, rel_pad);
 
