@@ -8,8 +8,8 @@ use std::fmt::Debug;
 use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, LayoutBounds, LayoutParams, QuadRenderer, RelPos, RelayoutSlot,
-    Shell, Size, Widget, WidgetExt,
+    Element, LayoutBounds, LayoutFlags, LayoutParams, QuadRenderer, RelPos,
+    RelayoutSlot, Shell, Size, Widget, WidgetExt,
     event::{Event, EventInfo},
 };
 
@@ -85,6 +85,7 @@ where
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &LayoutBounds,
         rel_pos: RelPos,
+        flags: LayoutFlags,
     ) -> Rect<f32> {
         self.rel_pos.update(rel_pos.clone());
 
@@ -92,7 +93,8 @@ where
         let abs_pad = self.padding.map(|a| a.to_parts().x + bw);
 
         let cbounds = bounds.padded(abs_pad);
-        let cbounds = self.child.layout(lp, &cbounds, rel_pos) - abs_pad;
+        let cbounds =
+            self.child.layout(lp, &cbounds, rel_pos, flags) - abs_pad;
 
         let remaining =
             bounds.size.best_at_least(cbounds.size()) - cbounds.size();

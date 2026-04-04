@@ -7,9 +7,9 @@ use std::borrow::Cow;
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    Align, Element, LayedText, LayoutParams, RedrawSlot, RelPos, RelayoutSlot,
-    Size, Text, TextAlign, TextRenderer, TextWrap, Widget, WidgetExt,
-    event::EventInfo,
+    Align, Element, LayedText, LayoutFlags, LayoutParams, RedrawSlot, RelPos,
+    RelayoutSlot, Size, Text, TextAlign, TextRenderer, TextWrap, Widget,
+    WidgetExt, event::EventInfo,
 };
 
 #[derive(Debug)]
@@ -87,9 +87,10 @@ where
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
         rel_pos: RelPos,
+        flags: LayoutFlags,
     ) -> Rect<f32> {
         self.rel_pos.update(rel_pos);
-        if self.text.update() {
+        if self.text.update() || flags.contains(LayoutFlags::WIDGET_MODIFIED) {
             self.layed = None;
         }
 

@@ -1,4 +1,6 @@
-use crate::{Element, RefVariableOut, VariableAction, Widget, WidgetExt};
+use crate::{
+    Element, LayoutFlags, RefVariableOut, VariableAction, Widget, WidgetExt,
+};
 
 pub struct Variable<W>(RefVariableOut<W>);
 
@@ -18,8 +20,12 @@ where
         lp: &mut crate::LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
         pos_base: crate::RelPos,
+        mut flags: LayoutFlags,
     ) -> minlin::Rect<f32> {
-        self.0.borrow_mut().layout(lp, bounds, pos_base)
+        if self.0.update() {
+            flags |= LayoutFlags::WIDGET_MODIFIED;
+        }
+        self.0.borrow_mut().layout(lp, bounds, pos_base, flags)
     }
 
     fn size(&mut self, theme: &Theme) -> minlin::Vec2<f32> {

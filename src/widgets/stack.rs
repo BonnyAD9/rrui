@@ -1,8 +1,8 @@
 use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
-    Direction, Element, LayoutParams, RelPos, RelPosSrc, RelayoutSlot, Widget,
-    WidgetExt, event::Event, layout,
+    Direction, Element, LayoutFlags, LayoutParams, RelPos, RelPosSrc,
+    RelayoutSlot, Widget, WidgetExt, event::Event, layout,
 };
 
 #[derive(Debug)]
@@ -62,6 +62,11 @@ impl<W> Stack<W> {
         self.children.extend(children);
         self
     }
+    
+    pub fn spacing(&mut self, spacing: impl Into<RelayoutSlot<f32>>) -> &mut Self {
+        self.spacing = spacing.into();
+        self
+    }
 }
 
 impl<W> Default for Stack<W> {
@@ -87,6 +92,7 @@ where
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
         rel_pos: RelPos,
+        flags: LayoutFlags,
     ) -> Rect<f32> {
         self.spacing.update();
         self.direction.update();
@@ -102,6 +108,7 @@ where
             lp,
             &rbounds,
             rel_pos,
+            flags,
         );
 
         if self.direction.is_from_end() {

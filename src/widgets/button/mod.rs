@@ -4,8 +4,8 @@ mod button_theme;
 use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
-    Element, LayoutBounds, LayoutParams, QuadRenderer, RedrawSlot, RelPos,
-    TextAlign, Widget, WidgetExt,
+    Element, LayoutBounds, LayoutFlags, LayoutParams, QuadRenderer,
+    RedrawSlot, RelPos, TextAlign, Widget, WidgetExt,
     event::{Event, EventKind, MouseButton, MouseRelation, MouseState},
     widgets::TextBlock,
 };
@@ -110,6 +110,7 @@ where
         lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
         bounds: &crate::LayoutBounds,
         rel_pos: RelPos,
+        flags: LayoutFlags,
     ) -> Rect<f32> {
         self.rel_pos.update(rel_pos.clone());
 
@@ -118,13 +119,13 @@ where
             let mut bounds =
                 LayoutBounds::at_most(self.bounds.pad_rect(self.padding));
             bounds.fill();
-            self.child.layout(lp, &bounds, rel_pos);
+            self.child.layout(lp, &bounds, rel_pos, flags);
             self.bounds
         } else {
             let bounds = bounds.padded(self.padding);
             self.bounds = self
                 .child
-                .layout(lp, &bounds, rel_pos)
+                .layout(lp, &bounds, rel_pos, flags)
                 .extend_rect(self.padding);
             self.bounds
         }

@@ -1,4 +1,5 @@
 mod layout_bounds;
+mod layout_flags;
 mod layout_params;
 mod layout_size;
 mod rel_pos;
@@ -8,7 +9,8 @@ use minlin::{Rect, RectExt};
 use crate::{Direction, Widget};
 
 pub use self::{
-    layout_bounds::*, layout_params::*, layout_size::*, rel_pos::*,
+    layout_bounds::*, layout_flags::*, layout_params::*, layout_size::*,
+    rel_pos::*,
 };
 
 pub fn stack<W, Rend, Msg, Evt, Theme>(
@@ -18,22 +20,23 @@ pub fn stack<W, Rend, Msg, Evt, Theme>(
     lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
+    flags: LayoutFlags,
 ) -> Rect<f32>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
     match direction {
         Direction::Left => {
-            stack_from_left(children, spacing, lp, bounds, rel_pos)
+            stack_from_left(children, spacing, lp, bounds, rel_pos, flags)
         }
         Direction::Top => {
-            stack_from_top(children, spacing, lp, bounds, rel_pos)
+            stack_from_top(children, spacing, lp, bounds, rel_pos, flags)
         }
         Direction::Right => {
-            stack_from_right(children, spacing, lp, bounds, rel_pos)
+            stack_from_right(children, spacing, lp, bounds, rel_pos, flags)
         }
         Direction::Bottom => {
-            stack_from_bottom(children, spacing, lp, bounds, rel_pos)
+            stack_from_bottom(children, spacing, lp, bounds, rel_pos, flags)
         }
     }
 }
@@ -44,6 +47,7 @@ pub fn stack_from_left<W, Rend, Msg, Evt, Theme>(
     lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
+    flags: LayoutFlags,
 ) -> Rect<f32>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
@@ -59,14 +63,14 @@ where
 
     let last = children.len() - 1;
     for child in &mut children[..last] {
-        let cu = child.layout(lp, &remaining, rel_pos.clone());
+        let cu = child.layout(lp, &remaining, rel_pos.clone(), flags);
         let shr = cu.width() + spacing;
         used.set_height(used.height().max(cu.height()));
         remaining.shrink_left(shr);
         used.extend_right(shr);
     }
 
-    let cu = children[last].layout(lp, &remaining, rel_pos);
+    let cu = children[last].layout(lp, &remaining, rel_pos, flags);
     used.set_height(used.height().max(cu.height()));
     remaining.shrink_left(cu.width());
     used.extend_right(cu.width());
@@ -80,6 +84,7 @@ pub fn stack_from_top<W, Rend, Msg, Evt, Theme>(
     lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
+    flags: LayoutFlags,
 ) -> Rect<f32>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
@@ -95,14 +100,14 @@ where
 
     let last = children.len() - 1;
     for child in &mut children[..last] {
-        let cu = child.layout(lp, &remaining, rel_pos.clone());
+        let cu = child.layout(lp, &remaining, rel_pos.clone(), flags);
         let shr = cu.height() + spacing;
         used.set_width(used.width().max(cu.width()));
         remaining.shrink_top(shr);
         used.extend_bot(shr);
     }
 
-    let cu = children[last].layout(lp, &remaining, rel_pos);
+    let cu = children[last].layout(lp, &remaining, rel_pos, flags);
     used.set_width(used.width().max(cu.width()));
     remaining.shrink_top(cu.height());
     used.extend_bot(cu.height());
@@ -116,6 +121,7 @@ pub fn stack_from_right<W, Rend, Msg, Evt, Theme>(
     lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
+    flags: LayoutFlags,
 ) -> Rect<f32>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
@@ -135,7 +141,7 @@ where
 
     let last = children.len() - 1;
     for child in &mut children[..last] {
-        let cu = child.layout(lp, &remaining, rel_pos.clone());
+        let cu = child.layout(lp, &remaining, rel_pos.clone(), flags);
         child.reposition(
             lp.theme,
             (remaining.max_right() - cu.width(), cu.y).into(),
@@ -146,7 +152,7 @@ where
         used.extend_left(shr);
     }
 
-    let cu = children[last].layout(lp, &remaining, rel_pos);
+    let cu = children[last].layout(lp, &remaining, rel_pos, flags);
     children[last].reposition(
         lp.theme,
         (remaining.max_right() - cu.width(), cu.y).into(),
@@ -164,6 +170,7 @@ pub fn stack_from_bottom<W, Rend, Msg, Evt, Theme>(
     lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
+    flags: LayoutFlags,
 ) -> Rect<f32>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
@@ -183,7 +190,7 @@ where
 
     let last = children.len() - 1;
     for child in &mut children[..last] {
-        let cu = child.layout(lp, &remaining, rel_pos.clone());
+        let cu = child.layout(lp, &remaining, rel_pos.clone(), flags);
         child.reposition(
             lp.theme,
             (cu.x, remaining.max_bot() - cu.height()).into(),
@@ -194,7 +201,7 @@ where
         used.extend_top(shr);
     }
 
-    let cu = children[last].layout(lp, &remaining, rel_pos);
+    let cu = children[last].layout(lp, &remaining, rel_pos, flags);
     children[last].reposition(
         lp.theme,
         (cu.x, remaining.max_bot() - cu.height()).into(),

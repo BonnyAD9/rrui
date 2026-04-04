@@ -75,12 +75,13 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
         let mut mono_but = Button::text("Monospace");
         mono_but.size([100., 30.]);
         mono_but.on_press(move |_| {
-            // Text needs to be invalidated. Realise with flag in layout.
             db_text.borrow_mut().font = Some(Font::monospace());
             None
         });
 
-        let buts = Container::center(Stack::from_left([def_but, mono_but]));
+        let mut buts = Stack::from_left([def_but, mono_but]);
+        buts.spacing(6.);
+        let buts = Container::center(buts);
 
         Stack::<Element<_, _, _, _>>::from_top([text.into(), buts.into()])
             .into()

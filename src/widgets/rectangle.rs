@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    Background, Border, Element, LayoutBounds, LayoutParams, QuadRenderer,
-    RedrawSlot, RelPos, RelayoutSlot, Shell, Widget, WidgetExt,
+    Background, Border, Element, LayoutBounds, LayoutFlags, LayoutParams,
+    QuadRenderer, RedrawSlot, RelPos, RelayoutSlot, Shell, Widget, WidgetExt,
     event::EventInfo,
 };
 
@@ -41,6 +41,7 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
         _: &mut LayoutParams<Rend, Msg, Theme>,
         bounds: &LayoutBounds,
         rel_pos: RelPos,
+        _: LayoutFlags,
     ) -> Rect<f32> {
         self.size.update();
 

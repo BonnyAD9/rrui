@@ -3,8 +3,9 @@ use std::{marker::PhantomData, mem};
 use minlin::{MapExt, RectExt};
 
 use crate::{
-    AppCtrl, Configuration, Element, EventLoop, LayoutBounds, LayoutParams,
-    MayInit, RelPos, RenderState, Renderer, Shell, Widget, Window,
+    AppCtrl, Configuration, Element, EventLoop, LayoutBounds, LayoutFlags,
+    LayoutParams, MayInit, RelPos, RenderState, Renderer, Shell, Widget,
+    Window,
     application::Application,
     event::{Event, EventCtrl, EventInfo, EventKind},
     widgets::Nothing,
@@ -163,6 +164,7 @@ where
                 ),
                 &bounds,
                 RelPos::new(),
+                LayoutFlags::default(),
             );
         }
 
