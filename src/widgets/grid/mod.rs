@@ -67,6 +67,26 @@ impl<W> Grid<W> {
         self.ydef.push(height.into());
         self
     }
+    
+    pub fn add_x_rel(&mut self, width: f32) -> &mut Self {
+        self.xdef.push(Size::Relative(width));
+        self
+    }
+
+    pub fn add_y_rel(&mut self, height: f32) -> &mut Self {
+        self.ydef.push(Size::Relative(height));
+        self
+    }
+    
+    pub fn add_x_abs(&mut self, width: f32) -> &mut Self {
+        self.xdef.push(Size::Absolute(width));
+        self
+    }
+
+    pub fn add_y_abs(&mut self, height: f32) -> &mut Self {
+        self.ydef.push(Size::Absolute(height));
+        self
+    }
 
     pub fn add(&mut self, pos: impl Into<GridSpan>, child: W) -> &mut Self {
         self.children.push(GridItem::new(pos, child));
