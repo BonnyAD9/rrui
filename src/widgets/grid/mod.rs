@@ -3,8 +3,8 @@ mod grid_item;
 use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, LayoutBounds, LayoutFlags, RelPosSrc, Size, Widget, WidgetExt,
-    event::Event, layout, update_rel_pos,
+    Element, GridSpan, LayoutBounds, LayoutFlags, RelPosSrc, Size, Widget,
+    WidgetExt, event::Event, layout, update_rel_pos,
 };
 
 pub use self::grid_item::*;
@@ -48,7 +48,7 @@ impl<W> Grid<W> {
         self
     }
 
-    pub fn add(&mut self, pos: impl Into<Vec2>, child: W) -> &mut Self {
+    pub fn add(&mut self, pos: impl Into<GridSpan>, child: W) -> &mut Self {
         self.children.push(GridItem::new(pos, child));
         self
     }
@@ -114,15 +114,16 @@ where
             self.size = Some(Vec2::new(sx, sy));
         }
 
-        let size = self.grid_size();
+        let gbounds = self.grid_bounds();
         for c in &mut self.children {
-            if !size.size_contains(c.pos) {
+            let pos = gbounds.intersect(c.pos);
+            if pos.is_empty() {
                 continue;
             }
-            let tl = Vec2::new(self.xbounds[c.pos.x], self.ybounds[c.pos.y]);
+            let tl = Vec2::new(self.xbounds[pos.x], self.ybounds[pos.y]);
             let br = Vec2::new(
-                self.xbounds[c.pos.x + 1],
-                self.ybounds[c.pos.y + 1],
+                self.xbounds[pos.right()],
+                self.ybounds[pos.bottom()],
             );
             let bounds = LayoutBounds::at_most(tl..br);
             c.widget.layout(lp, &bounds, pos_base.clone(), flags);
@@ -156,9 +157,9 @@ where
         }
 
         // TODO: try only childern in touching grid cells
-        let size = self.grid_size();
+        let gbounds = self.grid_bounds();
         self.children.iter_mut().any(|c| {
-            size.size_contains(c.pos) && c.widget.event(shell, theme, event)
+            gbounds.intersects(&c.pos) && c.widget.event(shell, theme, event)
         })
     }
 
@@ -168,9 +169,9 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
-        let size = self.grid_size();
+        let gbounds = self.grid_bounds();
         for c in &mut self.children {
-            if size.size_contains(c.pos) {
+            if gbounds.intersects(&c.pos) {
                 c.widget.draw(shell, theme, renderer);
             }
         }
@@ -178,8 +179,8 @@ where
 }
 
 impl<W> Grid<W> {
-    fn grid_size(&self) -> Vec2 {
-        Vec2::new(self.xdef.len().max(1), self.ydef.len().max(1))
+    fn grid_bounds(&self) -> Rect {
+        Rect::new(0, 0, self.xdef.len().max(1), self.ydef.len().max(1))
     }
 
     fn update_lay(
