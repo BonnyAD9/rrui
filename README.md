@@ -22,7 +22,10 @@ These are the currently implemented widgets:
 - `Container`: Simple container with relative and absolute padding for its
   child.
 - `Grid`: Layouting widget showing children in absolute or relative sized rows
-  and columns.
+  and columns (basically 2D `Layout`).
+- `Layout`: Layouting widget aligning childern horizontaly or verticaly with
+  absolute or relative sizes and the given spacing. (basically 1D `Grid` +
+  spacing)
 - `Margin`: Simple layouting container that adds absolute padding to its child.
 - `TextBlock`: Widget for displaying text.
 - `Nothing`: The simplest widget. Does nothing, takes no space.

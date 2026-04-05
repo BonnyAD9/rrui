@@ -4,7 +4,7 @@ use rrui::{
     TextRenderer, TextWrap, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{Button, Container, Grid, Stack, TextBlock, Variable},
+    widgets::{Button, Container, Layout, Stack, TextBlock, Variable},
 };
 use winit::error::EventLoopError;
 
@@ -76,11 +76,11 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
         let mut buts = Container::new(buts);
         buts.pad_rel([1., 1., 1., 4.]);
 
-        let mut grid = Grid::<Element<_, _, _, _>>::new_rel([], [1., 1.]);
-        grid.add([0, 0], text.into());
-        grid.add([0, 1], buts.into());
+        let mut align = Layout::<Element<_, _, _, _>>::vertical();
+        align.add_unit(text.into());
+        align.add_unit(buts.into());
 
-        grid.into()
+        align.into()
     }
 
     fn theme(&self) -> &Self::Theme {

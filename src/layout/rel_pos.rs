@@ -47,6 +47,26 @@ pub fn update_rel_pos(
     }
 }
 
+pub fn reposition(cur: &Option<RelPosSrc>, pos: Vec2<f32>) {
+    if let Some(rp) = cur {
+        rp.move_to(pos);
+    }
+}
+
+pub fn reposition_off(
+    cur: &Option<RelPosSrc>,
+    pos: Vec2<f32>,
+    offset: Vec2<f32>,
+) {
+    if let Some(rp) = cur {
+        rp.move_to(pos + offset);
+    }
+}
+
+pub fn get_pos(cur: &mut Option<RelPosSrc>) -> RelPosVal<'_> {
+    cur.as_mut().unwrap().get()
+}
+
 impl RelPos {
     pub fn new() -> Self {
         Self::default()

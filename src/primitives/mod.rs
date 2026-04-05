@@ -4,6 +4,7 @@ mod border;
 mod direction;
 mod grid_span;
 mod layed_text;
+mod orientation;
 mod quad;
 mod radius;
 mod shadow;
@@ -14,6 +15,6 @@ mod text_wrap;
 
 pub use self::{
     align::*, background::*, border::*, direction::*, grid_span::*,
-    layed_text::*, quad::*, radius::*, shadow::*, size::*, text::*,
-    text_align::*, text_wrap::*,
+    layed_text::*, orientation::*, quad::*, radius::*, shadow::*, size::*,
+    text::*, text_align::*, text_wrap::*,
 };

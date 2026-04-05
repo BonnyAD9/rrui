@@ -9,9 +9,9 @@ This folder contains examples for rrui:
 - [fonts.rs](fonts.rs): Buttons to change font of text. Showcases:
     - how to use the widget `Variable` to modify child widgets
     - how set font of a text
-    - layouting with `Container`, `Grid` and `Stack`
+    - layouting with `Container`, `Layout` and `Stack`
 - [fonts2.rs](fonts2.rs): Simmilar to `fonts.rs` but uses `Grid` with spanning
-  text instead of `Stack`.
+  text instead of `Layout` and `Stack`.
 - [no_rrui.rs](no_rrui.rs): This is not really rrui example. It shows how to
   create window and draw to it without using rrui. It served as reference for
   implementing the backend.

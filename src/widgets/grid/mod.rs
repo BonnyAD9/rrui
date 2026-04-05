@@ -4,7 +4,7 @@ use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
     Element, GridSpan, LayoutBounds, LayoutFlags, RelPosSrc, Size, Widget,
-    WidgetExt, event::Event, layout, update_rel_pos,
+    WidgetExt, event::Event, get_pos, layout, update_rel_pos,
 };
 
 pub use self::grid_item::*;
@@ -67,7 +67,7 @@ impl<W> Grid<W> {
         self.ydef.push(height.into());
         self
     }
-    
+
     pub fn add_x_rel(&mut self, width: f32) -> &mut Self {
         self.xdef.push(Size::Relative(width));
         self
@@ -77,7 +77,7 @@ impl<W> Grid<W> {
         self.ydef.push(Size::Relative(height));
         self
     }
-    
+
     pub fn add_x_abs(&mut self, width: f32) -> &mut Self {
         self.xdef.push(Size::Absolute(width));
         self
@@ -124,6 +124,7 @@ where
         self.bounds = bounds.best_max();
         let pos_base =
             update_rel_pos(&mut self.rel_pos, pos_base, self.bounds.pos());
+        self.bounds.set_pos(Vec2::ZERO);
 
         if !flags.contains(LayoutFlags::WIDGET_MODIFIED)
             && let Some(s) = self.size
@@ -188,16 +189,15 @@ where
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
-        {
-            let rp = self.rel_pos.as_mut().unwrap().get();
-            let bounds = rp.position_rect(self.bounds);
-            if !event.is_for(bounds) {
-                return false;
-            }
+        let gbounds = self.grid_bounds();
+
+        let rp = self.rel_pos.as_mut().unwrap().get();
+        let bounds = rp.position_rect(self.bounds);
+        if !event.is_for(bounds) {
+            return false;
         }
 
         // TODO: try only childern in touching grid cells
-        let gbounds = self.grid_bounds();
         self.children.iter_mut().any(|c| {
             gbounds.intersects(&c.pos) && c.widget.event(shell, theme, event)
         })
@@ -210,6 +210,7 @@ where
         renderer: &mut Rend,
     ) {
         let gbounds = self.grid_bounds();
+        let _rp = get_pos(&mut self.rel_pos);
         for c in &mut self.children {
             if gbounds.intersects(&c.pos) {
                 c.widget.draw(shell, theme, renderer);

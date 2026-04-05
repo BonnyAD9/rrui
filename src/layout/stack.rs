@@ -43,8 +43,7 @@ pub fn stack_from_left<W, Rend, Msg, Evt, Theme>(
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
-    let mut used =
-        Rect::from_pos_size(bounds.pos, [0., bounds.size.best_max().y]);
+    let mut used = Rect::from_pos_size(bounds.pos, [0., 0.]);
     if children.is_empty() {
         return used;
     }
@@ -80,8 +79,7 @@ pub fn stack_from_top<W, Rend, Msg, Evt, Theme>(
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
-    let mut used =
-        Rect::from_pos_size(bounds.pos, [bounds.size.best_max().x, 0.]);
+    let mut used = Rect::from_pos_size(bounds.pos, [0., 0.]);
     if children.is_empty() {
         return used;
     }
@@ -117,12 +115,7 @@ pub fn stack_from_right<W, Rend, Msg, Evt, Theme>(
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
-    let mut used = Rect::new(
-        bounds.max_right(),
-        bounds.pos.y,
-        0.,
-        bounds.size.best_max().y,
-    );
+    let mut used = Rect::new(bounds.max_right(), bounds.pos.y, 0., 0.);
     if children.is_empty() {
         return used;
     }
@@ -166,12 +159,7 @@ pub fn stack_from_bottom<W, Rend, Msg, Evt, Theme>(
 where
     W: Widget<Rend, Msg, Evt, Theme>,
 {
-    let mut used = Rect::new(
-        bounds.pos.x,
-        bounds.max_bot(),
-        0.,
-        bounds.size.best_max().y,
-    );
+    let mut used = Rect::new(bounds.pos.x, bounds.max_bot(), 0., 0.);
     if children.is_empty() {
         return used;
     }
