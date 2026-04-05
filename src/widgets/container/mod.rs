@@ -18,6 +18,7 @@ pub struct Container<W, S> {
     pub child: W,
     pub style: RelayoutSlot<S>,
     pub padding: Padding<Size>,
+    pub size: Option<Vec2<f32>>,
     child_offset: Vec2<f32>,
     bounds: Rect<f32>,
     rel_pos: RelPos,
@@ -30,6 +31,7 @@ impl<W, S> Container<W, S> {
             style: style.into(),
             padding: Padding::default(),
             child_offset: Vec2::default(),
+            size: None,
             bounds: Rect::default(),
             rel_pos: RelPos::default(),
         }
@@ -41,6 +43,7 @@ impl<W, S> Container<W, S> {
             style: style.into(),
             padding: Size::Relative(1.).into(),
             child_offset: Vec2::default(),
+            size: None,
             bounds: Rect::default(),
             rel_pos: RelPos::default(),
         }
@@ -58,6 +61,11 @@ impl<W, S> Container<W, S> {
 
     pub fn pad_rel(&mut self, relative: impl Into<Padding<f32>>) -> &mut Self {
         self.padding = relative.into().map(Size::Relative);
+        self
+    }
+
+    pub fn size(&mut self, size: impl Into<Vec2<f32>>) -> &mut Self {
+        self.size = size.into().into();
         self
     }
 }
@@ -92,6 +100,12 @@ where
         let bw = lp.theme.border_width(&self.style);
         let abs_pad = self.padding.map(|a| a.to_parts().x + bw);
 
+        let bounds = if let Some(s) = self.size {
+            LayoutBounds::filling(bounds.clamp(s))
+        } else {
+            *bounds
+        };
+
         let cbounds = bounds.padded(abs_pad);
         let cbounds =
             self.child.layout(lp, &cbounds, rel_pos, flags) - abs_pad;
@@ -108,12 +122,19 @@ where
                 .reposition(lp.theme, self.child_offset + bounds.pos);
         }
 
-        self.bounds =
-            Rect::from_pos_size(cbounds.pos(), cbounds.size() + pad.size());
+        self.bounds = if self.size.is_some() {
+            bounds.best_max()
+        } else {
+            Rect::from_pos_size(cbounds.pos(), cbounds.size() + pad.size())
+        };
         self.bounds
     }
 
     fn size(&mut self, theme: &Theme) -> Vec2<f32> {
+        if let Some(s) = self.size {
+            return s;
+        }
+
         let size = self.padding.size();
         let rel = size.map(|a| a.y != 0.);
 
