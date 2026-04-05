@@ -1,7 +1,7 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Application, Color, Element, QuadRenderer, Shell, Size, TextAlign,
-    TextRenderer, Theme,
+    Application, Color, Element, QuadRenderer, Shell, TextAlign, TextRenderer,
+    Theme,
     config::IcedWgpuWinit,
     event::Event,
     widgets::{Button, Container, Grid, TextBlock},
@@ -66,10 +66,7 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
         let mut but = Container::new(but);
         but.pad_rel([1., 1., 1., 4.]);
 
-        let mut grid = Grid::<Element<_, _, _, _>>::new(
-            [],
-            [Size::Relative(1.), Size::Relative(1.)],
-        );
+        let mut grid = Grid::<Element<_, _, _, _>>::new_rel([], [1., 1.]);
         grid.add([0, 0], text.into());
         grid.add([0, 1], but.into());
 

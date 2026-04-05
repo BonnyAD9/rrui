@@ -38,6 +38,26 @@ impl<W> Grid<W> {
         }
     }
 
+    pub fn new_rel(
+        xdef: impl IntoIterator<Item = f32>,
+        ydef: impl IntoIterator<Item = f32>,
+    ) -> Self {
+        Self::new(
+            xdef.into_iter().map(Size::Relative).collect::<Vec<_>>(),
+            ydef.into_iter().map(Size::Relative).collect::<Vec<_>>(),
+        )
+    }
+
+    pub fn new_abs(
+        xdef: impl IntoIterator<Item = f32>,
+        ydef: impl IntoIterator<Item = f32>,
+    ) -> Self {
+        Self::new(
+            xdef.into_iter().map(Size::Absolute).collect::<Vec<_>>(),
+            ydef.into_iter().map(Size::Absolute).collect::<Vec<_>>(),
+        )
+    }
+
     pub fn add_x(&mut self, width: impl Into<Size>) -> &mut Self {
         self.xdef.push(width.into());
         self
