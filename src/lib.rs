@@ -1,36 +1,30 @@
-mod app_ctrl;
 mod app_state;
 mod application;
 mod configuration;
 mod element;
 pub mod event;
-mod event_loop;
-mod event_loop_proxy;
-mod font;
 pub mod iced_wgpu;
 mod layout;
 mod may_init;
 mod primitives;
-mod render_state;
 mod renderer;
 mod shell;
 mod shell_proxy;
 mod theme;
+mod traits;
 mod variable;
 pub mod wgpu;
 mod widget;
 mod widget_ext;
 pub mod widgets;
-mod window;
 pub mod winit;
 
 use crate::event::Event;
 
 pub use self::{
-    app_ctrl::*, app_state::*, application::*, configuration::*, element::*,
-    event_loop::*, event_loop_proxy::*, font::*, layout::*, may_init::*,
-    primitives::*, render_state::*, renderer::*, shell::*, shell_proxy::*,
-    theme::*, variable::*, widget::*, widget_ext::*, window::*,
+    app_state::*, application::*, configuration::*, element::*, layout::*,
+    may_init::*, primitives::*, renderer::*, shell::*, shell_proxy::*,
+    theme::*, traits::*, variable::*, widget::*, widget_ext::*,
 };
 
 pub type Color = minlin::Rgba<f32>;

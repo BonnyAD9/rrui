@@ -4,11 +4,12 @@ use std::borrow::Cow;
 
 use iced_wgpu::{
     core::{
-        Background, Border, Color, Font, Point, Rectangle, Shadow, Size, Text,
-        Vector,
+        Background, Border, Color, Font, Image, Point, Radians, Rectangle,
+        Shadow, Size, Text, Vector,
         alignment::Vertical,
         border::Radius,
         font::Family,
+        image,
         renderer::Quad,
         text::{
             Alignment, Hit, LineHeight, Paragraph as ParagraphTrait, Shaping,
@@ -33,6 +34,20 @@ fn rect(rect: Rect<f32>) -> Rectangle {
         y: rect.y,
         width: rect.z,
         height: rect.w,
+    }
+}
+
+fn image(
+    handle: &image::Handle,
+    params: &crate::ImageParameters,
+) -> Image<image::Handle> {
+    Image {
+        handle: handle.clone(),
+        filter_method: params.filter.into(),
+        rotation: params.rotation.into(),
+        border_radius: params.border_radius.into(),
+        opacity: params.opacity,
+        snap: params.snap,
     }
 }
 
@@ -310,5 +325,41 @@ impl crate::Font for Font {
             family: Family::Monospace,
             ..Self::DEFAULT
         }
+    }
+}
+
+impl crate::ImageData for image::Handle {
+    fn from_path(path: impl AsRef<std::path::Path>) -> Self {
+        Self::from_path(path.as_ref())
+    }
+
+    fn from_data(data: bytes::Bytes) -> Self {
+        Self::from_bytes(data)
+    }
+
+    fn from_rgba(size: minlin::Vec2<u32>, data: bytes::Bytes) -> Self {
+        Self::from_rgba(size.x, size.y, data)
+    }
+}
+
+impl crate::LoadedImage for image::Allocation {
+    fn size(&self) -> minlin::Vec2<u32> {
+        let s = self.size();
+        minlin::Vec2::new(s.width, s.height)
+    }
+}
+
+impl From<crate::ImageFilter> for image::FilterMethod {
+    fn from(value: crate::ImageFilter) -> Self {
+        match value {
+            crate::ImageFilter::Linear => Self::Linear,
+            crate::ImageFilter::Nearest => Self::Nearest,
+        }
+    }
+}
+
+impl From<crate::Angle> for Radians {
+    fn from(value: crate::Angle) -> Self {
+        Self(value.radians())
     }
 }

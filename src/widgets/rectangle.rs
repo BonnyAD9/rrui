@@ -63,7 +63,8 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
         self.background.update();
         self.border.update();
 
-        renderer.draw_border(self.bounds, *self.border, &*self.background);
+        let bounds = self.rel_pos.position_rect(self.bounds);
+        renderer.draw_border(bounds, *self.border, &*self.background);
     }
 
     fn size(&mut self, _: &Theme) -> Vec2<f32> {

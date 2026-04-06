@@ -1,8 +1,11 @@
 mod align;
+mod angle;
 mod background;
 mod border;
 mod direction;
 mod grid_span;
+mod image_filter;
+mod image_parameters;
 mod layed_text;
 mod orientation;
 mod quad;
@@ -14,7 +17,10 @@ mod text_align;
 mod text_wrap;
 
 pub use self::{
-    align::*, background::*, border::*, direction::*, grid_span::*,
-    layed_text::*, orientation::*, quad::*, radius::*, shadow::*, size::*,
-    text::*, text_align::*, text_wrap::*,
+    align::*, angle::*, background::*, border::*, direction::*, grid_span::*,
+    image_filter::*, image_parameters::*, layed_text::*, orientation::*,
+    quad::*, radius::*, shadow::*, size::*, text::*, text_align::*,
+    text_wrap::*,
 };
+
+pub use bytes::*;

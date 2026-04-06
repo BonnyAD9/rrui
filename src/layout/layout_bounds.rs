@@ -58,6 +58,10 @@ impl LayoutBounds {
         Rect::from_pos_size(self.pos, self.size.best_at_least(v))
     }
 
+    pub fn clamp(&self, size: impl Into<Vec2<f32>>) -> Rect<f32> {
+        Rect::from_pos_size(self.pos, self.size.clamp(size))
+    }
+
     pub fn shrink(&mut self) {
         self.size.shrink();
     }
@@ -72,10 +76,6 @@ impl LayoutBounds {
 
     pub fn filly(&mut self) {
         self.size.filly()
-    }
-
-    pub fn clamp(&self, v: impl Into<Vec2<f32>>) -> Rect<f32> {
-        Rect::from_pos_size(self.pos, self.size.clamp(v))
     }
 
     pub fn filling(bounds: Rect<f32>) -> Self {

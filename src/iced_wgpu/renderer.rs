@@ -2,6 +2,7 @@ use iced_wgpu::{
     Engine,
     core::{
         Border, Color, Font, Point, Rectangle, Renderer as _, Shadow,
+        image::{self, Renderer as _},
         renderer::Quad,
         text::{Paragraph as _, Renderer as _},
     },
@@ -222,5 +223,61 @@ impl crate::ClipRenderer for Renderer {
         let res = f(self);
         self.renderer.end_layer();
         res
+    }
+}
+
+impl crate::ImageRenderer for Renderer {
+    type ImageData = image::Handle;
+    type LoadedImage = image::Allocation;
+    type LoadImageError = image::Error;
+
+    fn load_image(
+        &self,
+        data: &Self::ImageData,
+    ) -> Result<Self::LoadedImage, Self::LoadImageError> {
+        self.renderer.load_image(data)
+    }
+
+    fn image_size(&self, img: &Self::ImageData) -> Vec2<u32> {
+        // TODO: use faster way than load_image
+        self.renderer
+            .measure_image(img)
+            .or_else(|| {
+                self.renderer
+                    .load_image(img)
+                    .inspect_err(|e| eprintln!("{e}"))
+                    .ok()
+                    .map(|a| a.size())
+            })
+            .map(|a| Vec2::new(a.width, a.height))
+            .unwrap_or_default()
+    }
+
+    fn draw_loaded_image_clipped(
+        &mut self,
+        bounds: impl Into<Rect<f32>>,
+        clip_bounds: impl Into<Rect<f32>>,
+        image: &Self::LoadedImage,
+        params: &crate::ImageParameters,
+    ) {
+        self.renderer.draw_image(
+            super::image(image.handle(), params),
+            rect(bounds.into()),
+            rect(clip_bounds.into()),
+        );
+    }
+
+    fn draw_image_clipped(
+        &mut self,
+        bounds: impl Into<Rect<f32>>,
+        clip_bounds: impl Into<Rect<f32>>,
+        data: &Self::ImageData,
+        params: &crate::ImageParameters,
+    ) {
+        self.renderer.draw_image(
+            super::image(data, params),
+            rect(bounds.into()),
+            rect(clip_bounds.into()),
+        );
     }
 }

@@ -1,6 +1,7 @@
 mod button;
 mod container;
 mod grid;
+mod image;
 mod layout;
 mod margin;
 mod nothing;
@@ -10,6 +11,6 @@ mod text_block;
 mod variable;
 
 pub use self::{
-    button::*, container::*, grid::*, layout::*, margin::*, nothing::*,
-    rectangle::*, stack::*, text_block::*, variable::*,
+    button::*, container::*, grid::*, image::*, layout::*, margin::*,
+    nothing::*, rectangle::*, stack::*, text_block::*, variable::*,
 };
