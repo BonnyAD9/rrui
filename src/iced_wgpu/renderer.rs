@@ -9,6 +9,8 @@ use iced_wgpu::{
 };
 use minlin::{MapExt, Rect, Vec2};
 
+use crate::iced_wgpu::rect;
+
 #[derive(Debug)]
 pub struct RendererConfig {
     pub font: Font,
@@ -207,5 +209,18 @@ impl crate::TextRenderer for Renderer {
                 height: s.height,
             },
         );
+    }
+}
+
+impl crate::ClipRenderer for Renderer {
+    fn with_clip<T>(
+        &mut self,
+        bounds: impl Into<Rect<f32>>,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        self.renderer.start_layer(rect(bounds.into()));
+        let res = f(self);
+        self.renderer.end_layer();
+        res
     }
 }
