@@ -28,6 +28,7 @@ These are the currently implemented widgets:
   spacing)
 - `Margin`: Simple layouting container that adds absolute padding to its child.
 - `TextBlock`: Widget for displaying text.
+- `Image`: Widget showing image.
 - `Nothing`: The simplest widget. Does nothing, takes no space.
 - `Rectangle`: Colored rectangle with border.
 - `Stack`: Layouting widget that stacks its children with spacing in one of

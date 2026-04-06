@@ -213,7 +213,7 @@ impl crate::TextRenderer for Renderer {
     }
 }
 
-impl crate::ClipRenderer for Renderer {
+impl crate::LayerRenderer for Renderer {
     fn with_clip<T>(
         &mut self,
         bounds: impl Into<Rect<f32>>,

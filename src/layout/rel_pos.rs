@@ -126,7 +126,8 @@ impl RelPos {
 }
 
 impl<'a> RelPosVal<'a> {
-    pub fn position_rect(&self, mut rect: Rect<f32>) -> Rect<f32> {
+    pub fn position_rect(&self, rect: impl Into<Rect<f32>>) -> Rect<f32> {
+        let mut rect = rect.into();
         rect.move_to(rect.pos() + self.value);
         rect
     }

@@ -1,10 +1,10 @@
-mod clip_renderer;
+mod layer_renderer;
 mod image_renderer;
 mod quad_renderer;
 mod text_renderer;
 
 pub use self::{
-    clip_renderer::*, image_renderer::*, quad_renderer::*, text_renderer::*,
+    layer_renderer::*, image_renderer::*, quad_renderer::*, text_renderer::*,
 };
 
 use minlin::Vec2;

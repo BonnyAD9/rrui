@@ -209,6 +209,7 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
+        // TODO: Allow overlay
         let gbounds = self.grid_bounds();
         let _rp = get_pos(&mut self.rel_pos);
         for c in &mut self.children {

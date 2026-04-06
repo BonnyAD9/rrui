@@ -1,6 +1,6 @@
 use minlin::Rect;
 
-pub trait ClipRenderer {
+pub trait LayerRenderer {
     fn with_clip<T>(
         &mut self,
         bounds: impl Into<Rect<f32>>,

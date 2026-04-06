@@ -4,6 +4,7 @@ mod background;
 mod border;
 mod direction;
 mod grid_span;
+mod image_fill;
 mod image_filter;
 mod image_parameters;
 mod layed_text;
@@ -18,9 +19,9 @@ mod text_wrap;
 
 pub use self::{
     align::*, angle::*, background::*, border::*, direction::*, grid_span::*,
-    image_filter::*, image_parameters::*, layed_text::*, orientation::*,
-    quad::*, radius::*, shadow::*, size::*, text::*, text_align::*,
-    text_wrap::*,
+    image_fill::*, image_filter::*, image_parameters::*, layed_text::*,
+    orientation::*, quad::*, radius::*, shadow::*, size::*, text::*,
+    text_align::*, text_wrap::*,
 };
 
 pub use bytes::*;

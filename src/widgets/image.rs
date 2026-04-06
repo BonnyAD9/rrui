@@ -4,16 +4,19 @@ use bytes::Bytes;
 use minlin::{Infinity, MapExt, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, ImageData, ImageParameters, ImageRenderer, LayoutFlags,
-    RefRedrawSlot, RelPos, Widget, WidgetExt,
+    Angle, Element, ImageData, ImageFill, ImageFilter, ImageParameters,
+    ImageRenderer, LayoutFlags, Radius, RedrawSlot, RelPos, RelayoutSlot,
+    Widget, WidgetExt,
 };
 
 #[derive(Debug)]
 pub struct Image<I> {
     pub image: I,
-    pub params: RefRedrawSlot<ImageParameters>,
+    pub params: RedrawSlot<ImageParameters>,
     pub size: Option<Vec2<f32>>,
+    pub fill: RelayoutSlot<ImageFill>,
     img_size: Option<Vec2<u32>>,
+    ibounds: Rect<f32>,
     rel_pos: RelPos,
     bounds: Rect<f32>,
 }
@@ -22,9 +25,11 @@ impl<I: ImageData> Image<I> {
     pub fn new(image: I) -> Self {
         Self {
             image,
-            params: ImageParameters::default().into(),
+            params: Default::default(),
             size: None,
+            fill: Default::default(),
             img_size: None,
+            ibounds: Rect::default(),
             rel_pos: RelPos::default(),
             bounds: Rect::default(),
         }
@@ -41,6 +46,62 @@ impl<I: ImageData> Image<I> {
     pub fn rgba(size: impl Into<Vec2<u32>>, data: Bytes) -> Self {
         Self::new(I::from_rgba(size.into(), data))
     }
+
+    pub fn size(&mut self, size: impl Into<Vec2<f32>>) -> &mut Self {
+        self.size = Some(size.into());
+        self
+    }
+
+    pub fn set_fill(
+        &mut self,
+        fill: impl Into<RelayoutSlot<ImageFill>>,
+    ) -> &mut Self {
+        self.fill = fill.into();
+        self
+    }
+
+    pub fn fill(&mut self) -> &mut Self {
+        self.fill = ImageFill::fill_center().into();
+        self
+    }
+
+    pub fn fit(&mut self) -> &mut Self {
+        self.fill = ImageFill::fit_center().into();
+        self
+    }
+
+    pub fn params(
+        &mut self,
+        params: impl Into<RedrawSlot<ImageParameters>>,
+    ) -> &mut Self {
+        self.params = params.into();
+        self
+    }
+
+    pub fn filter(&mut self, filter: ImageFilter) -> &mut Self {
+        self.params.filter = filter;
+        self
+    }
+
+    pub fn rotation(&mut self, rotation: Angle) -> &mut Self {
+        self.params.rotation = rotation;
+        self
+    }
+
+    pub fn border_radius(&mut self, radius: impl Into<Radius>) -> &mut Self {
+        self.params.border_radius = radius.into();
+        self
+    }
+
+    pub fn opacity(&mut self, opacity: f32) -> &mut Self {
+        self.params.opacity = opacity;
+        self
+    }
+
+    pub fn snap(&mut self, snap: bool) -> &mut Self {
+        self.params.snap = snap;
+        self
+    }
 }
 
 impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
@@ -56,15 +117,19 @@ where
         flags: crate::LayoutFlags,
     ) -> Rect<f32> {
         self.rel_pos.update(pos_base);
+        self.fill.update();
         if flags.contains(LayoutFlags::WIDGET_MODIFIED) {
             self.img_size = None;
         }
 
+        let img_size = self.img_size(lp.renderer).cast();
         self.bounds = if let Some(s) = self.size {
             bounds.clamp(s)
         } else {
-            bounds.clamp(self.img_size(lp.renderer).cast())
+            bounds.clamp(img_size)
         };
+
+        self.ibounds = self.fill.calculate(self.bounds, img_size);
         self.bounds
     }
 
@@ -92,9 +157,14 @@ where
         renderer: &mut Rend,
     ) {
         self.params.update();
-        let params = self.params.borrow();
         let bounds = self.rel_pos.position_rect(self.bounds);
-        renderer.draw_image(bounds, &self.image, &params);
+        let ibounds = self.rel_pos.position_rect(self.ibounds);
+        renderer.draw_image_clipped(
+            ibounds,
+            bounds,
+            &self.image,
+            &self.params,
+        );
     }
 }
 

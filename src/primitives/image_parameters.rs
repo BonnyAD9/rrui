@@ -1,6 +1,6 @@
 use crate::{Angle, ImageFilter, Radius};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ImageParameters {
     pub filter: ImageFilter,
     pub rotation: Angle,
