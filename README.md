@@ -21,6 +21,9 @@ These are the currently implemented widgets:
 - `Button`: Clickable container.
 - `Container`: Simple container with relative and absolute padding for its
   child.
+- `Debug`: Debbugging widget. Draws border and background of the given child
+  widget. Useful when debugging layouting. Doesn't modify the child behaviour
+  in any way.
 - `Grid`: Layouting widget showing children in absolute or relative sized rows
   and columns (basically 2D `Layout`) and allows children to overlap with given
   z index.
