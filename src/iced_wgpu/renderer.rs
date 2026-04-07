@@ -4,6 +4,7 @@ use iced_wgpu::{
         Border, Color, Font, Point, Rectangle, Renderer as _, Shadow,
         image::{self, Renderer as _},
         renderer::Quad,
+        svg::{self, Renderer as _},
         text::{Paragraph as _, Renderer as _},
     },
     graphics::{Antialiasing, Shell, Viewport, text::Paragraph},
@@ -284,6 +285,29 @@ impl crate::ImageRenderer for Renderer {
     ) {
         self.renderer.draw_image(
             super::image(data, params),
+            rect(bounds.into()),
+            rect(clip_bounds.into()),
+        );
+    }
+}
+
+impl crate::SvgRenderer for Renderer {
+    type SvgData = svg::Handle;
+
+    fn measure_svg(&self, data: &Self::SvgData) -> Vec2<u32> {
+        let s = self.renderer.measure_svg(data);
+        Vec2::new(s.width, s.height)
+    }
+
+    fn draw_svg_clipped(
+        &mut self,
+        bounds: impl Into<Rect<f32>>,
+        clip_bounds: impl Into<Rect<f32>>,
+        data: &Self::SvgData,
+        params: &crate::SvgParameters,
+    ) {
+        self.renderer.draw_svg(
+            super::svg(data, params),
             rect(bounds.into()),
             rect(clip_bounds.into()),
         );

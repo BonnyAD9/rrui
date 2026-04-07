@@ -5,12 +5,13 @@ use std::borrow::Cow;
 use iced_wgpu::{
     core::{
         Background, Border, Color, Font, Image, Point, Radians, Rectangle,
-        Shadow, Size, Text, Vector,
+        Shadow, Size, Svg, Text, Vector,
         alignment::Vertical,
         border::Radius,
         font::Family,
         image,
         renderer::Quad,
+        svg,
         text::{
             Alignment, Hit, LineHeight, Paragraph as ParagraphTrait, Shaping,
             Wrapping,
@@ -48,6 +49,18 @@ fn image(
         border_radius: params.border_radius.into(),
         opacity: params.opacity,
         snap: params.snap,
+    }
+}
+
+fn svg(
+    handle: &svg::Handle,
+    params: &crate::SvgParameters,
+) -> Svg<svg::Handle> {
+    Svg {
+        handle: handle.clone(),
+        color: params.color.map(color),
+        rotation: params.rotation.into(),
+        opacity: params.opacity,
     }
 }
 
@@ -361,5 +374,19 @@ impl From<crate::ImageFilter> for image::FilterMethod {
 impl From<crate::Angle> for Radians {
     fn from(value: crate::Angle) -> Self {
         Self(value.radians())
+    }
+}
+
+impl crate::SvgData for svg::Handle {
+    fn from_path(path: impl AsRef<std::path::Path>) -> Self {
+        Self::from_path(path.as_ref())
+    }
+
+    fn from_memory(data: bytes::Bytes) -> Self {
+        Self::from_memory(data.to_vec())
+    }
+
+    fn from_static(data: impl Into<Cow<'static, [u8]>>) -> Self {
+        Self::from_memory(data)
     }
 }

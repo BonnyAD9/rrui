@@ -16,6 +16,7 @@ This folder contains examples for rrui:
   Showcases:
     - how to use image
     - how to use grid with overlap and spanning
+- [svg.rs](svg.rs): Same as image but with svg.
 - [no_rrui.rs](no_rrui.rs): This is not really rrui example. It shows how to
   create window and draw to it without using rrui. It served as reference for
   implementing the backend.

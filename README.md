@@ -37,3 +37,5 @@ These are the currently implemented widgets:
 - `Rectangle`: Colored rectangle with border.
 - `Stack`: Layouting widget that stacks its children with spacing in one of
   four directions.
+- `Svg`: Widget for displaying svg.
+- `Variable`: Widget that allows remote modifications of child.

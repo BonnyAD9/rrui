@@ -5,9 +5,10 @@ mod font;
 mod image_data;
 mod loaded_image;
 mod render_state;
+mod svg_data;
 mod window;
 
 pub use self::{
     app_ctrl::*, event_loop::*, event_loop_proxy::*, font::*, image_data::*,
-    loaded_image::*, render_state::*, window::*,
+    loaded_image::*, render_state::*, svg_data::*, window::*,
 };
