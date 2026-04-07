@@ -22,7 +22,8 @@ These are the currently implemented widgets:
 - `Container`: Simple container with relative and absolute padding for its
   child.
 - `Grid`: Layouting widget showing children in absolute or relative sized rows
-  and columns (basically 2D `Layout`).
+  and columns (basically 2D `Layout`) and allows children to overlap with given
+  z index.
 - `Layout`: Layouting widget aligning childern horizontaly or verticaly with
   absolute or relative sizes and the given spacing. (basically 1D `Grid` +
   spacing)

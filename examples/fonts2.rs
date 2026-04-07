@@ -1,6 +1,10 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Application, Color, Element, Font, LayerRenderer, QuadRenderer, Shell, TextAlign, TextRenderer, TextWrap, Theme, config::IcedWgpuWinit, event::Event, widgets::{Button, Container, Grid, TextBlock, Variable}
+    Application, Color, Element, Font, LayerRenderer, QuadRenderer, Shell,
+    TextAlign, TextRenderer, TextWrap, Theme,
+    config::IcedWgpuWinit,
+    event::Event,
+    widgets::{Button, Container, Grid, TextBlock, Variable},
 };
 use winit::error::EventLoopError;
 
@@ -26,8 +30,10 @@ impl App {
     }
 }
 
-impl<R, E>
-    Application<R, E> for App where R: QuadRenderer + TextRenderer + LayerRenderer + 'static, E: Event + 'static
+impl<R, E> Application<R, E> for App
+where
+    R: QuadRenderer + TextRenderer + LayerRenderer + 'static,
+    E: Event + 'static,
 {
     type Message = ();
     type Theme = Theme;

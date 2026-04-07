@@ -8,7 +8,7 @@ use iced_wgpu::{
     },
     graphics::{Antialiasing, Shell, Viewport, text::Paragraph},
 };
-use minlin::{MapExt, Rect, Vec2};
+use minlin::{MapExt, Rect, RectExt, Vec2};
 
 use crate::iced_wgpu::rect;
 
@@ -25,6 +25,8 @@ pub struct Renderer {
     renderer: iced_wgpu::Renderer,
     viewport: Viewport,
     clear_color: Option<Color>,
+    cur_clip: Rect<f32>,
+    next_clips: Vec<Rect<f32>>,
 }
 
 impl crate::wgpu::Renderer for Renderer {
@@ -62,6 +64,8 @@ impl crate::wgpu::Renderer for Renderer {
             renderer,
             viewport,
             clear_color,
+            cur_clip: Rect::default(),
+            next_clips: vec![],
         }
     }
 
@@ -75,8 +79,6 @@ impl crate::wgpu::Renderer for Renderer {
             (size.x, size.y).into(),
             self.viewport.scale_factor(),
         );
-        // let size = size.cast::<f32>();
-        // self.renderer.reset(Rectangle::new((0., 0.).into(), (size.x, size.y).into()));
         self.renderer
             .present(self.clear_color, format, view, &self.viewport);
     }
@@ -91,6 +93,8 @@ impl crate::Renderer for Renderer {
             self.viewport.scale_factor(),
         );
         let size = size.cast::<f32>();
+        self.cur_clip = Rect::from_pos_size([0., 0.], size);
+        self.next_clips.clear();
         self.renderer
             .reset(Rectangle::new((0., 0.).into(), (size.x, size.y).into()));
     }
@@ -214,15 +218,19 @@ impl crate::TextRenderer for Renderer {
 }
 
 impl crate::LayerRenderer for Renderer {
-    fn with_clip<T>(
-        &mut self,
-        bounds: impl Into<Rect<f32>>,
-        f: impl FnOnce(&mut Self) -> T,
-    ) -> T {
-        self.renderer.start_layer(rect(bounds.into()));
-        let res = f(self);
+    fn start_layer(&mut self, bounds: impl Into<Rect<f32>>) {
+        self.next_clips.push(self.cur_clip);
+        self.cur_clip = self.cur_clip.intersect(bounds.into());
+        self.renderer.start_layer(rect(self.cur_clip));
+    }
+
+    fn end_layer(&mut self) {
+        self.cur_clip = self.next_clips.pop().unwrap();
         self.renderer.end_layer();
-        res
+    }
+
+    fn clip_bounds(&self) -> Rect<f32> {
+        self.cur_clip
     }
 }
 

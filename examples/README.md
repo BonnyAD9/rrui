@@ -13,6 +13,9 @@ This folder contains examples for rrui:
 - [fonts2.rs](fonts2.rs): Simmilar to `fonts.rs` but uses `Grid` with spanning
   text instead of `Layout` and `Stack`.
 - [image.rs](image.rs): Image inside window with different filling options.
+  Showcases:
+    - how to use image
+    - how to use grid with overlap and spanning
 - [no_rrui.rs](no_rrui.rs): This is not really rrui example. It shows how to
   create window and draw to it without using rrui. It served as reference for
   implementing the backend.

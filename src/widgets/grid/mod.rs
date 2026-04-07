@@ -3,8 +3,8 @@ mod grid_item;
 use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
-    Element, GridSpan, LayoutBounds, LayoutFlags, RelPosSrc, Size, Widget,
-    WidgetExt, event::Event, get_pos, layout, update_rel_pos,
+    Element, GridSpan, LayerRenderer, LayoutBounds, LayoutFlags, RelPosSrc,
+    Size, Widget, WidgetExt, event::Event, get_pos, layout, update_rel_pos,
 };
 
 pub use self::grid_item::*;
@@ -92,6 +92,16 @@ impl<W> Grid<W> {
         self.children.push(GridItem::new(pos, child));
         self
     }
+
+    pub fn add_z(
+        &mut self,
+        z: f32,
+        pos: impl Into<GridSpan>,
+        child: W,
+    ) -> &mut Self {
+        self.children.push(GridItem::new_z(z, pos, child));
+        self
+    }
 }
 
 impl<W> Default for Grid<W> {
@@ -111,6 +121,7 @@ impl<W> Default for Grid<W> {
 
 impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme> for Grid<W>
 where
+    Rend: LayerRenderer,
     W: Widget<Rend, Msg, Evt, Theme>,
     Evt: Event,
 {
@@ -129,6 +140,7 @@ where
         if !flags.contains(LayoutFlags::WIDGET_MODIFIED)
             && let Some(s) = self.size
         {
+            self.children.sort_by(|a, b| a.z.total_cmp(&b.z));
             Self::update_lay(
                 self.bounds.width(),
                 &self.xdef,
@@ -209,13 +221,29 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
-        // TODO: Allow overlay
         let gbounds = self.grid_bounds();
         let _rp = get_pos(&mut self.rel_pos);
+
+        let mut end_on_top = false;
+        let mut last_z = None;
         for c in &mut self.children {
             if gbounds.intersects(&c.pos) {
+                if let Some(z) = last_z
+                    && z != c.z
+                {
+                    if end_on_top {
+                        renderer.end_on_top();
+                    } else {
+                        end_on_top = true;
+                    }
+                    renderer.start_on_top();
+                }
+                last_z = Some(c.z);
                 c.widget.draw(shell, theme, renderer);
             }
+        }
+        if end_on_top {
+            renderer.end_on_top();
         }
     }
 }
@@ -253,6 +281,7 @@ impl<W> Grid<W> {
 impl<W, Rend, Msg, Evt, Theme> From<Grid<W>> for Element<Rend, Msg, Evt, Theme>
 where
     W: Widget<Rend, Msg, Evt, Theme> + 'static,
+    Rend: LayerRenderer,
     Evt: Event,
 {
     fn from(value: Grid<W>) -> Self {

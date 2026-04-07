@@ -1,6 +1,10 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Align, Application, Bytes, Element, ImageFill, ImageRenderer, LayerRenderer, QuadRenderer, Shell, TextRenderer, Theme, VariableIn, config::IcedWgpuWinit, event::Event, widgets::{Button, Container, Grid, Image, Stack}
+    Align, Application, Bytes, Element, ImageFill, ImageRenderer,
+    LayerRenderer, QuadRenderer, Shell, TextRenderer, Theme, VariableIn,
+    config::IcedWgpuWinit,
+    event::Event,
+    widgets::{Button, Container, Grid, Image, Stack},
 };
 use winit::error::EventLoopError;
 
@@ -53,7 +57,7 @@ where
 
         let mut grid =
             Grid::<Element<_, _, _, _>>::new_rel([1., 1., 1.], [1., 1., 1.]);
-        grid.add([0, 0]..[3, 3], img.into());
+        grid.add_z(-1., [0, 0]..[3, 3], img.into());
         grid.add(
             [0, 0],
             align_buttons(fill_in.clone(), [Align::Start, Align::Start]),
@@ -118,7 +122,9 @@ where
         None
     });
 
-    Container::center(Stack::new([but_fill, but_fit])).into()
+    let mut stack = Stack::new([but_fill, but_fit]);
+    stack.spacing(5.);
+    Container::center(stack).into()
 }
 
 fn center_buttons<Rend, Evt>(
@@ -152,5 +158,7 @@ where
         None
     });
 
-    Container::center(Stack::new([but_fill, but_strech, but_fit])).into()
+    let mut stack = Stack::new([but_fill, but_strech, but_fit]);
+    stack.spacing(5.);
+    Container::center(stack).into()
 }
