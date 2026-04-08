@@ -10,6 +10,7 @@ use crate::{
     Border, Color, Element, Quad, QuadRenderer, RelPos, Widget, WidgetExt,
 };
 
+#[derive(Debug)]
 pub struct Debug<W> {
     pub child: W,
     pub draw_after: bool,

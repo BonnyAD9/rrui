@@ -1,28 +1,32 @@
+mod button_event;
 mod button_state;
 mod button_theme;
+mod part_button;
 
 use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
-    Element, LayoutBounds, LayoutFlags, LayoutParams, QuadRenderer,
-    RedrawSlot, RelPos, TextAlign, Widget, WidgetExt,
-    event::{Event, EventKind, MouseButton, MouseRelation, MouseState},
-    widgets::TextBlock,
+    Element, LayoutFlags, LayoutParams, QuadRenderer, RedrawSlot, RelPos,
+    TextAlign, Widget, WidgetExt,
+    event::{Event, MouseButton, MouseState},
+    widgets::{
+        TextBlock,
+        inner::{ButtonEvent, PartButton},
+    },
 };
 
 pub use self::{button_state::*, button_theme::*};
 
-use minlin::{Padding, Rect, RectExt, Vec2};
+pub mod inner {
+    pub use super::{button_event::*, part_button::*};
+}
+
+use minlin::{Padding, Rect, Vec2};
 
 pub struct Button<W, Style, Msg> {
     pub child: W,
-    pub style: RedrawSlot<Style>,
-    pub size: Option<Vec2<f32>>,
-    pub padding: Padding<f32>,
     pub on_press: Box<dyn FnMut(MouseButton) -> Option<Msg>>,
-    pub react: MouseState,
-    bounds: Rect<f32>,
-    state: ButtonState,
+    pub inner: PartButton<Style>,
     rel_pos: RelPos,
 }
 
@@ -30,13 +34,8 @@ impl<W, Style, Msg> Button<W, Style, Msg> {
     pub fn styled(style: Style, child: W) -> Self {
         Self {
             child,
-            style: style.into(),
-            size: None,
-            padding: Padding::uniform(5.),
-            bounds: Rect::default(),
-            state: ButtonState::Normal,
-            react: MouseState::LEFT,
             on_press: Box::new(|_| None),
+            inner: PartButton::styled(style.into()),
             rel_pos: RelPos::default(),
         }
     }
@@ -49,7 +48,12 @@ impl<W, Style, Msg> Button<W, Style, Msg> {
     }
 
     pub fn padding(&mut self, total: impl Into<Padding<f32>>) -> &mut Self {
-        self.padding = total.into();
+        self.inner.padding = total.into();
+        self
+    }
+
+    pub fn style(&mut self, s: impl Into<RedrawSlot<Style>>) -> &mut Self {
+        self.inner.style = s.into();
         self
     }
 
@@ -62,7 +66,12 @@ impl<W, Style, Msg> Button<W, Style, Msg> {
     }
 
     pub fn size(&mut self, size: impl Into<Vec2<f32>>) -> &mut Self {
-        self.size = Some(size.into());
+        self.inner.size = Some(size.into());
+        self
+    }
+
+    pub fn react(&mut self, react: MouseState) -> &mut Self {
+        self.inner.react = react;
         self
     }
 }
@@ -87,12 +96,9 @@ impl<W: Debug, Style: Debug, Msg> Debug for Button<W, Style, Msg> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Button")
             .field("child", &self.child)
-            .field("style", &self.style)
-            .field("size", &self.size)
-            .field("padding", &self.padding)
-            .field("on_press", &"Box<FnMut>")
-            .field("bounds", &self.bounds)
-            .field("state", &self.state)
+            .field("on_press", &"closure")
+            .field("inner", &self.inner)
+            .field("rel_pos", &self.rel_pos)
             .finish()
     }
 }
@@ -113,35 +119,17 @@ where
         flags: LayoutFlags,
     ) -> Rect<f32> {
         self.rel_pos.update(rel_pos.clone());
-
-        if let Some(s) = self.size {
-            self.bounds = bounds.clamp(s);
-            let mut bounds =
-                LayoutBounds::at_most(self.bounds.pad_rect(self.padding));
-            bounds.fill();
-            self.child.layout(lp, &bounds, rel_pos, flags);
-            self.bounds
-        } else {
-            let bounds = bounds.padded(self.padding);
-            self.bounds = self
-                .child
-                .layout(lp, &bounds, rel_pos, flags)
-                .extend_rect(self.padding);
-            self.bounds
-        }
+        self.inner
+            .layout(bounds, |b| self.child.layout(lp, b, rel_pos, flags))
     }
 
     fn size(&mut self, theme: &Theme) -> Vec2<f32> {
-        if let Some(s) = self.size {
-            s
-        } else {
-            self.child.size(theme) + self.padding.size()
-        }
+        self.inner.size(|| self.child.size(theme))
     }
 
     fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>) {
-        self.bounds.set_pos(pos);
-        self.child.reposition(theme, pos + self.padding.offset());
+        self.inner
+            .reposition(pos, |pos| self.child.reposition(theme, pos))
     }
 
     fn event(
@@ -150,40 +138,15 @@ where
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
-        let bounds = self.rel_pos.position_rect(self.bounds);
-
-        let new_state = match event.mouse_relate_to(bounds) {
-            MouseRelation::None | MouseRelation::Elswhere => return false,
-            MouseRelation::Hover
-            | MouseRelation::Move
-            | MouseRelation::Enter => {
-                if shell.mouse_state().intersects(self.react) {
-                    ButtonState::Pressed
-                } else {
-                    ButtonState::Hover
-                }
-            }
-            MouseRelation::Leave => ButtonState::Normal,
-        };
-
-        let handled = match event.get_kind() {
-            EventKind::MousePress(b) if self.react.contains(b.into()) => {
-                shell.msgs((self.on_press)(b));
-                true
-            }
-            EventKind::MouseRelease(b) if self.react.contains(b.into()) => {
-                true
-            }
-            _ => false,
-        };
-
-        if self.state != new_state
-            && theme.is_different(&self.style, self.state, new_state)
-        {
-            shell.request_redraw();
+        let (handled, evt) =
+            self.inner
+                .event(self.rel_pos.get(), shell, theme, event, |s| {
+                    self.child.event(s, theme, event)
+                });
+        match evt {
+            ButtonEvent::Nothing => {}
+            ButtonEvent::Clicked(b) => shell.msgs((self.on_press)(b)),
         }
-
-        self.state = new_state;
         handled
     }
 
@@ -193,13 +156,9 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
-        self.style.update();
-
-        if let Some(a) = theme.appereance(&self.style, self.state) {
-            let bounds = self.rel_pos.position_rect(self.bounds);
-            renderer.draw_border(bounds, a.border, a.background);
-        }
-        self.child.draw(shell, theme, renderer);
+        self.inner.draw(self.rel_pos.get(), theme, renderer, |r| {
+            self.child.draw(shell, theme, r)
+        });
     }
 }
 
