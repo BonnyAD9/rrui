@@ -1,12 +1,10 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Application, Color, Element, LayerRenderer, QuadRenderer, Shell,
-    SvgRenderer, TextAlign, TextRenderer, Theme,
+    Application, Color, Element, QuadRenderer, Shell, SvgRenderer, TextAlign,
+    TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
-    widgets::{
-        Button, Container, Grid, Layout, Scrollbar, ScrollbarState, TextBlock,
-    },
+    widgets::{Layout, Scrollbar, ScrollbarState, TextBlock},
 };
 use winit::error::EventLoopError;
 

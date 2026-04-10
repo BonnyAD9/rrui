@@ -31,6 +31,8 @@ These are the currently implemented widgets:
   absolute or relative sizes and the given spacing. (basically 1D `Grid` +
   spacing)
 - `Margin`: Simple layouting container that adds absolute padding to its child.
+- `Scrollable`: Widget that allows scrolling over child widget.
+- `Scrollbar`: Scrollbar widget.
 - `TextBlock`: Widget for displaying text.
 - `Image`: Widget showing image.
 - `Nothing`: The simplest widget. Does nothing, takes no space.

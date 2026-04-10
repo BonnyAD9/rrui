@@ -1,7 +1,10 @@
-use minlin::Vec2;
+use crate::widgets::{ContainerAppereance, ScrollableStyle, ScrollbarTheme};
 
-pub trait ScrollableTheme {
-    type Style;
+pub trait ScrollableTheme: ScrollbarTheme {
+    type Style: ScrollableStyle;
 
-    fn scrollbar_size(&self, style: &Self::Style) -> Vec2<f32>;
+    fn appereance(
+        &self,
+        style: &<Self as ScrollableTheme>::Style,
+    ) -> Option<ContainerAppereance>;
 }

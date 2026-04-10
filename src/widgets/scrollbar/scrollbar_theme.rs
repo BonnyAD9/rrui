@@ -1,10 +1,10 @@
-use minlin::{Padding, Vec2};
+use minlin::Padding;
 
 use crate::{
     Orientation, SvgData, SvgParameters,
     widgets::{
-        ButtonState, ButtonTheme, ContainerAppereance, ScrollbarSizes,
-        ThumbTheme, TrackTheme, scrollbar::scrollbar_style::ScrollbarStyle,
+        ButtonTheme, ContainerAppereance, ScrollbarSizes, ThumbTheme,
+        TrackTheme, scrollbar::scrollbar_style::ScrollbarStyle,
     },
 };
 

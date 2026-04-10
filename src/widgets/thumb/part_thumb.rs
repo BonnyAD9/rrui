@@ -1,14 +1,9 @@
-use std::ops::{Range, RangeInclusive};
-
-use minlin::{Rect, RectExt, Vec2};
+use minlin::{Rect, Vec2};
 
 use crate::{
     Orientation, QuadRenderer, Shell,
-    event::{Event, EventInfo, EventKind, MouseRelation, MouseState},
-    widgets::{
-        ButtonEvent, ScrollbarTheme, ThumbEvent, ThumbLayout, ThumbState,
-        ThumbTheme,
-    },
+    event::{Event, EventInfo, MouseRelation, MouseState},
+    widgets::{ThumbEvent, ThumbLayout, ThumbState, ThumbTheme},
 };
 
 #[derive(Debug, Clone)]

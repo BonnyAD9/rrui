@@ -1,9 +1,9 @@
-use minlin::{Rect, RectExt, Vec2};
+use minlin::Rect;
 
 use crate::{
     Orientation, QuadRenderer, Shell,
     event::{Event, EventInfo, EventKind, MouseRelation, MouseState},
-    widgets::{PartThumb, TrackEvent, TrackState, TrackTheme},
+    widgets::{TrackEvent, TrackState, TrackTheme},
 };
 
 #[derive(Debug, Clone, Copy)]

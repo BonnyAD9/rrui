@@ -8,8 +8,8 @@ use crate::{
     Background, Border, Color, Orientation, Radius, SvgParameters,
     widgets::{
         ButtonState, ButtonTheme, ContainerAppereance, ContainerTheme,
-        ScrollbarSizes, ScrollbarStyle, ScrollbarTheme, TextBlockTheme,
-        ThumbState, ThumbTheme, TrackTheme,
+        ScrollableStyle, ScrollableTheme, ScrollbarSizes, ScrollbarStyle,
+        ScrollbarTheme, TextBlockTheme, ThumbState, ThumbTheme, TrackTheme,
     },
 };
 
@@ -262,5 +262,22 @@ impl ScrollbarTheme for Theme {
             Svg::from_static(include_bytes!("point_right.svg")),
             SvgParameters::default(),
         )
+    }
+}
+
+impl ScrollableStyle for () {
+    type ScrollbarStyle = ();
+
+    fn scrollbar_style(&self) -> Self::ScrollbarStyle {}
+}
+
+impl ScrollableTheme for Theme {
+    type Style = ();
+
+    fn appereance(
+        &self,
+        _: &<Self as ScrollableTheme>::Style,
+    ) -> Option<ContainerAppereance> {
+        None
     }
 }

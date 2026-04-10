@@ -3,11 +3,10 @@ use minlin::{Rect, RectExt, Vec2};
 use crate::{
     LayoutBounds, Orientation, QuadRenderer, RedrawSlot, Shell, SvgRenderer,
     event::{Event, EventInfo, EventKind, MouseRelation, ScrollDelta},
-    theme,
     widgets::{
         ButtonEvent, ButtonTheme, PartButton, PartThumb, PartTrack,
         ScrollbarEvent, ScrollbarState, ScrollbarTheme, ThumbEvent,
-        ThumbLayout, ThumbState, ThumbTheme, TrackEvent, TrackTheme,
+        ThumbLayout, ThumbTheme, TrackEvent, TrackTheme,
         scrollbar::scrollbar_style::ScrollbarStyle,
     },
 };
@@ -31,6 +30,8 @@ impl<Style> PartScrollbar<Style>
 where
     Style: ScrollbarStyle,
 {
+    pub const SCROLL_LINE_SIZE: f32 = 80.;
+
     pub fn styled(style: Style, orientation: Orientation) -> Self {
         Self {
             line_size: None,
@@ -43,8 +44,12 @@ where
             end_track: PartTrack::new(style.track_style()),
             track_bounds: Rect::default(),
             bounds: Rect::default(),
-            style: style,
+            style,
         }
+    }
+
+    pub fn style(&self) -> &Style {
+        &self.style
     }
 
     pub fn orientation(&self) -> Orientation {
@@ -61,6 +66,28 @@ where
 
     pub fn off_bounds(&self, off: Vec2<f32>) -> Rect<f32> {
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
+    }
+
+    pub fn scroll_event<Msg>(
+        &mut self,
+        delta: ScrollDelta,
+        shell: &mut Shell<Msg>,
+    ) -> bool {
+        match delta {
+            ScrollDelta::Lines(v) => {
+                let v = self.orientation.component(v);
+                let evt = self.scroll_by(
+                    v * self.line_size.unwrap_or(Self::SCROLL_LINE_SIZE),
+                    shell,
+                );
+                matches!(evt, ScrollbarEvent::ScrollTo(_))
+            }
+            ScrollDelta::Pixels(v) => {
+                let evt =
+                    self.scroll_by(self.orientation().component(v), shell);
+                matches!(evt, ScrollbarEvent::ScrollTo(_))
+            }
+        }
     }
 
     fn off_track_bounds(&self, off: Vec2<f32>) -> Rect<f32> {
@@ -187,8 +214,11 @@ where
 
     pub fn reposition(&mut self, pos: Vec2<f32>) {
         let change = pos - self.bounds.pos();
+        self.reposition_by(change);
+    }
 
-        self.bounds.set_pos(pos);
+    pub fn reposition_by(&mut self, change: Vec2<f32>) {
+        self.bounds.set_pos(self.bounds.pos() + change);
         self.track_bounds.set_pos(self.track_bounds.pos() + change);
 
         self.start_button
@@ -222,10 +252,13 @@ where
             MouseRelation::Hover => {
                 if let EventKind::MouseScroll(s) = event.get_kind() {
                     let evt = match s {
-                        ScrollDelta::Lines(v) => {
-                            self.scroll_by(v.y * self.line_size.unwrap_or(20.))
-                        }
-                        ScrollDelta::Pixels(v) => self.scroll_by(v.y),
+                        ScrollDelta::Lines(v) => self.scroll_by(
+                            v.y * self
+                                .line_size
+                                .unwrap_or(Self::SCROLL_LINE_SIZE),
+                            shell,
+                        ),
+                        ScrollDelta::Pixels(v) => self.scroll_by(v.y, shell),
                     };
                     return (true, evt);
                 }
@@ -236,7 +269,7 @@ where
         let tlay = self.thumb_layout(tbounds, theme.min_thumb(&self.style));
         let (handled, evt) = self.thumb.event(&tlay, shell, theme, event);
         if let ThumbEvent::Move(p) = evt {
-            self.move_to_sceen_space_pos(&tlay, p);
+            self.move_to_sceen_space_pos(&tlay, p, shell);
             return (true, ScrollbarEvent::ScrollTo(self.state.pos));
         }
         if handled {
@@ -254,7 +287,10 @@ where
         if let TrackEvent::PressAt(p) = evt {
             let dpos = tlay.size() / 2.;
             self.thumb.start_drag(dpos, shell);
-            return (true, self.move_to_sceen_space_pos(&tlay, p - dpos));
+            return (
+                true,
+                self.move_to_sceen_space_pos(&tlay, p - dpos, shell),
+            );
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -271,7 +307,10 @@ where
         if let TrackEvent::PressAt(p) = evt {
             let dpos = tlay.size() / 2.;
             self.thumb.start_drag(dpos, shell);
-            return (true, self.move_to_sceen_space_pos(&tlay, p - dpos));
+            return (
+                true,
+                self.move_to_sceen_space_pos(&tlay, p - dpos, shell),
+            );
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -280,7 +319,7 @@ where
         let (handled, evt) =
             self.start_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(self.state.view));
+            return (true, self.scroll_by(self.state.view, shell));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -289,7 +328,7 @@ where
         let (handled, evt) =
             self.end_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(-self.state.view));
+            return (true, self.scroll_by(-self.state.view, shell));
         }
 
         (handled, ScrollbarEvent::Nothing)
@@ -391,16 +430,18 @@ where
         }
     }
 
-    fn move_to_sceen_space_pos(
+    fn move_to_sceen_space_pos<Msg>(
         &mut self,
         tlay: &ThumbLayout,
         mut p: f32,
+        shell: &mut Shell<Msg>,
     ) -> ScrollbarEvent {
         p = p.clamp(tlay.range.start, tlay.range.end);
         let rel = (p - tlay.range.start) / (tlay.range.end - tlay.range.start);
 
         let new_pos = self.state.from_rel(rel);
         let evt = if new_pos != self.state.pos {
+            shell.request_redraw();
             ScrollbarEvent::ScrollTo(new_pos)
         } else {
             ScrollbarEvent::Nothing
@@ -409,13 +450,18 @@ where
         evt
     }
 
-    pub fn scroll_by(&mut self, amt: f32) -> ScrollbarEvent {
+    pub fn scroll_by<Msg>(
+        &mut self,
+        amt: f32,
+        shell: &mut Shell<Msg>,
+    ) -> ScrollbarEvent {
         let abs_pos = (self.state.pos - amt)
             .min(self.state.len - self.state.view)
             .max(0.);
         if abs_pos == self.state.pos {
             return ScrollbarEvent::Nothing;
         }
+        shell.request_redraw();
         self.state.pos = abs_pos;
         ScrollbarEvent::ScrollTo(self.state.pos)
     }

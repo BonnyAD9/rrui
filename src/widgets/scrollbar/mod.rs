@@ -7,9 +7,7 @@ mod scrollbar_theme;
 
 use crate::{
     Element, Orientation, QuadRenderer, RedrawSlot, RelPos, SvgRenderer,
-    Widget, WidgetExt,
-    event::Event,
-    widgets::{ThumbTheme, TrackTheme},
+    Widget, WidgetExt, event::Event,
 };
 
 pub use self::{
