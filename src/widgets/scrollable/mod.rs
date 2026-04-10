@@ -350,7 +350,10 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
     where
         Theme: ScrollbarTheme<Style = Style::ScrollbarStyle>,
     {
-        let siz = self.scroll.as_ref().map(|a| theme.sizes(a.style()).size);
+        let siz = self
+            .scroll
+            .as_ref()
+            .map(|a| theme.sizes(a.style(), a.orientation()).size);
         Vec2::ZERO.combine(siz, self.enabled()).swapped()
     }
 }

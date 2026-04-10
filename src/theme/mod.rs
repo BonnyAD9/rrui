@@ -144,12 +144,12 @@ impl ThumbTheme for Theme {
         match state {
             ThumbState::Normal => Some(ContainerAppereance {
                 border: Border::round(5.),
-                background: self.accent.rgb_mul(0.3).into(),
+                background: self.accent.rgb_mul(0.4).into(),
             }),
             ThumbState::Hover | ThumbState::Dragging(_) => {
                 Some(ContainerAppereance {
                     border: Border::round(5.),
-                    background: self.accent.rgb_mul(0.7).into(),
+                    background: self.accent.rgb_mul(0.6).into(),
                 })
             }
         }
@@ -170,8 +170,8 @@ impl ThumbTheme for Theme {
         orientation: Orientation,
     ) -> minlin::Padding<f32> {
         match orientation {
-            Orientation::Horizontal => Padding::vertical(5.),
-            Orientation::Vertical => Padding::horizontal(5.),
+            Orientation::Horizontal => Padding::new(0., 7., 0., 5.),
+            Orientation::Vertical => Padding::new(7., 0., 5., 0.),
         }
     }
 }
@@ -196,11 +196,15 @@ impl ScrollbarTheme for Theme {
     fn sizes(
         &self,
         _: &<Self as ScrollbarTheme>::Style,
+        orientation: Orientation,
     ) -> crate::widgets::ScrollbarSizes {
         ScrollbarSizes {
             size: 20.,
             button: 20.,
-            button_padding: Padding::uniform(0.),
+            button_padding: match orientation {
+                Orientation::Horizontal => Padding::new(0., 1., 0., 0.),
+                Orientation::Vertical => Padding::new(1., 0., 0., 0.),
+            },
         }
     }
 
@@ -213,15 +217,21 @@ impl ScrollbarTheme for Theme {
         _: &<Self as ScrollbarTheme>::Style,
         _: Orientation,
     ) -> Option<ContainerAppereance> {
-        None
+        Some(ContainerAppereance {
+            border: Border::none(),
+            background: self.border.color.into(),
+        })
     }
 
     fn padding(
         &self,
         _: &<Self as ScrollbarTheme>::Style,
-        _: Orientation,
+        orientation: Orientation,
     ) -> minlin::Padding<f32> {
-        Padding::uniform(0.)
+        match orientation {
+            Orientation::Horizontal => Padding::new(0., 0., 0., 19.),
+            Orientation::Vertical => Padding::new(0., 0., 19., 0.),
+        }
     }
 
     fn top_button<Svg: crate::SvgData>(
@@ -230,7 +240,7 @@ impl ScrollbarTheme for Theme {
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_up.svg")),
-            SvgParameters::default(),
+            SvgParameters::colored(self.fg),
         )
     }
 
@@ -240,7 +250,7 @@ impl ScrollbarTheme for Theme {
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_down.svg")),
-            SvgParameters::default(),
+            SvgParameters::colored(self.fg),
         )
     }
 
@@ -250,7 +260,7 @@ impl ScrollbarTheme for Theme {
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_left.svg")),
-            SvgParameters::default(),
+            SvgParameters::colored(self.fg),
         )
     }
 
@@ -260,7 +270,7 @@ impl ScrollbarTheme for Theme {
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_right.svg")),
-            SvgParameters::default(),
+            SvgParameters::colored(self.fg),
         )
     }
 }

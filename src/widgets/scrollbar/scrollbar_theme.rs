@@ -15,8 +15,11 @@ pub trait ScrollbarTheme: ButtonTheme + ThumbTheme + TrackTheme {
             ThumbStyle = <Self as ThumbTheme>::Style,
         >;
 
-    fn sizes(&self, style: &<Self as ScrollbarTheme>::Style)
-    -> ScrollbarSizes;
+    fn sizes(
+        &self,
+        style: &<Self as ScrollbarTheme>::Style,
+        orientation: Orientation,
+    ) -> ScrollbarSizes;
 
     fn min_thumb(&self, style: &<Self as ScrollbarTheme>::Style) -> f32;
 

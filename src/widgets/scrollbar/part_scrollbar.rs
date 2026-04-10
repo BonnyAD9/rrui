@@ -119,7 +119,7 @@ where
     where
         Theme: ScrollbarTheme<Style = Style>,
     {
-        let sizes = theme.sizes(&self.style);
+        let sizes = theme.sizes(&self.style, self.orientation);
         let w = sizes.size;
         let h = bounds.size.best_max().y;
         self.bounds = bounds.clamp([w, h]);
@@ -164,7 +164,7 @@ where
     where
         Theme: ScrollbarTheme<Style = Style>,
     {
-        let sizes = theme.sizes(&self.style);
+        let sizes = theme.sizes(&self.style, self.orientation);
         let h = sizes.size;
         let w = bounds.size.best_max().x;
         self.bounds = bounds.clamp([w, h]);
@@ -205,7 +205,7 @@ where
     where
         Theme: ScrollbarTheme<Style = Style>,
     {
-        let s = theme.sizes(&self.style).size;
+        let s = theme.sizes(&self.style, self.orientation).size;
         match self.orientation {
             Orientation::Horizontal => Vec2::new(f32::INFINITY, s),
             Orientation::Vertical => Vec2::new(s, f32::INFINITY),
