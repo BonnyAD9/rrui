@@ -17,4 +17,8 @@ impl ScrollbarState {
     pub fn from_rel(&self, rel: f32) -> f32 {
         rel * (self.len - self.view)
     }
+
+    pub fn elen(&self) -> f32 {
+        (self.len - self.view).max(0.)
+    }
 }

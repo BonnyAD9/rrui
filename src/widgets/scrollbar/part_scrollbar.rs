@@ -107,6 +107,7 @@ where
         Theme: ScrollbarTheme<Style = Style>,
         Theme: ButtonTheme<Style = Style::ButtonStyle>,
     {
+        self.state.pos = self.state.pos.clamp(0., self.state.elen());
         let res = match self.orientation {
             Orientation::Horizontal => self.layout_horizontal(theme, bounds),
             Orientation::Vertical => self.layout_vertical(theme, bounds),
@@ -425,8 +426,8 @@ where
     fn thumb_layout(&self, tb: Rect<f32>, min_size: f32) -> ThumbLayout {
         match self.orientation {
             Orientation::Horizontal => {
-                let w = min_size
-                    .max(self.state.view / self.state.len * tb.width());
+                let w = (self.state.view / self.state.len * tb.width())
+                    .clamp(min_size, tb.width());
                 let tw = tb.width() - w;
                 let x = self.state.rel_pos() * tw;
                 ThumbLayout {
@@ -436,8 +437,8 @@ where
                 }
             }
             Orientation::Vertical => {
-                let h = min_size
-                    .max(self.state.view / self.state.len * tb.height());
+                let h = (self.state.view / self.state.len * tb.height())
+                    .clamp(min_size, tb.height());
                 let th = tb.height() - h;
                 let y = self.state.rel_pos() * th;
                 ThumbLayout {
@@ -459,8 +460,13 @@ where
     where
         Theme: ButtonTheme<Style = Style::ButtonStyle>,
     {
-        p = p.clamp(tlay.range.start, tlay.range.end);
-        let rel = (p - tlay.range.start) / (tlay.range.end - tlay.range.start);
+        let tlen = tlay.range.end - tlay.range.start;
+        let rel = if tlen <= 0. {
+            0.
+        } else {
+            p = p.clamp(tlay.range.start, tlay.range.end);
+            (p - tlay.range.start) / (tlay.range.end - tlay.range.start)
+        };
 
         self.start_button
             .set_disable(p == tlay.range.start, theme, shell);
