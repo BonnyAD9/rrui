@@ -68,31 +68,23 @@ where
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
     }
 
-    pub fn scroll_event<Msg, Theme>(
+    pub fn scroll_event<Msg>(
         &mut self,
         delta: ScrollDelta,
         shell: &mut Shell<Msg>,
-        theme: &Theme,
-    ) -> bool
-    where
-        Theme: ButtonTheme<Style = Style::ButtonStyle>,
-    {
+    ) -> bool {
         match delta {
             ScrollDelta::Lines(v) => {
                 let v = self.orientation.component(v);
                 let evt = self.scroll_by(
                     v * self.line_size.unwrap_or(Self::SCROLL_LINE_SIZE),
                     shell,
-                    theme,
                 );
                 matches!(evt, ScrollbarEvent::ScrollTo(_))
             }
             ScrollDelta::Pixels(v) => {
-                let evt = self.scroll_by(
-                    self.orientation().component(v),
-                    shell,
-                    theme,
-                );
+                let evt =
+                    self.scroll_by(self.orientation().component(v), shell);
                 matches!(evt, ScrollbarEvent::ScrollTo(_))
             }
         }
@@ -273,11 +265,8 @@ where
                                 .line_size
                                 .unwrap_or(Self::SCROLL_LINE_SIZE),
                             shell,
-                            theme,
                         ),
-                        ScrollDelta::Pixels(v) => {
-                            self.scroll_by(v.y, shell, theme)
-                        }
+                        ScrollDelta::Pixels(v) => self.scroll_by(v.y, shell),
                     };
                     (None, (true, evt))
                 } else {
@@ -349,7 +338,7 @@ where
         let (handled, evt) =
             self.start_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(self.state.view, shell, theme));
+            return (true, self.scroll_by(self.state.view, shell));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -358,7 +347,7 @@ where
         let (handled, evt) =
             self.end_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(-self.state.view, shell, theme));
+            return (true, self.scroll_by(-self.state.view, shell));
         }
 
         (handled || late_event.0, late_event.1)
@@ -489,26 +478,21 @@ where
         evt
     }
 
-    pub fn scroll_by<Msg, Theme>(
+    pub fn scroll_by<Msg>(
         &mut self,
         amt: f32,
         shell: &mut Shell<Msg>,
-        theme: &Theme,
-    ) -> ScrollbarEvent
-    where
-        Theme: ButtonTheme<Style = Style::ButtonStyle>,
-    {
+    ) -> ScrollbarEvent {
         let end = self.state.len - self.state.view;
         let abs_pos = (self.state.pos - amt).min(end).max(0.);
         if abs_pos == self.state.pos {
             return ScrollbarEvent::Nothing;
         }
         shell.request_redraw();
-        self.start_button
-            .set_disable(self.state.pos == 0., theme, shell);
-        self.end_button
-            .set_disable(self.state.pos == end, theme, shell);
         self.state.pos = abs_pos;
+        self.start_button
+            .set_disable_no_redraw(self.state.pos == 0.);
+        self.end_button.set_disable_no_redraw(self.state.pos == end);
         ScrollbarEvent::ScrollTo(self.state.pos)
     }
 }

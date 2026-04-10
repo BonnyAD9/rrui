@@ -140,9 +140,8 @@ where
     W: Widget<Rend, Msg, Evt, Theme>,
     Theme: ScrollableTheme,
     <Theme as ScrollableTheme>::Style: ScrollableStyle,
-    Theme: ScrollbarTheme<Style =
-        <<Theme as ScrollableTheme>::Style as ScrollableStyle>::ScrollbarStyle
-    >,
+    Theme: ScrollbarTheme<Style = <<Theme as ScrollableTheme>::Style
+        as ScrollableStyle>::ScrollbarStyle>,
     Theme: ThumbTheme<Style = <<<Theme as ScrollableTheme>::Style
         as ScrollableStyle>::ScrollbarStyle as ScrollbarStyle>::ThumbStyle>,
     Theme: TrackTheme<Style = <<<Theme as ScrollableTheme>::Style
@@ -162,7 +161,7 @@ where
         self.rel_pos.update(pos_base.clone());
         self.bounds = bounds.best_max();
 
-        let enabled = self.behaviour.map(|a| a.enabled());
+        let enabled = self.enabled();
         let scroll_sizes = self.scroll_sizes(lp.theme);
         let size = (self.bounds.size() - scroll_sizes.swapped())
             .combine(Vec2::INFINITY, enabled);
@@ -290,10 +289,10 @@ where
                     }
                     let mut change = false;
                     if self.behaviour.x.enabled() {
-                        change |= self.scroll.x.scroll_event(s, shell, theme);
+                        change |= self.scroll.x.scroll_event(s, shell);
                     }
                     if self.behaviour.y.enabled() {
-                        change |= self.scroll.y.scroll_event(s, shell, theme);
+                        change |= self.scroll.y.scroll_event(s, shell);
                     }
                     if change {
                         let pos = self.abs_pos();
@@ -348,6 +347,10 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
         self.behaviour.map(|a| a.enabled())
     }
 
+    fn visible(&self) -> Vec2<bool> {
+        self.behaviour.map(|a| a.visible())
+    }
+
     fn scroll_sizes<Theme>(&self, theme: &Theme) -> Vec2<f32>
     where
         Theme: ScrollbarTheme<Style = Style::ScrollbarStyle>,
@@ -356,7 +359,7 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
             .scroll
             .as_ref()
             .map(|a| theme.sizes(a.style(), a.orientation()).size);
-        Vec2::ZERO.combine(siz, self.enabled()).swapped()
+        Vec2::ZERO.combine(siz, self.visible()).swapped()
     }
 }
 

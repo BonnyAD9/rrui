@@ -54,7 +54,8 @@ where
         img.set_fill(ImageFill::fill_center());
         img.size = Some(Vec2::new(2000., 2000.));
 
-        let scrollable = Scrollable::both(img);
+        let mut scrollable = Scrollable::both(img);
+        scrollable.behaviour.x = rrui::widgets::ScrollbarBehaviour::Hidden;
         scrollable.into()
     }
 
