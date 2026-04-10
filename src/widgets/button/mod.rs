@@ -9,17 +9,12 @@ use crate::{
     Element, LayoutFlags, LayoutParams, QuadRenderer, RedrawSlot, RelPos,
     TextAlign, Widget, WidgetExt,
     event::{Event, MouseButton, MouseState},
-    widgets::{
-        TextBlock,
-        inner::{ButtonEvent, PartButton},
-    },
+    widgets::TextBlock,
 };
 
-pub use self::{button_state::*, button_theme::*};
-
-pub mod inner {
-    pub use super::{button_event::*, part_button::*};
-}
+pub use self::{
+    button_event::*, button_state::*, button_theme::*, part_button::*,
+};
 
 use minlin::{Padding, Rect, Vec2};
 

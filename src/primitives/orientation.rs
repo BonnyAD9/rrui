@@ -14,4 +14,12 @@ impl Orientation {
             Orientation::Vertical => v.y,
         }
     }
+
+    pub fn other_component<T>(&self, v: impl Into<Vec2<T>>) -> T {
+        let v = v.into();
+        match self {
+            Orientation::Horizontal => v.y,
+            Orientation::Vertical => v.x,
+        }
+    }
 }

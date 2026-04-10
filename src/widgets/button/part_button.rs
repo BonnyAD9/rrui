@@ -3,7 +3,7 @@ use minlin::{Padding, Rect, RectExt, Vec2};
 use crate::{
     LayoutBounds, QuadRenderer, RedrawSlot, Shell,
     event::{Event, EventInfo, EventKind, MouseRelation, MouseState},
-    widgets::{ButtonState, ButtonTheme, inner::ButtonEvent},
+    widgets::{ButtonEvent, ButtonState, ButtonTheme},
 };
 
 #[derive(Debug)]
@@ -28,6 +28,14 @@ impl<Style> PartButton<Style> {
         }
     }
 
+    pub fn bounds(&self) -> Rect<f32> {
+        self.bounds
+    }
+
+    pub fn off_bounds(&self, off: Vec2<f32>) -> Rect<f32> {
+        Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
+    }
+
     pub fn layout(
         &mut self,
         bounds: &LayoutBounds,
@@ -44,6 +52,10 @@ impl<Style> PartButton<Style> {
             self.bounds = layout_child(&bounds).extend_rect(self.padding);
         }
         self.bounds
+    }
+
+    pub fn layout_direct(&mut self, bounds: Rect<f32>) {
+        self.bounds = bounds;
     }
 
     pub fn size(&self, child_size: impl FnOnce() -> Vec2<f32>) -> Vec2<f32> {
@@ -63,6 +75,10 @@ impl<Style> PartButton<Style> {
         reposition_child(pos + self.padding.offset());
     }
 
+    pub fn reposition_direct(&mut self, pos: Vec2<f32>) {
+        self.bounds.set_pos(pos);
+    }
+
     pub fn event<Msg, Evt, Theme>(
         &mut self,
         off: Vec2<f32>,
@@ -75,8 +91,26 @@ impl<Style> PartButton<Style> {
         Evt: Event,
         Theme: ButtonTheme<Style = Style>,
     {
-        let bounds =
-            Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size());
+        let mut res = self.event_direct(off, shell, theme, event);
+
+        if !res.0 {
+            res.0 = child_event(shell);
+        }
+        res
+    }
+
+    pub fn event_direct<Msg, Evt, Theme>(
+        &mut self,
+        off: Vec2<f32>,
+        shell: &mut Shell<Msg>,
+        theme: &Theme,
+        event: &EventInfo<Evt>,
+    ) -> (bool, ButtonEvent)
+    where
+        Evt: Event,
+        Theme: ButtonTheme<Style = Style>,
+    {
+        let bounds = self.off_bounds(off);
 
         let new_state = match event.mouse_relate_to(bounds) {
             MouseRelation::None | MouseRelation::Elswhere => {
@@ -94,7 +128,7 @@ impl<Style> PartButton<Style> {
             MouseRelation::Leave => ButtonState::Normal,
         };
 
-        let mut res = match event.get_kind() {
+        let res = match event.get_kind() {
             EventKind::MousePress(b) if self.react.contains(b.into()) => {
                 (true, ButtonEvent::Clicked(b))
             }
@@ -111,9 +145,6 @@ impl<Style> PartButton<Style> {
         }
         self.state = new_state;
 
-        if !res.0 {
-            res.0 = child_event(shell);
-        }
         res
     }
 
@@ -127,14 +158,23 @@ impl<Style> PartButton<Style> {
         Rend: QuadRenderer,
         Theme: ButtonTheme<Style = Style>,
     {
+        self.draw_direct(off, theme, renderer);
+        draw_child(renderer);
+    }
+
+    pub fn draw_direct<Rend, Theme>(
+        &mut self,
+        off: Vec2<f32>,
+        theme: &Theme,
+        renderer: &mut Rend,
+    ) where
+        Rend: QuadRenderer,
+        Theme: ButtonTheme<Style = Style>,
+    {
         self.style.update();
         if let Some(a) = theme.appereance(&self.style, self.state) {
-            let bounds = Rect::from_pos_size(
-                self.bounds.pos() + off,
-                self.bounds.size(),
-            );
+            let bounds = self.off_bounds(off);
             renderer.draw_border(bounds, a.border, a.background);
         }
-        draw_child(renderer);
     }
 }
