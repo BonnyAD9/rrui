@@ -3,8 +3,8 @@ use minlin::Padding;
 use crate::{
     Orientation, SvgData, SvgParameters,
     widgets::{
-        ButtonTheme, ContainerAppereance, ScrollbarSizes, ThumbTheme,
-        TrackTheme, scrollbar::scrollbar_style::ScrollbarStyle,
+        ButtonState, ButtonTheme, ContainerAppereance, ScrollbarSizes,
+        ThumbTheme, TrackTheme, scrollbar::scrollbar_style::ScrollbarStyle,
     },
 };
 
@@ -38,20 +38,24 @@ pub trait ScrollbarTheme: ButtonTheme + ThumbTheme + TrackTheme {
     fn top_button<Svg: SvgData>(
         &self,
         style: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, SvgParameters);
 
     fn bottom_button<Svg: SvgData>(
         &self,
         style: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, SvgParameters);
 
     fn left_button<Svg: SvgData>(
         &self,
         style: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, SvgParameters);
 
     fn right_button<Svg: SvgData>(
         &self,
         style: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, SvgParameters);
 }

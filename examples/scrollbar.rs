@@ -56,9 +56,9 @@ where
         text.align_x = TextAlign::Center;
 
         let mut scrollbar = Scrollbar::vertical();
-        scrollbar.configure(ScrollbarState::new(110., 10., 0.));
+        scrollbar.configure(ScrollbarState::new(1100., 100., 0.));
         scrollbar.on_scroll(move |pos| {
-            text_in.set(format!("{pos:.0} / 100"));
+            text_in.set(format!("{:.0} / 100", pos / 10.));
             None
         });
 

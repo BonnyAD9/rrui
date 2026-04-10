@@ -190,7 +190,8 @@ where
                 self.bounds.width() - cor.x,
                 scroll_sizes.y
             );
-            self.scroll.x.layout(lp.theme, &LayoutBounds::exact(bounds));
+            self.scroll.x
+                .layout(lp.theme, lp.shell, &LayoutBounds::exact(bounds));
             self.scroll.x.state.view = self.vbounds.width();
             self.scroll.x.state.len = cbounds.width();
         }
@@ -201,7 +202,8 @@ where
                 scroll_sizes.x,
                 self.bounds.height() - cor.y
             );
-            self.scroll.y.layout(lp.theme, &LayoutBounds::exact(bounds));
+            self.scroll.y
+                .layout(lp.theme, lp.shell, &LayoutBounds::exact(bounds));
             self.scroll.y.state.view = self.vbounds.height();
             self.scroll.y.state.len = cbounds.height();
         }
@@ -288,10 +290,10 @@ where
                     }
                     let mut change = false;
                     if self.behaviour.x.enabled() {
-                        change |= self.scroll.x.scroll_event(s, shell);
+                        change |= self.scroll.x.scroll_event(s, shell, theme);
                     }
                     if self.behaviour.y.enabled() {
-                        change |= self.scroll.y.scroll_event(s, shell);
+                        change |= self.scroll.y.scroll_event(s, shell, theme);
                     }
                     if change {
                         let pos = self.abs_pos();

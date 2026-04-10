@@ -4,4 +4,11 @@ pub enum ButtonState {
     Normal,
     Hover,
     Pressed,
+    Disabled,
+}
+
+impl ButtonState {
+    pub fn is_disabled(&self) -> bool {
+        *self == ButtonState::Disabled
+    }
 }

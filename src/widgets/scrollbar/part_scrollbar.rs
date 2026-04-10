@@ -68,23 +68,31 @@ where
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
     }
 
-    pub fn scroll_event<Msg>(
+    pub fn scroll_event<Msg, Theme>(
         &mut self,
         delta: ScrollDelta,
         shell: &mut Shell<Msg>,
-    ) -> bool {
+        theme: &Theme,
+    ) -> bool
+    where
+        Theme: ButtonTheme<Style = Style::ButtonStyle>,
+    {
         match delta {
             ScrollDelta::Lines(v) => {
                 let v = self.orientation.component(v);
                 let evt = self.scroll_by(
                     v * self.line_size.unwrap_or(Self::SCROLL_LINE_SIZE),
                     shell,
+                    theme,
                 );
                 matches!(evt, ScrollbarEvent::ScrollTo(_))
             }
             ScrollDelta::Pixels(v) => {
-                let evt =
-                    self.scroll_by(self.orientation().component(v), shell);
+                let evt = self.scroll_by(
+                    self.orientation().component(v),
+                    shell,
+                    theme,
+                );
                 matches!(evt, ScrollbarEvent::ScrollTo(_))
             }
         }
@@ -97,18 +105,26 @@ where
         )
     }
 
-    pub fn layout<Theme>(
+    pub fn layout<Theme, Msg>(
         &mut self,
         theme: &Theme,
+        shell: &mut Shell<Msg>,
         bounds: &LayoutBounds,
     ) -> Rect<f32>
     where
         Theme: ScrollbarTheme<Style = Style>,
+        Theme: ButtonTheme<Style = Style::ButtonStyle>,
     {
-        match self.orientation {
+        let res = match self.orientation {
             Orientation::Horizontal => self.layout_horizontal(theme, bounds),
             Orientation::Vertical => self.layout_vertical(theme, bounds),
-        }
+        };
+        let end = self.state.len - self.state.view;
+        self.start_button
+            .set_disable(self.state.pos <= 0., theme, shell);
+        self.end_button
+            .set_disable(self.state.pos >= end, theme, shell);
+        res
     }
 
     fn layout_vertical<Theme>(
@@ -245,7 +261,7 @@ where
         let bounds = self.off_bounds(off);
         let tbounds = self.off_track_bounds(off);
 
-        match event.mouse_relate_to(bounds) {
+        let (thover, late_event) = match event.mouse_relate_to(bounds) {
             MouseRelation::None | MouseRelation::Elswhere => {
                 return (false, ScrollbarEvent::Nothing);
             }
@@ -257,19 +273,33 @@ where
                                 .line_size
                                 .unwrap_or(Self::SCROLL_LINE_SIZE),
                             shell,
+                            theme,
                         ),
-                        ScrollDelta::Pixels(v) => self.scroll_by(v.y, shell),
+                        ScrollDelta::Pixels(v) => {
+                            self.scroll_by(v.y, shell, theme)
+                        }
                     };
-                    return (true, evt);
+                    (None, (true, evt))
+                } else {
+                    (None, (false, ScrollbarEvent::Nothing))
                 }
             }
-            _ => {}
-        }
+            MouseRelation::Enter => {
+                (Some(true), (false, ScrollbarEvent::Nothing))
+            }
+            MouseRelation::Leave => {
+                (Some(false), (false, ScrollbarEvent::Nothing))
+            }
+            _ => (None, (false, ScrollbarEvent::Nothing)),
+        };
 
         let tlay = self.thumb_layout(tbounds, theme.min_thumb(&self.style));
         let (handled, evt) = self.thumb.event(&tlay, shell, theme, event);
+        if let Some(h) = thover {
+            self.thumb.set_track_hover(h, shell, theme);
+        }
         if let ThumbEvent::Move(p) = evt {
-            self.move_to_sceen_space_pos(&tlay, p, shell);
+            self.move_to_sceen_space_pos(&tlay, p, shell, theme);
             return (true, ScrollbarEvent::ScrollTo(self.state.pos));
         }
         if handled {
@@ -289,7 +319,7 @@ where
             self.thumb.start_drag(dpos, shell);
             return (
                 true,
-                self.move_to_sceen_space_pos(&tlay, p - dpos, shell),
+                self.move_to_sceen_space_pos(&tlay, p - dpos, shell, theme),
             );
         }
         if handled {
@@ -309,7 +339,7 @@ where
             self.thumb.start_drag(dpos, shell);
             return (
                 true,
-                self.move_to_sceen_space_pos(&tlay, p - dpos, shell),
+                self.move_to_sceen_space_pos(&tlay, p - dpos, shell, theme),
             );
         }
         if handled {
@@ -319,7 +349,7 @@ where
         let (handled, evt) =
             self.start_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(self.state.view, shell));
+            return (true, self.scroll_by(self.state.view, shell, theme));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -328,10 +358,10 @@ where
         let (handled, evt) =
             self.end_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(-self.state.view, shell));
+            return (true, self.scroll_by(-self.state.view, shell, theme));
         }
 
-        (handled, ScrollbarEvent::Nothing)
+        (handled || late_event.0, late_event.1)
     }
 
     pub fn draw<Rend, Theme>(
@@ -383,12 +413,12 @@ where
 
         let (start, end) = match self.orientation {
             Orientation::Horizontal => (
-                theme.left_button(&self.style),
-                theme.right_button(&self.style),
+                theme.left_button(&self.style, self.start_button.state()),
+                theme.right_button(&self.style, self.end_button.state()),
             ),
             Orientation::Vertical => (
-                theme.top_button(&self.style),
-                theme.bottom_button(&self.style),
+                theme.top_button(&self.style, self.start_button.state()),
+                theme.bottom_button(&self.style, self.end_button.state()),
             ),
         };
 
@@ -430,14 +460,23 @@ where
         }
     }
 
-    fn move_to_sceen_space_pos<Msg>(
+    fn move_to_sceen_space_pos<Msg, Theme>(
         &mut self,
         tlay: &ThumbLayout,
         mut p: f32,
         shell: &mut Shell<Msg>,
-    ) -> ScrollbarEvent {
+        theme: &Theme,
+    ) -> ScrollbarEvent
+    where
+        Theme: ButtonTheme<Style = Style::ButtonStyle>,
+    {
         p = p.clamp(tlay.range.start, tlay.range.end);
         let rel = (p - tlay.range.start) / (tlay.range.end - tlay.range.start);
+
+        self.start_button
+            .set_disable(p == tlay.range.start, theme, shell);
+        self.end_button
+            .set_disable(p == tlay.range.end, theme, shell);
 
         let new_pos = self.state.from_rel(rel);
         let evt = if new_pos != self.state.pos {
@@ -450,18 +489,25 @@ where
         evt
     }
 
-    pub fn scroll_by<Msg>(
+    pub fn scroll_by<Msg, Theme>(
         &mut self,
         amt: f32,
         shell: &mut Shell<Msg>,
-    ) -> ScrollbarEvent {
-        let abs_pos = (self.state.pos - amt)
-            .min(self.state.len - self.state.view)
-            .max(0.);
+        theme: &Theme,
+    ) -> ScrollbarEvent
+    where
+        Theme: ButtonTheme<Style = Style::ButtonStyle>,
+    {
+        let end = self.state.len - self.state.view;
+        let abs_pos = (self.state.pos - amt).min(end).max(0.);
         if abs_pos == self.state.pos {
             return ScrollbarEvent::Nothing;
         }
         shell.request_redraw();
+        self.start_button
+            .set_disable(self.state.pos == 0., theme, shell);
+        self.end_button
+            .set_disable(self.state.pos == end, theme, shell);
         self.state.pos = abs_pos;
         ScrollbarEvent::ScrollTo(self.state.pos)
     }

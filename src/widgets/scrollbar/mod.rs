@@ -91,7 +91,7 @@ where
         _: crate::LayoutFlags,
     ) -> minlin::Rect<f32> {
         self.rel_pos.update(pos_base);
-        self.inner.layout(lp.theme, bounds)
+        self.inner.layout(lp.theme, lp.shell, bounds)
     }
 
     fn size(&mut self, theme: &Theme) -> minlin::Vec2<f32> {

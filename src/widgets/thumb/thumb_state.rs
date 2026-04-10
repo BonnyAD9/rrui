@@ -2,5 +2,6 @@
 pub enum ThumbState {
     Normal,
     Hover,
+    TrackHover,
     Dragging(f32),
 }

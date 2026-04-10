@@ -36,6 +36,62 @@ impl<Style> PartButton<Style> {
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
     }
 
+    pub fn disable<Msg, Theme>(
+        &mut self,
+        theme: &Theme,
+        shell: &mut Shell<Msg>,
+    ) where
+        Theme: ButtonTheme<Style = Style>,
+    {
+        if self.state.is_disabled() {
+            return;
+        }
+        if theme.is_different(&self.style, self.state, ButtonState::Disabled) {
+            shell.request_redraw();
+        }
+        self.state = ButtonState::Disabled;
+    }
+
+    pub fn enable<Msg, Theme>(&mut self, theme: &Theme, shell: &mut Shell<Msg>)
+    where
+        Theme: ButtonTheme<Style = Style>,
+    {
+        if !self.state.is_disabled() {
+            return;
+        }
+        if theme.is_different(&self.style, self.state, ButtonState::Normal) {
+            shell.request_redraw();
+        }
+        self.state = ButtonState::Normal;
+    }
+
+    pub fn set_disable<Msg, Theme>(
+        &mut self,
+        val: bool,
+        theme: &Theme,
+        shell: &mut Shell<Msg>,
+    ) where
+        Theme: ButtonTheme<Style = Style>,
+    {
+        if val {
+            self.disable(theme, shell);
+        } else {
+            self.enable(theme, shell);
+        }
+    }
+
+    pub fn set_disable_no_redraw(&mut self, val: bool) {
+        if val {
+            self.state = ButtonState::Disabled;
+        } else if self.state.is_disabled() {
+            self.state = ButtonState::Normal;
+        }
+    }
+
+    pub fn state(&self) -> ButtonState {
+        self.state
+    }
+
     pub fn layout(
         &mut self,
         bounds: &LayoutBounds,
@@ -110,6 +166,10 @@ impl<Style> PartButton<Style> {
         Evt: Event,
         Theme: ButtonTheme<Style = Style>,
     {
+        if self.state.is_disabled() {
+            return (false, ButtonEvent::Nothing);
+        }
+
         let bounds = self.off_bounds(off);
 
         let new_state = match event.mouse_relate_to(bounds) {

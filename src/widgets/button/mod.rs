@@ -22,6 +22,7 @@ pub struct Button<W, Style, Msg> {
     pub child: W,
     pub on_press: Box<dyn FnMut(MouseButton) -> Option<Msg>>,
     pub inner: PartButton<Style>,
+    pub disabled: RedrawSlot<bool>,
     rel_pos: RelPos,
 }
 
@@ -31,6 +32,7 @@ impl<W, Style, Msg> Button<W, Style, Msg> {
             child,
             on_press: Box::new(|_| None),
             inner: PartButton::styled(style.into()),
+            disabled: Default::default(),
             rel_pos: RelPos::default(),
         }
     }
@@ -133,6 +135,10 @@ where
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
+        if self.disabled.update() {
+            self.inner.set_disable(*self.disabled, theme, shell);
+        }
+
         let (handled, evt) =
             self.inner
                 .event(self.rel_pos.get(), shell, theme, event, |s| {
@@ -151,6 +157,10 @@ where
         theme: &Theme,
         renderer: &mut Rend,
     ) {
+        if self.disabled.update() {
+            self.inner.set_disable_no_redraw(*self.disabled);
+        }
+
         self.inner.draw(self.rel_pos.get(), theme, renderer, |r| {
             self.child.draw(shell, theme, r)
         });

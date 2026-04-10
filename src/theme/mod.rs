@@ -87,6 +87,12 @@ impl ButtonTheme for Theme {
                     border: self.border.with_color(self.accent.rgb_mul(0.7)),
                     background: self.accent.rgb_mul(0.3).into(),
                 }),
+                ButtonState::Disabled => Some(ContainerAppereance {
+                    border: self
+                        .border
+                        .with_color(self.border.color.rgb_mul(0.7)),
+                    background: self.bg_norm.clone(),
+                }),
             },
             ButtonStyle::Scrollbar => None,
         }
@@ -143,8 +149,8 @@ impl ThumbTheme for Theme {
     ) -> Option<ContainerAppereance> {
         match state {
             ThumbState::Normal => Some(ContainerAppereance {
-                border: Border::round(5.),
-                background: self.accent.rgb_mul(0.4).into(),
+                border: self.border.with_radius(5.),
+                background: self.border.color.rgb_mul(0.7).into(),
             }),
             ThumbState::Hover | ThumbState::Dragging(_) => {
                 Some(ContainerAppereance {
@@ -152,6 +158,10 @@ impl ThumbTheme for Theme {
                     background: self.accent.rgb_mul(0.6).into(),
                 })
             }
+            ThumbState::TrackHover => Some(ContainerAppereance {
+                border: self.border.with_radius(4.),
+                background: self.border.color.rgb_mul(0.8).into(),
+            }),
         }
     }
 
@@ -161,7 +171,14 @@ impl ThumbTheme for Theme {
         a: crate::widgets::ThumbState,
         b: crate::widgets::ThumbState,
     ) -> bool {
-        matches!(a, ThumbState::Normal) != matches!(b, ThumbState::Normal)
+        fn state_group(s: ThumbState) -> u32 {
+            match s {
+                ThumbState::Normal => 0,
+                ThumbState::Hover | ThumbState::Dragging(_) => 1,
+                ThumbState::TrackHover => 2,
+            }
+        }
+        state_group(a) != state_group(b)
     }
 
     fn padding(
@@ -237,40 +254,68 @@ impl ScrollbarTheme for Theme {
     fn top_button<Svg: crate::SvgData>(
         &self,
         _: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_up.svg")),
-            SvgParameters::colored(self.fg),
+            SvgParameters::colored(match state {
+                ButtonState::Normal => self.fg,
+                ButtonState::Hover | ButtonState::Pressed => {
+                    self.accent.rgb_mul(0.8)
+                }
+                ButtonState::Disabled => self.fg.rgb_mul(0.5),
+            }),
         )
     }
 
     fn bottom_button<Svg: crate::SvgData>(
         &self,
         _: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_down.svg")),
-            SvgParameters::colored(self.fg),
+            SvgParameters::colored(match state {
+                ButtonState::Normal => self.fg,
+                ButtonState::Hover | ButtonState::Pressed => {
+                    self.accent.rgb_mul(0.8)
+                }
+                ButtonState::Disabled => self.fg.rgb_mul(0.5),
+            }),
         )
     }
 
     fn left_button<Svg: crate::SvgData>(
         &self,
         _: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_left.svg")),
-            SvgParameters::colored(self.fg),
+            SvgParameters::colored(match state {
+                ButtonState::Normal => self.fg,
+                ButtonState::Hover | ButtonState::Pressed => {
+                    self.accent.rgb_mul(0.8)
+                }
+                ButtonState::Disabled => self.fg.rgb_mul(0.5),
+            }),
         )
     }
 
     fn right_button<Svg: crate::SvgData>(
         &self,
         _: &<Self as ScrollbarTheme>::Style,
+        state: ButtonState,
     ) -> (Svg, crate::SvgParameters) {
         (
             Svg::from_static(include_bytes!("point_right.svg")),
-            SvgParameters::colored(self.fg),
+            SvgParameters::colored(match state {
+                ButtonState::Normal => self.fg,
+                ButtonState::Hover | ButtonState::Pressed => {
+                    self.accent.rgb_mul(0.8)
+                }
+                ButtonState::Disabled => self.fg.rgb_mul(0.5),
+            }),
         )
     }
 }

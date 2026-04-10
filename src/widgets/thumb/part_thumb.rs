@@ -22,6 +22,61 @@ impl<Style> PartThumb<Style> {
         }
     }
 
+    pub fn track_hover_start<Msg, Theme>(
+        &mut self,
+        shell: &mut Shell<Msg>,
+        theme: &Theme,
+    ) where
+        Theme: ThumbTheme<Style = Style>,
+    {
+        if self.state != ThumbState::Normal {
+            return;
+        }
+        self.state = ThumbState::TrackHover;
+        if theme.is_different(
+            &self.style,
+            ThumbState::Normal,
+            ThumbState::TrackHover,
+        ) {
+            shell.request_redraw();
+        }
+    }
+
+    pub fn track_hover_end<Msg, Theme>(
+        &mut self,
+        shell: &mut Shell<Msg>,
+        theme: &Theme,
+    ) where
+        Theme: ThumbTheme<Style = Style>,
+    {
+        if self.state != ThumbState::TrackHover {
+            return;
+        }
+        self.state = ThumbState::Normal;
+        if theme.is_different(
+            &self.style,
+            ThumbState::TrackHover,
+            ThumbState::Normal,
+        ) {
+            shell.request_redraw();
+        }
+    }
+
+    pub fn set_track_hover<Msg, Theme>(
+        &mut self,
+        hover: bool,
+        shell: &mut Shell<Msg>,
+        theme: &Theme,
+    ) where
+        Theme: ThumbTheme<Style = Style>,
+    {
+        if hover {
+            self.track_hover_start(shell, theme);
+        } else {
+            self.track_hover_end(shell, theme);
+        }
+    }
+
     pub fn event<Msg, Evt, Theme>(
         &mut self,
         layout: &ThumbLayout,
@@ -34,8 +89,14 @@ impl<Style> PartThumb<Style> {
         Theme: ThumbTheme<Style = Style>,
     {
         let (new_state, res) = match event.mouse_relate_to(layout.bounds) {
-            MouseRelation::None | MouseRelation::Elswhere => {
+            MouseRelation::None => {
                 return (false, ThumbEvent::Nothing);
+            }
+            MouseRelation::Elswhere => {
+                if self.state == ThumbState::Normal {
+                    return (false, ThumbEvent::Nothing);
+                }
+                (ThumbState::TrackHover, (false, ThumbEvent::Nothing))
             }
             MouseRelation::Move => {
                 if shell.mouse_state().intersects(Self::REACT) {
@@ -45,7 +106,7 @@ impl<Style> PartThumb<Style> {
                         (self.state, (true, ThumbEvent::Nothing))
                     }
                 } else {
-                    (ThumbState::Hover, (true, ThumbEvent::Nothing))
+                    (ThumbState::Hover, (false, ThumbEvent::Nothing))
                 }
             }
             MouseRelation::Enter | MouseRelation::Hover => {
@@ -56,11 +117,11 @@ impl<Style> PartThumb<Style> {
                         (self.state, (true, ThumbEvent::Nothing))
                     }
                 } else {
-                    (ThumbState::Hover, (true, ThumbEvent::Nothing))
+                    (ThumbState::Hover, (false, ThumbEvent::Nothing))
                 }
             }
             MouseRelation::Leave => {
-                (ThumbState::Normal, (false, ThumbEvent::Nothing))
+                (ThumbState::TrackHover, (false, ThumbEvent::Nothing))
             }
         };
 
