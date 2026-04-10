@@ -1,4 +1,9 @@
-use crate::widgets::{ContainerAppereance, TrackState};
+use minlin::Padding;
+
+use crate::{
+    Orientation,
+    widgets::{ContainerAppereance, TrackState},
+};
 
 pub trait TrackTheme {
     type Style;
@@ -7,6 +12,7 @@ pub trait TrackTheme {
         &self,
         style: &Self::Style,
         state: TrackState,
+        orientation: Orientation,
     ) -> Option<ContainerAppereance>;
 
     fn is_different(
@@ -15,4 +21,10 @@ pub trait TrackTheme {
         a: TrackState,
         b: TrackState,
     ) -> bool;
+
+    fn padding(
+        &self,
+        style: &Self::Style,
+        orientation: Orientation,
+    ) -> Padding<f32>;
 }

@@ -51,7 +51,7 @@ impl<E: Event> EventInfo<E> {
                 if self.old_mouse == self.new_mouse {
                     MouseRelation::Hover
                 } else {
-                    MouseRelation::Enter
+                    MouseRelation::Move
                 }
             }
         }

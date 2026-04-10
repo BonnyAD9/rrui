@@ -1,76 +1,58 @@
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    LayoutBounds, Orientation, RedrawSlot, Shell,
+    LayoutBounds, Orientation, QuadRenderer, RedrawSlot, Shell, SvgRenderer,
     event::{Event, EventInfo, EventKind, MouseRelation, ScrollDelta},
     theme,
     widgets::{
         ButtonEvent, ButtonTheme, PartButton, PartThumb, PartTrack,
-        ScrollbarEvent, ScrollbarTheme, ThumbEvent, ThumbState, ThumbTheme,
-        TrackEvent, TrackTheme, scrollbar::scrollbar_style::ScrollbarStyle,
+        ScrollbarEvent, ScrollbarState, ScrollbarTheme, ThumbEvent,
+        ThumbLayout, ThumbState, ThumbTheme, TrackEvent, TrackTheme,
+        scrollbar::scrollbar_style::ScrollbarStyle,
     },
 };
 
 #[derive(Debug)]
-pub struct PartScrollbar<Style, BStyle, TrackStyle, ThumbStyle>
-where
-    Style: ScrollbarStyle<BStyle, TrackStyle, ThumbStyle>,
-{
+pub struct PartScrollbar<Style: ScrollbarStyle> {
     pub line_size: Option<f32>,
+    pub state: RedrawSlot<ScrollbarState>,
     style: Style,
-    // TODO: relayout with pos length and view.
-    // CONSIDER: don't save the bounds for each element but rather calculate on
-    // demand.
-    pos: f32,
-    length: f32,
-    view: f32,
-    start_button: PartButton<BStyle>,
-    end_button: PartButton<BStyle>,
-    thumb: PartThumb<ThumbStyle>,
-    start_track: PartTrack<TrackStyle>,
-    end_track: PartTrack<TrackStyle>,
+    orientation: Orientation,
+    start_button: PartButton<Style::ButtonStyle>,
+    end_button: PartButton<Style::ButtonStyle>,
+    thumb: PartThumb<Style::ThumbStyle>,
+    start_track: PartTrack<Style::TrackStyle>,
+    end_track: PartTrack<Style::TrackStyle>,
+    track_bounds: Rect<f32>,
     bounds: Rect<f32>,
 }
 
-impl<BStyle, TrackStyle, ThumbStyle, Style>
-    PartScrollbar<Style, BStyle, TrackStyle, ThumbStyle>
+impl<Style> PartScrollbar<Style>
 where
-    Style: ScrollbarStyle<BStyle, TrackStyle, ThumbStyle>,
+    Style: ScrollbarStyle,
 {
-    pub fn styled(style: Style) -> Self {
+    pub fn styled(style: Style, orientation: Orientation) -> Self {
         Self {
             line_size: None,
+            state: Default::default(),
+            orientation,
             start_button: PartButton::styled(style.button_style().into()),
             end_button: PartButton::styled(style.button_style().into()),
-            pos: 0.,
-            length: 0.,
-            view: 500.,
-            thumb: PartThumb::new(style.thumb_style(), Orientation::Vertical),
-            start_track: PartTrack::new(
-                style.track_style(),
-                Orientation::Vertical,
-            ),
-            end_track: PartTrack::new(
-                style.track_style(),
-                Orientation::Vertical,
-            ),
+            thumb: PartThumb::new(style.thumb_style()),
+            start_track: PartTrack::new(style.track_style()),
+            end_track: PartTrack::new(style.track_style()),
+            track_bounds: Rect::default(),
             bounds: Rect::default(),
             style: style,
         }
     }
 
-    pub fn set_orientation(&mut self, orientation: Orientation) {
-        self.thumb.orientation = orientation;
-        self.start_track.orientation = orientation;
-        self.end_track.orientation = orientation;
-    }
-
     pub fn orientation(&self) -> Orientation {
-        self.thumb.orientation
+        self.orientation
     }
 
     pub fn osize(&self) -> f32 {
-        self.thumb.orientation.other_component(self.bounds.size())
+        self.orientation.other_component(self.bounds.size())
     }
 
     pub fn bounds(&self) -> Rect<f32> {
@@ -81,6 +63,13 @@ where
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
     }
 
+    fn off_track_bounds(&self, off: Vec2<f32>) -> Rect<f32> {
+        Rect::from_pos_size(
+            self.track_bounds.pos() + off,
+            self.track_bounds.size(),
+        )
+    }
+
     pub fn layout<Theme>(
         &mut self,
         theme: &Theme,
@@ -89,7 +78,7 @@ where
     where
         Theme: ScrollbarTheme<Style = Style>,
     {
-        match self.thumb.orientation {
+        match self.orientation {
             Orientation::Horizontal => self.layout_horizontal(theme, bounds),
             Orientation::Vertical => self.layout_vertical(theme, bounds),
         }
@@ -108,46 +97,34 @@ where
         let h = bounds.size.best_max().y;
         self.bounds = bounds.clamp([w, h]);
 
-        let minh = sizes.button * 2. + sizes.min_thumb;
+        let minh = sizes.button * 2. + theme.min_thumb(&self.style);
         let (buth, trackh) = if self.bounds.height() < minh {
             let h = minh / 3.;
             (h, h)
         } else {
-            (sizes.button, self.bounds.height() * sizes.button * 2.)
+            (sizes.button, self.bounds.height() - sizes.button * 2.)
         };
+
+        self.track_bounds = Rect::new(
+            self.bounds.x,
+            self.bounds.y + buth,
+            self.bounds.width(),
+            trackh,
+        );
 
         let but_size = Vec2::new(w, buth);
         self.start_button.size = Some(but_size);
         self.end_button.size = Some(but_size);
 
-        let thumbh = (trackh * self.view / self.length)
-            .max(sizes.min_thumb)
-            .min(trackh);
-        let toph = self.pos / self.length * (trackh - thumbh);
-        let both = trackh - thumbh - toph;
-
         let start_but = Rect::from_pos_size(self.bounds.pos(), but_size)
             + sizes.button_padding;
         self.start_button.layout_direct(start_but);
-        let mut top = self.bounds.y + but_size.y;
 
-        self.start_track.bounds =
-            Rect::new(self.bounds.x, top, self.bounds.width(), toph);
-        top += toph;
-
-        let thumb = Rect::new(self.bounds.x, top, self.bounds.width(), thumbh);
-        let tmin = self.bounds.y + but_size.y;
-        let tmax = tmin + toph + both;
-        self.thumb.layout_direct(thumb, tmin..tmax);
-        top += thumbh;
-
-        self.end_track.bounds =
-            Rect::new(self.bounds.x, top, self.bounds.width(), both);
-        top += both;
-
-        let end_but = Rect::from_pos_size([self.bounds.x, top], but_size)
-            + sizes.button_padding;
-        self.start_button.layout_direct(end_but);
+        let end_but = Rect::from_pos_size(
+            [self.bounds.x, self.track_bounds.bottom()],
+            but_size,
+        ) + sizes.button_padding;
+        self.end_button.layout_direct(end_but);
 
         self.bounds
     }
@@ -160,7 +137,41 @@ where
     where
         Theme: ScrollbarTheme<Style = Style>,
     {
-        todo!()
+        let sizes = theme.sizes(&self.style);
+        let h = sizes.size;
+        let w = bounds.size.best_max().x;
+        self.bounds = bounds.clamp([w, h]);
+
+        let minw = sizes.button * 2. + theme.min_thumb(&self.style);
+        let (butw, trackw) = if self.bounds.width() < minw {
+            let w = minw / 3.;
+            (w, w)
+        } else {
+            (sizes.button, self.bounds.width() - sizes.button * 2.)
+        };
+
+        self.track_bounds = Rect::new(
+            self.bounds.x + butw,
+            self.bounds.y,
+            trackw,
+            self.bounds.height(),
+        );
+
+        let but_size = Vec2::new(h, butw);
+        self.start_button.size = Some(but_size);
+        self.end_button.size = Some(but_size);
+
+        let start_but = Rect::from_pos_size(self.bounds.pos(), but_size)
+            + sizes.button_padding;
+        self.start_button.layout_direct(start_but);
+
+        let end_but = Rect::from_pos_size(
+            [self.track_bounds.right(), self.bounds.y],
+            but_size,
+        ) + sizes.button_padding;
+        self.end_button.layout_direct(end_but);
+
+        self.bounds
     }
 
     pub fn size<Theme>(&self, theme: &Theme) -> Vec2<f32>
@@ -168,7 +179,7 @@ where
         Theme: ScrollbarTheme<Style = Style>,
     {
         let s = theme.sizes(&self.style).size;
-        match self.thumb.orientation {
+        match self.orientation {
             Orientation::Horizontal => Vec2::new(f32::INFINITY, s),
             Orientation::Vertical => Vec2::new(s, f32::INFINITY),
         }
@@ -176,15 +187,14 @@ where
 
     pub fn reposition(&mut self, pos: Vec2<f32>) {
         let change = pos - self.bounds.pos();
-        self.bounds.set_pos(pos);
 
-        self.start_button.reposition_direct(pos);
-        self.start_track
-            .reposition(self.start_track.bounds.pos() + change);
-        self.thumb.reposition_by(change);
-        self.end_track
-            .reposition(self.start_track.bounds.pos() + change);
-        self.end_button.reposition_direct(pos);
+        self.bounds.set_pos(pos);
+        self.track_bounds.set_pos(self.track_bounds.pos() + change);
+
+        self.start_button
+            .reposition_direct(self.start_button.bounds().pos() + change);
+        self.end_button
+            .reposition_direct(self.end_button.bounds().pos() + change);
     }
 
     pub fn event<Msg, Evt, Theme>(
@@ -197,11 +207,13 @@ where
     where
         Evt: Event,
         Theme: ScrollbarTheme<Style = Style>,
-        Theme: ThumbTheme<Style = ThumbStyle>,
-        Theme: TrackTheme<Style = TrackStyle>,
-        Theme: ButtonTheme<Style = BStyle>,
+        Theme: ThumbTheme<Style = Style::ThumbStyle>,
+        Theme: TrackTheme<Style = Style::TrackStyle>,
+        Theme: ButtonTheme<Style = Style::ButtonStyle>,
     {
+        self.state.update();
         let bounds = self.off_bounds(off);
+        let tbounds = self.off_track_bounds(off);
 
         match event.mouse_relate_to(bounds) {
             MouseRelation::None | MouseRelation::Elswhere => {
@@ -211,9 +223,9 @@ where
                 if let EventKind::MouseScroll(s) = event.get_kind() {
                     let evt = match s {
                         ScrollDelta::Lines(v) => {
-                            self.scroll_by(v.x * self.line_size.unwrap_or(20.))
+                            self.scroll_by(v.y * self.line_size.unwrap_or(20.))
                         }
-                        ScrollDelta::Pixels(v) => self.scroll_by(v.x),
+                        ScrollDelta::Pixels(v) => self.scroll_by(v.y),
                     };
                     return (true, evt);
                 }
@@ -221,29 +233,45 @@ where
             _ => {}
         }
 
-        let (handled, evt) = self.thumb.event(off, shell, theme, event);
+        let tlay = self.thumb_layout(tbounds, theme.min_thumb(&self.style));
+        let (handled, evt) = self.thumb.event(&tlay, shell, theme, event);
         if let ThumbEvent::Move(p) = evt {
-            self.relayout_with_pos(p);
-            return (true, ScrollbarEvent::ScrollTo(self.pos));
+            self.move_to_sceen_space_pos(&tlay, p);
+            return (true, ScrollbarEvent::ScrollTo(self.state.pos));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
         }
 
-        let (handled, evt) = self.start_track.event(off, shell, theme, event);
+        let sbounds = tlay.start_track_bounds();
+        let (handled, evt) = self.start_track.event(
+            sbounds,
+            shell,
+            theme,
+            event,
+            self.orientation,
+        );
         if let TrackEvent::PressAt(p) = evt {
-            self.thumb.drag_from(p, shell, theme);
-            return (true, self.relayout_with_pos(p));
+            let dpos = tlay.size() / 2.;
+            self.thumb.start_drag(dpos, shell);
+            return (true, self.move_to_sceen_space_pos(&tlay, p - dpos));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
         }
 
-        let (handled, evt) = self.end_track.event(off, shell, theme, event);
-        if let TrackEvent::PressAt(mut p) = evt {
-            p -= self.thumb.size();
-            self.thumb.drag_from(p, shell, theme);
-            return (true, self.relayout_with_pos(p));
+        let ebounds = tlay.end_track_bounds();
+        let (handled, evt) = self.end_track.event(
+            ebounds,
+            shell,
+            theme,
+            event,
+            self.orientation,
+        );
+        if let TrackEvent::PressAt(p) = evt {
+            let dpos = tlay.size() / 2.;
+            self.thumb.start_drag(dpos, shell);
+            return (true, self.move_to_sceen_space_pos(&tlay, p - dpos));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -252,7 +280,7 @@ where
         let (handled, evt) =
             self.start_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(-self.view));
+            return (true, self.scroll_by(self.state.view));
         }
         if handled {
             return (true, ScrollbarEvent::Nothing);
@@ -261,86 +289,134 @@ where
         let (handled, evt) =
             self.end_button.event_direct(off, shell, theme, event);
         if matches!(evt, ButtonEvent::Clicked(_)) {
-            return (true, self.scroll_by(-self.view));
+            return (true, self.scroll_by(-self.state.view));
         }
 
         (handled, ScrollbarEvent::Nothing)
     }
 
-    fn relayout_with_pos(&mut self, p: f32) -> ScrollbarEvent {
-        let rel = match self.thumb.orientation {
-            Orientation::Horizontal => {
-                let pos = p - self.start_track.bounds.x;
-                self.start_track.bounds.set_width(pos);
-                let es = p + self.thumb.bounds().width();
-                self.end_track
-                    .bounds
-                    .set_width(self.end_track.bounds.right() - es);
-                self.end_track.bounds.x = es;
-                pos / (self.start_track.bounds.width()
-                    + self.end_track.bounds.width())
-            }
-            Orientation::Vertical => {
-                let pos = p - self.start_track.bounds.y;
-                self.start_track.bounds.set_height(pos);
-                let es = p + self.thumb.bounds().height();
-                self.end_track
-                    .bounds
-                    .set_height(self.end_track.bounds.bottom() - es);
-                self.end_track.bounds.y = es;
-                pos / (self.start_track.bounds.height()
-                    + self.end_track.bounds.height())
-            }
+    pub fn draw<Rend, Theme>(
+        &mut self,
+        off: Vec2<f32>,
+        theme: &Theme,
+        renderer: &mut Rend,
+    ) where
+        Rend: QuadRenderer + SvgRenderer,
+        Theme: ScrollbarTheme<Style = Style>,
+        Theme: ThumbTheme<Style = Style::ThumbStyle>,
+        Theme: TrackTheme<Style = Style::TrackStyle>,
+        Theme: ButtonTheme<Style = Style::ButtonStyle>,
+    {
+        self.state.update();
+
+        if let Some(a) = <Theme as ScrollbarTheme>::appereance(
+            theme,
+            &self.style,
+            self.orientation,
+        ) {
+            let bounds = self.off_bounds(off)
+                + <Theme as ScrollbarTheme>::padding(
+                    theme,
+                    &self.style,
+                    self.orientation,
+                );
+            renderer.draw_border(bounds, a.border, a.background);
+        }
+
+        let track_bounds = self.off_track_bounds(off);
+        let tlay =
+            self.thumb_layout(track_bounds, theme.min_thumb(&self.style));
+
+        self.start_track.draw(
+            || tlay.start_track_bounds(),
+            theme,
+            renderer,
+            self.orientation,
+        );
+        self.end_track.draw(
+            || tlay.end_track_bounds(),
+            theme,
+            renderer,
+            self.orientation,
+        );
+        self.thumb
+            .draw(|| tlay.bounds, theme, renderer, self.orientation);
+
+        let (start, end) = match self.orientation {
+            Orientation::Horizontal => (
+                theme.left_button(&self.style),
+                theme.right_button(&self.style),
+            ),
+            Orientation::Vertical => (
+                theme.top_button(&self.style),
+                theme.bottom_button(&self.style),
+            ),
         };
 
-        let new_pos = rel * self.length;
-        let evt = if new_pos != self.pos {
+        self.start_button.draw_direct(off, theme, renderer);
+        renderer.draw_svg(
+            self.start_button.off_bounds(off),
+            &start.0,
+            &start.1,
+        );
+
+        self.end_button.draw_direct(off, theme, renderer);
+        renderer.draw_svg(self.end_button.off_bounds(off), &end.0, &end.1);
+    }
+
+    fn thumb_layout(&self, tb: Rect<f32>, min_size: f32) -> ThumbLayout {
+        match self.orientation {
+            Orientation::Horizontal => {
+                let w = min_size
+                    .max(self.state.view / self.state.len * tb.width());
+                let tw = tb.width() - w;
+                let x = self.state.rel_pos() * tw;
+                ThumbLayout {
+                    bounds: Rect::new(tb.x + x, tb.y, w, tb.height()),
+                    range: tb.x..tb.x + tw,
+                    orientation: self.orientation,
+                }
+            }
+            Orientation::Vertical => {
+                let h = min_size
+                    .max(self.state.view / self.state.len * tb.height());
+                let th = tb.height() - h;
+                let y = self.state.rel_pos() * th;
+                ThumbLayout {
+                    bounds: Rect::new(tb.x, tb.y + y, tb.width(), h),
+                    range: tb.y..tb.y + th,
+                    orientation: self.orientation,
+                }
+            }
+        }
+    }
+
+    fn move_to_sceen_space_pos(
+        &mut self,
+        tlay: &ThumbLayout,
+        mut p: f32,
+    ) -> ScrollbarEvent {
+        p = p.clamp(tlay.range.start, tlay.range.end);
+        let rel = (p - tlay.range.start) / (tlay.range.end - tlay.range.start);
+
+        let new_pos = self.state.from_rel(rel);
+        let evt = if new_pos != self.state.pos {
             ScrollbarEvent::ScrollTo(new_pos)
         } else {
             ScrollbarEvent::Nothing
         };
-        self.pos = new_pos;
+        self.state.pos = new_pos;
         evt
     }
 
     pub fn scroll_by(&mut self, amt: f32) -> ScrollbarEvent {
-        let abs_pos = (self.pos - amt).min(self.length).max(0.);
-        if abs_pos == self.pos {
+        let abs_pos = (self.state.pos - amt)
+            .min(self.state.len - self.state.view)
+            .max(0.);
+        if abs_pos == self.state.pos {
             return ScrollbarEvent::Nothing;
         }
-        self.pos = abs_pos;
-
-        let rel = self.pos / self.length;
-
-        match self.thumb.orientation {
-            Orientation::Horizontal => {
-                let p = rel
-                    * (self.start_track.bounds.width()
-                        + self.end_track.bounds.width());
-                self.thumb.move_to(p);
-                let pos = p - self.start_track.bounds.x;
-                self.start_track.bounds.set_width(pos);
-                let es = p + self.thumb.bounds().width();
-                self.end_track
-                    .bounds
-                    .set_width(self.end_track.bounds.right() - es);
-                self.end_track.bounds.x = es;
-            }
-            Orientation::Vertical => {
-                let p = rel
-                    * (self.start_track.bounds.height()
-                        + self.end_track.bounds.height());
-                self.thumb.move_to(p);
-                let pos = p - self.start_track.bounds.y;
-                self.start_track.bounds.set_height(pos);
-                let es = p + self.thumb.bounds().height();
-                self.end_track
-                    .bounds
-                    .set_height(self.end_track.bounds.bottom() - es);
-                self.end_track.bounds.y = es;
-            }
-        }
-
-        ScrollbarEvent::ScrollTo(self.pos)
+        self.state.pos = abs_pos;
+        ScrollbarEvent::ScrollTo(self.state.pos)
     }
 }

@@ -1,7 +1,11 @@
-pub trait ScrollbarStyle<Button, Track, Thumb> {
-    fn button_style(&self) -> Button;
+pub trait ScrollbarStyle {
+    type ButtonStyle;
+    type TrackStyle;
+    type ThumbStyle;
 
-    fn track_style(&self) -> Track;
+    fn button_style(&self) -> Self::ButtonStyle;
 
-    fn thumb_style(&self) -> Thumb;
+    fn track_style(&self) -> Self::TrackStyle;
+
+    fn thumb_style(&self) -> Self::ThumbStyle;
 }

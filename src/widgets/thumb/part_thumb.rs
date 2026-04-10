@@ -6,68 +6,30 @@ use crate::{
     Orientation, QuadRenderer, Shell,
     event::{Event, EventInfo, EventKind, MouseRelation, MouseState},
     widgets::{
-        ButtonEvent, ScrollbarTheme, ThumbEvent, ThumbState, ThumbTheme,
+        ButtonEvent, ScrollbarTheme, ThumbEvent, ThumbLayout, ThumbState,
+        ThumbTheme,
     },
 };
 
 #[derive(Debug, Clone)]
 pub struct PartThumb<Style> {
     pub style: Style,
-    pub orientation: Orientation,
-    pub range: Range<f32>,
     state: ThumbState,
-    bounds: Rect<f32>,
 }
 
 impl<Style> PartThumb<Style> {
     pub const REACT: MouseState = MouseState::LEFT;
 
-    pub fn new(style: Style, orientation: Orientation) -> Self {
+    pub fn new(style: Style) -> Self {
         Self {
             style,
-            orientation,
             state: ThumbState::Normal,
-            range: 0.0..0.,
-            bounds: Rect::default(),
-        }
-    }
-
-    pub fn bounds(&self) -> Rect<f32> {
-        self.bounds
-    }
-
-    pub fn off_bounds(&self, off: Vec2<f32>) -> Rect<f32> {
-        let mut res = self.bounds;
-        res.move_to(self.bounds.pos() + off);
-        res
-    }
-
-    pub fn size(&self) -> f32 {
-        self.orientation.component(self.bounds.size())
-    }
-
-    pub fn layout_direct(&mut self, bounds: Rect<f32>, range: Range<f32>) {
-        self.range = range;
-        self.bounds = bounds;
-    }
-
-    pub fn reposition_by(&mut self, off: Vec2<f32>) {
-        self.bounds.set_pos(self.bounds.pos() + off);
-        match self.orientation {
-            Orientation::Horizontal => {
-                self.range.start += off.x;
-                self.range.end += off.x;
-            }
-            Orientation::Vertical => {
-                self.range.start += off.y;
-                self.range.end += off.y;
-            }
         }
     }
 
     pub fn event<Msg, Evt, Theme>(
         &mut self,
-        off: Vec2<f32>,
+        layout: &ThumbLayout,
         shell: &mut Shell<Msg>,
         theme: &Theme,
         event: &EventInfo<Evt>,
@@ -76,16 +38,14 @@ impl<Style> PartThumb<Style> {
         Evt: Event,
         Theme: ThumbTheme<Style = Style>,
     {
-        let bounds = self.off_bounds(off);
-
-        let (new_state, res) = match event.mouse_relate_to(bounds) {
+        let (new_state, res) = match event.mouse_relate_to(layout.bounds) {
             MouseRelation::None | MouseRelation::Elswhere => {
                 return (false, ThumbEvent::Nothing);
             }
             MouseRelation::Move => {
                 if shell.mouse_state().intersects(Self::REACT) {
-                    if let Some(pos) = shell.mouse_pos() {
-                        self.drag(bounds, pos)
+                    if let Some(mpos) = shell.mouse_pos() {
+                        self.drag(layout, mpos)
                     } else {
                         (self.state, (true, ThumbEvent::Nothing))
                     }
@@ -95,8 +55,8 @@ impl<Style> PartThumb<Style> {
             }
             MouseRelation::Enter | MouseRelation::Hover => {
                 if shell.mouse_state().intersects(Self::REACT) {
-                    if let Some(pos) = shell.mouse_pos() {
-                        self.press(bounds, pos)
+                    if let Some(mpos) = shell.mouse_pos() {
+                        self.press(layout, mpos)
                     } else {
                         (self.state, (true, ThumbEvent::Nothing))
                     }
@@ -119,47 +79,26 @@ impl<Style> PartThumb<Style> {
         res
     }
 
-    pub fn drag_from<Msg, Theme>(
-        &mut self,
-        pos: f32,
-        shell: &mut Shell<Msg>,
-        theme: &Theme,
-    ) where
-        Theme: ThumbTheme<Style = Style>,
-    {
-        let old_state = self.state;
-        self.state = ThumbState::Dragging(0.);
-        self.drag(self.bounds, Vec2::new(pos, pos));
-        if theme.is_different(&self.style, old_state, self.state) {
-            shell.request_redraw();
-        }
-    }
-
-    pub fn move_to(&mut self, pos: f32) {
-        self.bounds.x = pos.clamp(self.range.start, self.range.end);
+    pub fn start_drag<Msg>(&mut self, dpos: f32, shell: &mut Shell<Msg>) {
+        self.state = ThumbState::Dragging(dpos);
+        shell.request_redraw();
     }
 
     fn drag(
         &mut self,
-        bounds: Rect<f32>,
-        pos: Vec2<f32>,
+        layout: &ThumbLayout,
+        mpos: Vec2<f32>,
     ) -> (ThumbState, (bool, ThumbEvent)) {
         let ThumbState::Dragging(dpos) = self.state else {
-            return self.press(bounds, pos);
+            return self.press(layout, mpos);
         };
 
-        let pos = match self.orientation {
+        let pos = match layout.orientation {
             Orientation::Horizontal => {
-                let pos = pos.x - dpos;
-                self.bounds.x +=
-                    pos.clamp(self.range.start, self.range.end) - bounds.x;
-                self.bounds.x
+                (mpos.x - dpos).clamp(layout.range.start, layout.range.end)
             }
             Orientation::Vertical => {
-                let pos = pos.y - dpos;
-                self.bounds.y +=
-                    pos.clamp(self.range.start, self.range.end) - bounds.y;
-                self.bounds.y
+                (mpos.y - dpos).clamp(layout.range.start, layout.range.end)
             }
         };
 
@@ -168,12 +107,12 @@ impl<Style> PartThumb<Style> {
 
     fn press(
         &mut self,
-        bounds: Rect<f32>,
+        layout: &ThumbLayout,
         pos: Vec2<f32>,
     ) -> (ThumbState, (bool, ThumbEvent)) {
-        let dpos = match self.orientation {
-            Orientation::Horizontal => pos.x - bounds.x,
-            Orientation::Vertical => pos.y - bounds.y,
+        let dpos = match layout.orientation {
+            Orientation::Horizontal => pos.x - layout.bounds.x,
+            Orientation::Vertical => pos.y - layout.bounds.y,
         };
 
         (ThumbState::Dragging(dpos), (true, ThumbEvent::Nothing))
@@ -181,15 +120,18 @@ impl<Style> PartThumb<Style> {
 
     pub fn draw<Rend, Theme>(
         &mut self,
-        off: Vec2<f32>,
+        bounds: impl FnOnce() -> Rect<f32>,
         theme: &Theme,
         renderer: &mut Rend,
+        orientation: Orientation,
     ) where
         Rend: QuadRenderer,
         Theme: ThumbTheme<Style = Style>,
     {
-        let bounds = self.off_bounds(off);
-        let a = theme.appereance(&self.style, self.state);
-        renderer.draw_border(bounds, a.border, a.background);
+        if let Some(a) = theme.appereance(&self.style, self.state, orientation)
+        {
+            let bounds = bounds() + theme.padding(&self.style, orientation);
+            renderer.draw_border(bounds, a.border, a.background);
+        }
     }
 }

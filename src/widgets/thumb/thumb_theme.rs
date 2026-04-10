@@ -1,4 +1,9 @@
-use crate::widgets::{ContainerAppereance, ThumbState};
+use minlin::Padding;
+
+use crate::{
+    Orientation,
+    widgets::{ContainerAppereance, ThumbState},
+};
 
 pub trait ThumbTheme {
     type Style;
@@ -7,7 +12,8 @@ pub trait ThumbTheme {
         &self,
         style: &Self::Style,
         state: ThumbState,
-    ) -> ContainerAppereance;
+        orientation: Orientation,
+    ) -> Option<ContainerAppereance>;
 
     fn is_different(
         &self,
@@ -15,4 +21,10 @@ pub trait ThumbTheme {
         a: ThumbState,
         b: ThumbState,
     ) -> bool;
+
+    fn padding(
+        &self,
+        style: &Self::Style,
+        orientation: Orientation,
+    ) -> Padding<f32>;
 }

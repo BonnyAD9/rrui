@@ -1,8 +1,15 @@
+mod button_style;
+
+use minlin::Padding;
+
+pub use self::button_style::*;
+
 use crate::{
-    Background, Border, Color, Radius,
+    Background, Border, Color, Orientation, Radius, SvgParameters,
     widgets::{
         ButtonState, ButtonTheme, ContainerAppereance, ContainerTheme,
-        TextBlockTheme,
+        ScrollbarSizes, ScrollbarStyle, ScrollbarTheme, TextBlockTheme,
+        ThumbState, ThumbTheme, TrackTheme,
     },
 };
 
@@ -59,26 +66,29 @@ impl TextBlockTheme for Theme {
 }
 
 impl ButtonTheme for Theme {
-    type Style = ();
+    type Style = ButtonStyle;
 
     fn appereance(
         &self,
-        _: &Self::Style,
+        style: &Self::Style,
         state: ButtonState,
     ) -> Option<ContainerAppereance> {
-        match state {
-            ButtonState::Normal => Some(ContainerAppereance {
-                border: self.border,
-                background: self.bg_norm.clone(),
-            }),
-            ButtonState::Hover => Some(ContainerAppereance {
-                border: self.border.with_color(self.accent.rgb_mul(0.7)),
-                background: self.bg_norm.clone(),
-            }),
-            ButtonState::Pressed => Some(ContainerAppereance {
-                border: self.border.with_color(self.accent.rgb_mul(0.7)),
-                background: self.accent.rgb_mul(0.3).into(),
-            }),
+        match style {
+            ButtonStyle::Normal => match state {
+                ButtonState::Normal => Some(ContainerAppereance {
+                    border: self.border,
+                    background: self.bg_norm.clone(),
+                }),
+                ButtonState::Hover => Some(ContainerAppereance {
+                    border: self.border.with_color(self.accent.rgb_mul(0.7)),
+                    background: self.bg_norm.clone(),
+                }),
+                ButtonState::Pressed => Some(ContainerAppereance {
+                    border: self.border.with_color(self.accent.rgb_mul(0.7)),
+                    background: self.accent.rgb_mul(0.3).into(),
+                }),
+            },
+            ButtonStyle::Scrollbar => None,
         }
     }
 
@@ -89,5 +99,168 @@ impl ButtonTheme for Theme {
         b: ButtonState,
     ) -> bool {
         a != b
+    }
+}
+
+impl TrackTheme for Theme {
+    type Style = ();
+
+    fn appereance(
+        &self,
+        _: &Self::Style,
+        _: crate::widgets::TrackState,
+        _: Orientation,
+    ) -> Option<ContainerAppereance> {
+        None
+    }
+
+    fn is_different(
+        &self,
+        _: &Self::Style,
+        _: crate::widgets::TrackState,
+        _: crate::widgets::TrackState,
+    ) -> bool {
+        false
+    }
+
+    fn padding(
+        &self,
+        _: &Self::Style,
+        _: Orientation,
+    ) -> minlin::Padding<f32> {
+        Padding::default()
+    }
+}
+
+impl ThumbTheme for Theme {
+    type Style = ();
+
+    fn appereance(
+        &self,
+        _: &Self::Style,
+        state: crate::widgets::ThumbState,
+        _: Orientation,
+    ) -> Option<ContainerAppereance> {
+        match state {
+            ThumbState::Normal => Some(ContainerAppereance {
+                border: Border::round(5.),
+                background: self.accent.rgb_mul(0.3).into(),
+            }),
+            ThumbState::Hover | ThumbState::Dragging(_) => {
+                Some(ContainerAppereance {
+                    border: Border::round(5.),
+                    background: self.accent.rgb_mul(0.7).into(),
+                })
+            }
+        }
+    }
+
+    fn is_different(
+        &self,
+        _: &Self::Style,
+        a: crate::widgets::ThumbState,
+        b: crate::widgets::ThumbState,
+    ) -> bool {
+        matches!(a, ThumbState::Normal) != matches!(b, ThumbState::Normal)
+    }
+
+    fn padding(
+        &self,
+        _: &Self::Style,
+        orientation: Orientation,
+    ) -> minlin::Padding<f32> {
+        match orientation {
+            Orientation::Horizontal => Padding::vertical(5.),
+            Orientation::Vertical => Padding::horizontal(5.),
+        }
+    }
+}
+
+impl ScrollbarStyle for () {
+    type ButtonStyle = ButtonStyle;
+    type TrackStyle = ();
+    type ThumbStyle = ();
+
+    fn button_style(&self) -> Self::ButtonStyle {
+        ButtonStyle::Scrollbar
+    }
+
+    fn track_style(&self) -> Self::TrackStyle {}
+
+    fn thumb_style(&self) -> Self::ThumbStyle {}
+}
+
+impl ScrollbarTheme for Theme {
+    type Style = ();
+
+    fn sizes(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+    ) -> crate::widgets::ScrollbarSizes {
+        ScrollbarSizes {
+            size: 20.,
+            button: 20.,
+            button_padding: Padding::uniform(0.),
+        }
+    }
+
+    fn min_thumb(&self, _: &<Self as ScrollbarTheme>::Style) -> f32 {
+        20.
+    }
+
+    fn appereance(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+        _: Orientation,
+    ) -> Option<ContainerAppereance> {
+        None
+    }
+
+    fn padding(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+        _: Orientation,
+    ) -> minlin::Padding<f32> {
+        Padding::uniform(0.)
+    }
+
+    fn top_button<Svg: crate::SvgData>(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+    ) -> (Svg, crate::SvgParameters) {
+        (
+            Svg::from_static(include_bytes!("point_up.svg")),
+            SvgParameters::default(),
+        )
+    }
+
+    fn bottom_button<Svg: crate::SvgData>(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+    ) -> (Svg, crate::SvgParameters) {
+        (
+            Svg::from_static(include_bytes!("point_down.svg")),
+            SvgParameters::default(),
+        )
+    }
+
+    fn left_button<Svg: crate::SvgData>(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+    ) -> (Svg, crate::SvgParameters) {
+        (
+            Svg::from_static(include_bytes!("point_left.svg")),
+            SvgParameters::default(),
+        )
+    }
+
+    fn right_button<Svg: crate::SvgData>(
+        &self,
+        _: &<Self as ScrollbarTheme>::Style,
+    ) -> (Svg, crate::SvgParameters) {
+        (
+            Svg::from_static(include_bytes!("point_right.svg")),
+            SvgParameters::default(),
+        )
     }
 }

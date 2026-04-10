@@ -9,46 +9,31 @@ use crate::{
 #[derive(Debug, Clone, Copy)]
 pub struct PartTrack<Style> {
     pub style: Style,
-    pub orientation: Orientation,
-    pub bounds: Rect<f32>,
     state: TrackState,
 }
 
 impl<Style> PartTrack<Style> {
     pub const REACT: MouseState = MouseState::LEFT;
 
-    pub fn new(style: Style, orientation: Orientation) -> Self {
+    pub fn new(style: Style) -> Self {
         Self {
             style,
-            orientation,
-            bounds: Rect::default(),
             state: TrackState::Normal,
         }
     }
 
-    pub fn off_bounds(&self, off: Vec2<f32>) -> Rect<f32> {
-        let mut res = self.bounds;
-        res.move_to(self.bounds.pos() + off);
-        res
-    }
-
-    pub fn reposition(&mut self, pos: Vec2<f32>) {
-        self.bounds.set_pos(pos);
-    }
-
     pub fn event<Msg, Evt, Theme>(
         &mut self,
-        off: Vec2<f32>,
+        bounds: Rect<f32>,
         shell: &mut Shell<Msg>,
         theme: &Theme,
         event: &EventInfo<Evt>,
+        orientation: Orientation,
     ) -> (bool, TrackEvent)
     where
         Evt: Event,
         Theme: TrackTheme<Style = Style>,
     {
-        let bounds = self.off_bounds(off);
-
         let mut new_state = match event.mouse_relate_to(bounds) {
             MouseRelation::None | MouseRelation::Elswhere => {
                 return (false, TrackEvent::Nothing);
@@ -63,12 +48,12 @@ impl<Style> PartTrack<Style> {
             EventKind::MousePress(b) if Self::REACT.contains(b.into()) => {
                 if let Some(pos) = shell.mouse_pos() {
                     new_state = TrackState::Normal;
-                    match self.orientation {
+                    match orientation {
                         Orientation::Horizontal => {
-                            (true, TrackEvent::PressAt(pos.x - off.x))
+                            (true, TrackEvent::PressAt(pos.x))
                         }
                         Orientation::Vertical => {
-                            (false, TrackEvent::PressAt(pos.y - off.y))
+                            (false, TrackEvent::PressAt(pos.y))
                         }
                     }
                 } else {
@@ -90,15 +75,17 @@ impl<Style> PartTrack<Style> {
 
     pub fn draw<Rend, Theme>(
         &mut self,
-        off: Vec2<f32>,
+        bounds: impl FnOnce() -> Rect<f32>,
         theme: &Theme,
         renderer: &mut Rend,
+        orientation: Orientation,
     ) where
         Rend: QuadRenderer,
         Theme: TrackTheme<Style = Style>,
     {
-        if let Some(a) = theme.appereance(&self.style, self.state) {
-            let bounds = self.off_bounds(off);
+        if let Some(a) = theme.appereance(&self.style, self.state, orientation)
+        {
+            let bounds = bounds() + theme.padding(&self.style, orientation);
             renderer.draw_border(bounds, a.border, a.background);
         }
     }

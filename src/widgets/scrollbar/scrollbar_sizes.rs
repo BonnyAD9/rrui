@@ -7,7 +7,6 @@ pub struct ScrollbarSizes {
 
     // H
     pub button: f32,
-    pub min_thumb: f32,
 
     pub button_padding: Padding<f32>,
 }

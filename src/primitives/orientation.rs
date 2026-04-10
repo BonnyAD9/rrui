@@ -1,4 +1,6 @@
-use minlin::Vec2;
+use std::mem;
+
+use minlin::{Padding, Vec2};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Orientation {
@@ -21,5 +23,21 @@ impl Orientation {
             Orientation::Horizontal => v.y,
             Orientation::Vertical => v.x,
         }
+    }
+
+    pub fn horizontal_padding(&self, mut p: Padding) -> Padding {
+        if *self == Orientation::Vertical {
+            mem::swap(&mut p.0.x, &mut p.0.y);
+            mem::swap(&mut p.0.z, &mut p.0.w);
+        }
+        p
+    }
+
+    pub fn vertical_padding(&self, mut p: Padding) -> Padding {
+        if *self == Orientation::Horizontal {
+            mem::swap(&mut p.0.x, &mut p.0.y);
+            mem::swap(&mut p.0.z, &mut p.0.w);
+        }
+        p
     }
 }
