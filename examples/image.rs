@@ -40,14 +40,14 @@ where
 
     fn message(
         &mut self,
-        _: &mut rrui::Shell<Self::Message>,
+        _: &mut rrui::Shell<R, Self::Message, E, Self::Theme>,
         _: Self::Message,
     ) {
     }
 
     fn root(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<R, Self::Message, E, Self::Theme>,
     ) -> Element<R, Self::Message, E, Self::Theme> {
         let (fill_in, fill_out) = shell.make_variable(ImageFill::default());
         let mut img =

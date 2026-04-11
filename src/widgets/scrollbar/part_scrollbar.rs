@@ -68,10 +68,14 @@ where
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
     }
 
-    pub fn scroll_event<Msg>(
+    pub fn is_dragging(&self) -> bool {
+        self.thumb.is_dragging()
+    }
+
+    pub fn scroll_event<Rend, Msg, Evt, Theme>(
         &mut self,
         delta: ScrollDelta,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
     ) -> bool {
         match delta {
             ScrollDelta::Lines(v) => {
@@ -97,10 +101,10 @@ where
         )
     }
 
-    pub fn layout<Theme, Msg>(
+    pub fn layout<Rend, Theme, Evt, Msg>(
         &mut self,
         theme: &Theme,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         bounds: &LayoutBounds,
     ) -> Rect<f32>
     where
@@ -236,10 +240,10 @@ where
             .reposition_direct(self.end_button.bounds().pos() + change);
     }
 
-    pub fn event<Msg, Evt, Theme>(
+    pub fn event<Rend, Msg, Evt, Theme>(
         &mut self,
         off: Vec2<f32>,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> (bool, ScrollbarEvent)
@@ -256,7 +260,10 @@ where
 
         let (thover, late_event) = match event.mouse_relate_to(bounds) {
             MouseRelation::None | MouseRelation::Elswhere => {
-                return (false, ScrollbarEvent::Nothing);
+                if !event.is_drag_capture() {
+                    return (false, ScrollbarEvent::Nothing);
+                }
+                (None, (false, ScrollbarEvent::Nothing))
             }
             MouseRelation::Hover => {
                 if let EventKind::MouseScroll(s) = event.get_kind() {
@@ -450,11 +457,11 @@ where
         }
     }
 
-    fn move_to_sceen_space_pos<Msg, Theme>(
+    fn move_to_sceen_space_pos<Rend, Msg, Evt, Theme>(
         &mut self,
         tlay: &ThumbLayout,
         mut p: f32,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
     ) -> ScrollbarEvent
     where
@@ -484,10 +491,10 @@ where
         evt
     }
 
-    pub fn scroll_by<Msg>(
+    pub fn scroll_by<Rend, Msg, Evt, Theme>(
         &mut self,
         amt: f32,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
     ) -> ScrollbarEvent {
         let end = self.state.len - self.state.view;
         let abs_pos = (self.state.pos - amt).min(end).max(0.);

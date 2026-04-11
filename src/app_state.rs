@@ -7,7 +7,7 @@ use crate::{
     LayoutParams, MayInit, RelPos, RenderState, Renderer, Shell, Widget,
     Window,
     application::Application,
-    event::{Event, EventCtrl, EventInfo, EventKind},
+    event::{Event, EventCtrl, EventInfo, EventKind, EventTarget},
     widgets::Nothing,
 };
 
@@ -22,7 +22,7 @@ where
     render_state: MayInit<RendState::Config, RendState>,
     window_config: Option<Win::Config>,
     root: Element<Rend, App::Message, Evt, App::Theme>,
-    shell: Shell<App::Message>,
+    shell: Shell<Rend, App::Message, Evt, App::Theme>,
     pending_redraw: bool,
     _phantom: PhantomData<(Rend, Evt, Win)>,
 }
@@ -47,7 +47,7 @@ where
             render_state: MayInit::Uninitialized(config.render_config),
             window_config: Some(config.window_config),
             root: Nothing.into(),
-            shell: Shell::<App::Message>::default(),
+            shell: Shell::default(),
             pending_redraw: true,
             _phantom: PhantomData,
         }
@@ -91,11 +91,13 @@ where
     }
 
     pub fn event(&mut self, event: Evt, ctrl: impl AppCtrl) {
+        self.shell.inc_id();
+
         let MayInit::Initialized(state) = &mut self.render_state else {
             return;
         };
 
-        let event_info = EventInfo::new(event, self.shell.mouse_pos);
+        let mut event_info = EventInfo::new(event, self.shell.mouse_pos);
 
         let mut evt_ctrl = EventCtrl::new();
         self.app
@@ -141,19 +143,10 @@ where
                 _ => {}
             }
 
-            if evt_ctrl
-                .for_widgets
-                .unwrap_or_else(|| event_info.is_for_widgets())
-            {
-                let handled = self.root.event(
-                    &mut self.shell,
-                    self.app.theme(),
-                    &event_info,
-                );
-
-                if !handled {
-                    self.app.post_event(&mut self.shell, &event_info);
-                }
+            let target =
+                evt_ctrl.target.unwrap_or_else(|| event_info.get_target());
+            if target != EventTarget::Nothing {
+                self.send_event(&mut event_info, target);
             }
         }
 
@@ -182,6 +175,55 @@ where
         if self.shell.redraw_requested() && !self.pending_redraw {
             self.pending_redraw = true;
             state.request_redraw();
+        }
+    }
+
+    pub fn send_event(
+        &mut self,
+        event: &mut EventInfo<Evt>,
+        target: EventTarget,
+    ) {
+        let mut handled = false;
+        self.shell.focus_target = None;
+
+        for t in target {
+            event.target_flags(t);
+            handled = match t {
+                EventTarget::Nothing => false,
+                EventTarget::Root => {
+                    self.root.event(&mut self.shell, self.app.theme(), event)
+                }
+                EventTarget::DragCapture => {
+                    if let Some(dc) = self.shell.drag_capture.clone() {
+                        dc.borrow_mut().event(
+                            &mut self.shell,
+                            self.app.theme(),
+                            event,
+                        )
+                    } else {
+                        false
+                    }
+                }
+                EventTarget::DragCaptureEnd => {
+                    if let Some(dc) = self.shell.drag_capture.take() {
+                        dc.borrow_mut().event(
+                            &mut self.shell,
+                            self.app.theme(),
+                            event,
+                        )
+                    } else {
+                        false
+                    }
+                }
+            };
+            if handled {
+                break;
+            }
+        }
+
+        event.target_flags(EventTarget::Nothing);
+        if !handled {
+            self.app.post_event(&mut self.shell, event);
         }
     }
 }

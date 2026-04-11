@@ -7,7 +7,7 @@ use crate::{
 pub trait Widget<Rend, Msg, Evt, Theme> {
     fn layout(
         &mut self,
-        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+        lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
         bounds: &LayoutBounds,
         pos_base: RelPos,
         flags: LayoutFlags,
@@ -19,14 +19,14 @@ pub trait Widget<Rend, Msg, Evt, Theme> {
 
     fn event(
         &mut self,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> bool;
 
     fn draw(
         &mut self,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         renderer: &mut Rend,
     );

@@ -22,10 +22,10 @@ impl<Style> PartTrack<Style> {
         }
     }
 
-    pub fn event<Msg, Evt, Theme>(
+    pub fn event<Rend, Msg, Evt, Theme>(
         &mut self,
         bounds: Rect<f32>,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
         orientation: Orientation,

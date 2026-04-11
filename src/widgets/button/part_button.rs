@@ -36,10 +36,10 @@ impl<Style> PartButton<Style> {
         Rect::from_pos_size(self.bounds.pos() + off, self.bounds.size())
     }
 
-    pub fn disable<Msg, Theme>(
+    pub fn disable<Rend, Msg, Evt, Theme>(
         &mut self,
         theme: &Theme,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
     ) where
         Theme: ButtonTheme<Style = Style>,
     {
@@ -52,8 +52,11 @@ impl<Style> PartButton<Style> {
         self.state = ButtonState::Disabled;
     }
 
-    pub fn enable<Msg, Theme>(&mut self, theme: &Theme, shell: &mut Shell<Msg>)
-    where
+    pub fn enable<Rend, Msg, Evt, Theme>(
+        &mut self,
+        theme: &Theme,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+    ) where
         Theme: ButtonTheme<Style = Style>,
     {
         if !self.state.is_disabled() {
@@ -65,11 +68,11 @@ impl<Style> PartButton<Style> {
         self.state = ButtonState::Normal;
     }
 
-    pub fn set_disable<Msg, Theme>(
+    pub fn set_disable<Rend, Msg, Evt, Theme>(
         &mut self,
         val: bool,
         theme: &Theme,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
     ) where
         Theme: ButtonTheme<Style = Style>,
     {
@@ -135,13 +138,13 @@ impl<Style> PartButton<Style> {
         self.bounds.set_pos(pos);
     }
 
-    pub fn event<Msg, Evt, Theme>(
+    pub fn event<Rend, Msg, Evt, Theme>(
         &mut self,
         off: Vec2<f32>,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
-        child_event: impl FnOnce(&mut Shell<Msg>) -> bool,
+        child_event: impl FnOnce(&mut Shell<Rend, Msg, Evt, Theme>) -> bool,
     ) -> (bool, ButtonEvent)
     where
         Evt: Event,
@@ -155,10 +158,10 @@ impl<Style> PartButton<Style> {
         res
     }
 
-    pub fn event_direct<Msg, Evt, Theme>(
+    pub fn event_direct<Rend, Msg, Evt, Theme>(
         &mut self,
         off: Vec2<f32>,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> (bool, ButtonEvent)

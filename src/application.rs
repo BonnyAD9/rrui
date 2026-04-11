@@ -9,7 +9,7 @@ pub trait Application<Renderer, Event> {
 
     fn pre_event(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<Renderer, Self::Message, Event, Self::Theme>,
         event: &EventInfo<Event>,
         evt_ctrl: &mut EventCtrl,
     ) {
@@ -20,7 +20,7 @@ pub trait Application<Renderer, Event> {
 
     fn post_event(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<Renderer, Self::Message, Event, Self::Theme>,
         event: &EventInfo<Event>,
     ) {
         _ = shell;
@@ -29,13 +29,13 @@ pub trait Application<Renderer, Event> {
 
     fn message(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<Renderer, Self::Message, Event, Self::Theme>,
         msg: Self::Message,
     );
 
     fn messages(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<Renderer, Self::Message, Event, Self::Theme>,
         msgs: &mut Vec<Self::Message>,
     ) {
         for msg in msgs.splice(.., []) {
@@ -45,7 +45,7 @@ pub trait Application<Renderer, Event> {
 
     fn root(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<Renderer, Self::Message, Event, Self::Theme>,
     ) -> Element<Renderer, Self::Message, Event, Self::Theme>;
 
     fn theme(&self) -> &Self::Theme;

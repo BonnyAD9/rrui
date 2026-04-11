@@ -2,6 +2,7 @@ mod event_ctx;
 mod event_flags;
 mod event_info;
 mod event_kind;
+mod event_target;
 mod modifiers;
 mod mouse_button;
 mod mouse_relation;
@@ -13,8 +14,9 @@ use std::fmt::Debug;
 use smol_str::SmolStr;
 
 pub use self::{
-    event_ctx::*, event_flags::*, event_info::*, event_kind::*, modifiers::*,
-    mouse_button::*, mouse_relation::*, mouse_state::*, scroll_delta::*,
+    event_ctx::*, event_flags::*, event_info::*, event_kind::*,
+    event_target::*, modifiers::*, mouse_button::*, mouse_relation::*,
+    mouse_state::*, scroll_delta::*,
 };
 
 pub trait Event: Debug {
@@ -36,8 +38,18 @@ pub trait Event: Debug {
         self.get_flags().contains(EventFlags::INPUT)
     }
 
-    fn is_for_widgets(&self) -> bool {
-        self.get_flags().contains(EventFlags::FOR_WIDGETS)
+    fn get_target(&self) -> EventTarget {
+        match self.get_kind() {
+            EventKind::MouseMove(_) => EventTarget::DragCapture,
+            EventKind::MouseRelease(_) => EventTarget::DragCaptureEnd,
+            _ => {
+                if self.get_flags().contains(EventFlags::FOR_WIDGETS) {
+                    EventTarget::Root
+                } else {
+                    EventTarget::Nothing
+                }
+            }
+        }
     }
 
     fn key_char(&self) -> Option<SmolStr>;

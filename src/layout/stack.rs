@@ -8,7 +8,7 @@ pub fn stack<W, Rend, Msg, Evt, Theme>(
     children: &mut [W],
     spacing: f32,
     direction: Direction,
-    lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+    lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
     flags: LayoutFlags,
@@ -35,7 +35,7 @@ where
 pub fn stack_from_left<W, Rend, Msg, Evt, Theme>(
     children: &mut [W],
     spacing: f32,
-    lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+    lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
     flags: LayoutFlags,
@@ -71,7 +71,7 @@ where
 pub fn stack_from_top<W, Rend, Msg, Evt, Theme>(
     children: &mut [W],
     spacing: f32,
-    lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+    lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
     flags: LayoutFlags,
@@ -107,7 +107,7 @@ where
 pub fn stack_from_right<W, Rend, Msg, Evt, Theme>(
     children: &mut [W],
     spacing: f32,
-    lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+    lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
     flags: LayoutFlags,
@@ -151,7 +151,7 @@ where
 pub fn stack_from_bottom<W, Rend, Msg, Evt, Theme>(
     children: &mut [W],
     spacing: f32,
-    lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+    lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
     bounds: &LayoutBounds,
     rel_pos: RelPos,
     flags: LayoutFlags,

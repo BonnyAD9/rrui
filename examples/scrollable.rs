@@ -40,14 +40,14 @@ where
 
     fn message(
         &mut self,
-        _: &mut rrui::Shell<Self::Message>,
+        _: &mut rrui::Shell<R, Self::Message, E, Self::Theme>,
         _: Self::Message,
     ) {
     }
 
     fn root(
         &mut self,
-        _: &mut Shell<Self::Message>,
+        _: &mut Shell<R, Self::Message, E, Self::Theme>,
     ) -> Element<R, Self::Message, E, Self::Theme> {
         let mut img =
             Image::encoded(Bytes::from_static(include_bytes!("bonnyad9.jpg")));

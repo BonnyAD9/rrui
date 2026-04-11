@@ -1,7 +1,9 @@
+use crate::event::EventTarget;
+
 #[derive(Debug, Default)]
 pub struct EventCtrl {
     pub ignore: bool,
-    pub for_widgets: Option<bool>,
+    pub target: Option<EventTarget>,
 }
 
 impl EventCtrl {
@@ -14,6 +16,6 @@ impl EventCtrl {
     }
 
     pub fn capture(&mut self) {
-        self.for_widgets = Some(false);
+        self.target = Some(EventTarget::Nothing);
     }
 }

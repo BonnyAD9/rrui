@@ -2,7 +2,7 @@ use minlin::{Rect, Vec2};
 
 use crate::{
     Orientation, QuadRenderer, Shell,
-    event::{Event, EventInfo, MouseRelation, MouseState},
+    event::{Event, EventInfo, EventKind, MouseRelation, MouseState},
     widgets::{ThumbEvent, ThumbLayout, ThumbState, ThumbTheme},
 };
 
@@ -10,6 +10,7 @@ use crate::{
 pub struct PartThumb<Style> {
     pub style: Style,
     state: ThumbState,
+    next_state: ThumbState,
 }
 
 impl<Style> PartThumb<Style> {
@@ -19,16 +20,18 @@ impl<Style> PartThumb<Style> {
         Self {
             style,
             state: ThumbState::Normal,
+            next_state: ThumbState::Normal,
         }
     }
 
-    pub fn track_hover_start<Msg, Theme>(
+    pub fn track_hover_start<Rend, Msg, Evt, Theme>(
         &mut self,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
     ) where
         Theme: ThumbTheme<Style = Style>,
     {
+        self.next_state = ThumbState::TrackHover;
         if self.state != ThumbState::Normal {
             return;
         }
@@ -42,13 +45,14 @@ impl<Style> PartThumb<Style> {
         }
     }
 
-    pub fn track_hover_end<Msg, Theme>(
+    pub fn track_hover_end<Rend, Msg, Evt, Theme>(
         &mut self,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
     ) where
         Theme: ThumbTheme<Style = Style>,
     {
+        self.next_state = ThumbState::Normal;
         if self.state != ThumbState::TrackHover {
             return;
         }
@@ -62,10 +66,10 @@ impl<Style> PartThumb<Style> {
         }
     }
 
-    pub fn set_track_hover<Msg, Theme>(
+    pub fn set_track_hover<Rend, Msg, Evt, Theme>(
         &mut self,
         hover: bool,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
     ) where
         Theme: ThumbTheme<Style = Style>,
@@ -77,10 +81,14 @@ impl<Style> PartThumb<Style> {
         }
     }
 
-    pub fn event<Msg, Evt, Theme>(
+    pub fn is_dragging(&self) -> bool {
+        matches!(self.state, ThumbState::Dragging(_))
+    }
+
+    pub fn event<Rend, Msg, Evt, Theme>(
         &mut self,
         layout: &ThumbLayout,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> (bool, ThumbEvent)
@@ -96,14 +104,30 @@ impl<Style> PartThumb<Style> {
                 if self.state == ThumbState::Normal {
                     return (false, ThumbEvent::Nothing);
                 }
-                (ThumbState::TrackHover, (false, ThumbEvent::Nothing))
+                if !event.is_drag_capture() {
+                    (self.next_state, (false, ThumbEvent::Nothing))
+                } else {
+                    match event.get_kind() {
+                        EventKind::MouseMove(_) => {
+                            if let Some(mpos) = shell.mouse_pos() {
+                                self.drag(layout, shell, mpos)
+                            } else {
+                                return (true, ThumbEvent::Nothing);
+                            }
+                        }
+                        EventKind::MouseRelease(_) => {
+                            (self.next_state, (true, ThumbEvent::Nothing))
+                        }
+                        _ => return (false, ThumbEvent::Nothing),
+                    }
+                }
             }
             MouseRelation::Move => {
                 if shell.mouse_state().intersects(Self::REACT) {
                     if let Some(mpos) = shell.mouse_pos() {
-                        self.drag(layout, mpos)
+                        self.drag(layout, shell, mpos)
                     } else {
-                        (self.state, (true, ThumbEvent::Nothing))
+                        return (true, ThumbEvent::Nothing);
                     }
                 } else {
                     (ThumbState::Hover, (false, ThumbEvent::Nothing))
@@ -112,16 +136,19 @@ impl<Style> PartThumb<Style> {
             MouseRelation::Enter | MouseRelation::Hover => {
                 if shell.mouse_state().intersects(Self::REACT) {
                     if let Some(mpos) = shell.mouse_pos() {
-                        self.press(layout, mpos)
+                        self.press(layout, shell, mpos)
                     } else {
-                        (self.state, (true, ThumbEvent::Nothing))
+                        return (true, ThumbEvent::Nothing);
                     }
                 } else {
                     (ThumbState::Hover, (false, ThumbEvent::Nothing))
                 }
             }
             MouseRelation::Leave => {
-                (ThumbState::TrackHover, (false, ThumbEvent::Nothing))
+                if matches!(self.state, ThumbState::Dragging(_)) {
+                    return (false, ThumbEvent::Nothing);
+                }
+                (self.next_state, (false, ThumbEvent::Nothing))
             }
         };
 
@@ -135,18 +162,24 @@ impl<Style> PartThumb<Style> {
         res
     }
 
-    pub fn start_drag<Msg>(&mut self, dpos: f32, shell: &mut Shell<Msg>) {
+    pub fn start_drag<Rend, Msg, Evt, Theme>(
+        &mut self,
+        dpos: f32,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+    ) {
         self.state = ThumbState::Dragging(dpos);
+        shell.capture_drag();
         shell.request_redraw();
     }
 
-    fn drag(
+    fn drag<Rend, Msg, Evt, Theme>(
         &mut self,
         layout: &ThumbLayout,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         mpos: Vec2<f32>,
     ) -> (ThumbState, (bool, ThumbEvent)) {
         let ThumbState::Dragging(dpos) = self.state else {
-            return self.press(layout, mpos);
+            return self.press(layout, shell, mpos);
         };
 
         let pos = match layout.orientation {
@@ -161,9 +194,10 @@ impl<Style> PartThumb<Style> {
         (ThumbState::Dragging(dpos), (true, ThumbEvent::Move(pos)))
     }
 
-    fn press(
+    fn press<Rend, Msg, Evt, Theme>(
         &mut self,
         layout: &ThumbLayout,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         pos: Vec2<f32>,
     ) -> (ThumbState, (bool, ThumbEvent)) {
         let dpos = match layout.orientation {
@@ -171,6 +205,7 @@ impl<Style> PartThumb<Style> {
             Orientation::Vertical => pos.y - layout.bounds.y,
         };
 
+        shell.capture_drag();
         (ThumbState::Dragging(dpos), (true, ThumbEvent::Nothing))
     }
 

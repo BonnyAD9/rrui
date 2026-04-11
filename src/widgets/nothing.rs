@@ -13,7 +13,7 @@ pub struct Nothing;
 impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
     fn layout(
         &mut self,
-        _: &mut LayoutParams<'_, Rend, Msg, Theme>,
+        _: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
         bounds: &crate::LayoutBounds,
         _: RelPos,
         _: LayoutFlags,
@@ -23,14 +23,20 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
 
     fn event(
         &mut self,
-        _: &mut Shell<Msg>,
+        _: &mut Shell<Rend, Msg, Evt, Theme>,
         _: &Theme,
         _: &EventInfo<Evt>,
     ) -> bool {
         false
     }
 
-    fn draw(&mut self, _: &mut Shell<Msg>, _: &Theme, _: &mut Rend) {}
+    fn draw(
+        &mut self,
+        _: &mut Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: &mut Rend,
+    ) {
+    }
 
     fn size(&mut self, _: &Theme) -> Vec2<f32> {
         Vec2::ZERO

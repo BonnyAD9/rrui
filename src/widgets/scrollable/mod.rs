@@ -2,6 +2,8 @@ mod scrollable_style;
 mod scrollable_theme;
 mod scrollbar_behaviour;
 
+use std::{cell::RefCell, rc::Rc};
+
 use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
@@ -18,7 +20,11 @@ pub use self::{
     scrollable_style::*, scrollable_theme::*, scrollbar_behaviour::*,
 };
 
-pub struct Scrollable<W, Msg, Style: ScrollableStyle> {
+pub struct Scrollable<W, Msg, Style: ScrollableStyle>(
+    Rc<RefCell<ScrollableInner<W, Msg, Style>>>,
+);
+
+struct ScrollableInner<W, Msg, Style: ScrollableStyle> {
     pub child: W,
     pub style: Style,
     pub behaviour: Vec2<ScrollbarBehaviour>,
@@ -29,9 +35,8 @@ pub struct Scrollable<W, Msg, Style: ScrollableStyle> {
     rel_pos: RelPos,
     bounds: Rect<f32>,
 }
-
-impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
-    pub fn with_scrollbars_styled(
+impl<W, Msg, Style: ScrollableStyle> ScrollableInner<W, Msg, Style> {
+    fn with_scrollbars_styled(
         style: Style,
         behaviour: impl Into<Vec2<ScrollbarBehaviour>>,
         child: W,
@@ -56,6 +61,19 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
             bounds: Rect::default(),
             style,
         }
+    }
+}
+
+impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
+    pub fn with_scrollbars_styled(
+        style: Style,
+        behaviour: impl Into<Vec2<ScrollbarBehaviour>>,
+        child: W,
+    ) -> Self {
+        Self(Rc::new(
+            ScrollableInner::with_scrollbars_styled(style, behaviour, child)
+                .into(),
+        ))
     }
 
     pub fn vertical_styled(style: Style, child: W) -> Self {
@@ -90,7 +108,7 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
         &mut self,
         scrollbar: impl Into<Vec2<ScrollbarBehaviour>>,
     ) -> &mut Self {
-        self.behaviour = scrollbar.into();
+        self.0.borrow_mut().behaviour = scrollbar.into();
         self
     }
 
@@ -98,12 +116,12 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
         &mut self,
         on_scroll: impl FnMut(Vec2<f32>) -> Option<Msg> + 'static,
     ) -> &mut Self {
-        self.on_scroll = Box::new(on_scroll);
+        self.0.borrow_mut().on_scroll = Box::new(on_scroll);
         self
     }
 
     pub fn padding(&mut self, padding: impl Into<Padding<f32>>) -> &mut Self {
-        self.padding = padding.into();
+        self.0.borrow_mut().padding = padding.into();
         self
     }
 }
@@ -135,7 +153,7 @@ impl<W, Msg, Style: Default + ScrollableStyle> Scrollable<W, Msg, Style> {
 
 #[rustfmt::skip] // rustfmt is confused from the long clauses and fails.
 impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
-    for Scrollable<W, Msg, <Theme as ScrollableTheme>::Style>
+    for ScrollableInner<W, Msg, <Theme as ScrollableTheme>::Style>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
     Theme: ScrollableTheme,
@@ -153,7 +171,7 @@ where
 {
     fn layout(
         &mut self,
-        lp: &mut crate::LayoutParams<'_, Rend, Msg, Theme>,
+        lp: &mut crate::LayoutParams<'_, Rend, Msg, Evt, Theme>,
         bounds: &crate::LayoutBounds,
         pos_base: RelPos,
         flags: crate::LayoutFlags,
@@ -236,25 +254,20 @@ where
 
     fn event(
         &mut self,
-        shell: &mut crate::Shell<Msg>,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
         let bounds = self.rel_pos.position_rect(self.bounds);
         let vbounds = self.rel_pos.position_rect(self.vbounds);
 
-        let handled = match event.mouse_relate_to(vbounds) {
-            MouseRelation::Elswhere => false,
-            _ => self.child.event(shell, theme, event),
-        };
-
-        if handled {
-            return true;
-        }
-
         let off = self.rel_pos.get();
+        
+        let drag_capture = event.is_drag_capture();
 
-        if self.behaviour.x.enabled() {
+        if self.behaviour.x.enabled() 
+            && (!drag_capture || self.scroll.x.is_dragging())
+        {
             let (handled, evt) = self.scroll.x.event(off, shell, theme, event);
             if matches!(evt, ScrollbarEvent::ScrollTo(_)) {
                 let pos = self.abs_pos();
@@ -267,7 +280,9 @@ where
             }
         }
 
-        if self.behaviour.y.enabled() {
+        if self.behaviour.y.enabled()
+            && (!drag_capture || self.scroll.y.is_dragging())
+        {
             let (handled, evt) = self.scroll.y.event(off, shell, theme, event);
             if matches!(evt, ScrollbarEvent::ScrollTo(_)) {
                 let pos = self.abs_pos();
@@ -278,6 +293,15 @@ where
             if handled {
                 return true;
             }
+        }
+        
+        let handled = match event.mouse_relate_to(vbounds) {
+            MouseRelation::Elswhere => false,
+            _ => self.child.event(shell, theme, event),
+        };
+
+        if handled {
+            return true;
         }
 
         match event.mouse_relate_to(bounds) {
@@ -310,7 +334,7 @@ where
 
     fn draw(
         &mut self,
-        shell: &mut crate::Shell<Msg>,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         renderer: &mut Rend,
     ) {
@@ -338,7 +362,65 @@ where
     }
 }
 
-impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
+#[rustfmt::skip] // rustfmt is confused from the long clauses and fails.
+impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
+    for Scrollable<W, Msg, <Theme as ScrollableTheme>::Style>
+where
+    W: Widget<Rend, Msg, Evt, Theme> + 'static,
+    Theme: ScrollableTheme,
+    <Theme as ScrollableTheme>::Style: ScrollableStyle + 'static,
+    Theme: ScrollbarTheme<Style = <<Theme as ScrollableTheme>::Style
+        as ScrollableStyle>::ScrollbarStyle>,
+    Theme: ThumbTheme<Style = <<<Theme as ScrollableTheme>::Style
+        as ScrollableStyle>::ScrollbarStyle as ScrollbarStyle>::ThumbStyle>,
+    Theme: TrackTheme<Style = <<<Theme as ScrollableTheme>::Style
+        as ScrollableStyle>::ScrollbarStyle as ScrollbarStyle>::TrackStyle>,
+    Theme: ButtonTheme<Style = <<<Theme as ScrollableTheme>::Style
+        as ScrollableStyle>::ScrollbarStyle as ScrollbarStyle>::ButtonStyle>,
+    Evt: Event,
+    Rend: QuadRenderer + SvgRenderer + LayerRenderer,
+    Msg: 'static,
+{
+    fn layout(
+        &mut self,
+        lp: &mut crate::LayoutParams<'_, Rend, Msg, Evt, Theme>,
+        bounds: &crate::LayoutBounds,
+        pos_base: RelPos,
+        flags: crate::LayoutFlags,
+    ) -> Rect<f32> {
+        self.0.borrow_mut().layout(lp, bounds, pos_base, flags)
+    }
+
+    fn size(&mut self, theme: &Theme) -> Vec2<f32> {
+        self.0.borrow_mut().size(theme)
+    }
+
+    fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>) {
+        self.0.borrow_mut().reposition(theme, pos);
+    }
+
+    fn event(
+        &mut self,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        event: &crate::event::EventInfo<Evt>,
+    ) -> bool {
+        shell.with_focus(self.0.clone(), |s| {
+            self.0.borrow_mut().event(s, theme, event)
+        })
+    }
+
+    fn draw(
+        &mut self,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        renderer: &mut Rend,
+    ) {
+        self.0.borrow_mut().draw(shell, theme, renderer);
+    }
+}
+
+impl<W, Msg, Style: ScrollableStyle> ScrollableInner<W, Msg, Style> {
     fn abs_pos(&self) -> Vec2<f32> {
         self.scroll.as_ref().map(|a| a.state.pos)
     }
@@ -385,7 +467,7 @@ where
 {
     fn from(value: Scrollable<W, Msg, <Theme as ScrollableTheme>::Style>)
     -> Self {
-        Self::new(value)
+        Self::from_cell(value.0)
     }
 }
 

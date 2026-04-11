@@ -99,7 +99,7 @@ where
 {
     fn layout(
         &mut self,
-        lp: &mut crate::LayoutParams<'_, Rend, Msg, Theme>,
+        lp: &mut crate::LayoutParams<'_, Rend, Msg, Evt, Theme>,
         bounds: &crate::LayoutBounds,
         pos_base: crate::RelPos,
         flags: crate::LayoutFlags,
@@ -120,7 +120,7 @@ where
 
     fn event(
         &mut self,
-        shell: &mut crate::Shell<Msg>,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &crate::event::EventInfo<Evt>,
     ) -> bool {
@@ -129,7 +129,7 @@ where
 
     fn draw(
         &mut self,
-        shell: &mut crate::Shell<Msg>,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         renderer: &mut Rend,
     ) {

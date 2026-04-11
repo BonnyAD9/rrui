@@ -35,14 +35,14 @@ impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
 
     fn message(
         &mut self,
-        _: &mut rrui::Shell<Self::Message>,
+        _: &mut rrui::Shell<R, Self::Message, E, Self::Theme>,
         _: Self::Message,
     ) {
     }
 
     fn root(
         &mut self,
-        _: &mut Shell<Self::Message>,
+        _: &mut Shell<R, Self::Message, E, Self::Theme>,
     ) -> Element<R, Self::Message, E, Self::Theme> {
         let mut text = TextBlock::new(
             "Hello rrui! Or maybe some longer text to try here.\n\

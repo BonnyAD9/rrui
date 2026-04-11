@@ -38,14 +38,14 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
 
     fn message(
         &mut self,
-        _: &mut rrui::Shell<Self::Message>,
+        _: &mut rrui::Shell<R, Self::Message, E, Self::Theme>,
         _: Self::Message,
     ) {
     }
 
     fn root(
         &mut self,
-        shell: &mut Shell<Self::Message>,
+        shell: &mut Shell<R, Self::Message, E, Self::Theme>,
     ) -> Element<R, Self::Message, E, Self::Theme> {
         let mut text =
             TextBlock::new("A quick brown fox jumped over the lazy dog.");

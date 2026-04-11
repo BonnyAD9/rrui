@@ -1,6 +1,6 @@
 use minlin::{Rect, RectExt, Vec2};
 
-use crate::event::{Event, EventFlags, EventKind, MouseRelation};
+use crate::event::{Event, EventFlags, EventKind, EventTarget, MouseRelation};
 
 #[derive(Clone, Copy, Debug)]
 pub struct EventInfo<E> {
@@ -67,6 +67,15 @@ impl<E: Event> EventInfo<E> {
                 .new_mouse
                 .map(|p| bounds.contains(p))
                 .unwrap_or_default()
+    }
+
+    pub fn is_drag_capture(&self) -> bool {
+        self.flags.contains(EventFlags::DRAG_CAPTURE)
+    }
+
+    pub fn target_flags(&mut self, target: EventTarget) {
+        self.flags &= !EventFlags::DIRECT;
+        self.flags |= target.target_flags();
     }
 }
 

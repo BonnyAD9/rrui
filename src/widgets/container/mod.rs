@@ -90,7 +90,7 @@ where
 {
     fn layout(
         &mut self,
-        lp: &mut LayoutParams<'_, Rend, Msg, Theme>,
+        lp: &mut LayoutParams<'_, Rend, Msg, Evt, Theme>,
         bounds: &LayoutBounds,
         rel_pos: RelPos,
         flags: LayoutFlags,
@@ -157,7 +157,7 @@ where
 
     fn event(
         &mut self,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
     ) -> bool {
@@ -177,7 +177,7 @@ where
 
     fn draw(
         &mut self,
-        shell: &mut Shell<Msg>,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         renderer: &mut Rend,
     ) {
