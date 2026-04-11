@@ -41,6 +41,27 @@ pub fn align_sizes0<S: AsRef<Size>, I: Iterator<Item = S> + Clone>(
     align_sizes_inner(best, sizes, res)
 }
 
+pub fn align_sizes_no_clone<S: AsRef<Size>, I: Iterator<Item = S>>(
+    best: f32,
+    sizes: impl IntoIterator<IntoIter = I>,
+    res: &mut Vec<f32>,
+) -> Vec2<f32> {
+    let sizes = sizes.into_iter();
+    res.reserve(sizes.size_hint().0);
+    align_sizes_no_clone_inner(best, sizes, res)
+}
+
+pub fn align_sizes0_no_clone<S: AsRef<Size>, I: Iterator<Item = S>>(
+    best: f32,
+    sizes: impl IntoIterator<IntoIter = I>,
+    res: &mut Vec<f32>,
+) -> Vec2<f32> {
+    let sizes = sizes.into_iter();
+    res.reserve(sizes.size_hint().0 + 1);
+    res.push(0.);
+    align_sizes_no_clone_inner(best, sizes, res)
+}
+
 fn align_sizes_inner<S, I>(
     best: f32,
     sizes: I,
@@ -60,6 +81,32 @@ where
     }
 
     update_align_sizes(best, sizes, &mut res[bl..], total);
+
+    total
+}
+
+fn align_sizes_no_clone_inner<S, I>(
+    best: f32,
+    sizes: I,
+    res: &mut Vec<f32>,
+) -> Vec2<f32>
+where
+    S: AsRef<Size>,
+    I: Iterator<Item = S>,
+{
+    let bl = res.len();
+    let mut total = Vec2::<f32>::ZERO;
+
+    let mut sizes2 = Vec::with_capacity(sizes.size_hint().0);
+    for s in sizes {
+        let s = *s.as_ref();
+        sizes2.push(s);
+        let parts = s.to_parts();
+        res.push(parts.x);
+        total += parts;
+    }
+
+    update_align_sizes(best, sizes2, &mut res[bl..], total);
 
     total
 }

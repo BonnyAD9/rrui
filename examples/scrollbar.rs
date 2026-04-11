@@ -63,8 +63,8 @@ where
         });
 
         let mut layout = Layout::<Element<_, _, _, _>>::horizontal();
-        layout.add_unit(text.into());
-        layout.add_abs(20., scrollbar.into());
+        layout.add_auto(text.into());
+        layout.add_auto(scrollbar.into());
 
         layout.into()
     }

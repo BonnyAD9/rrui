@@ -4,7 +4,7 @@ use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
     Element, LayoutBounds, LayoutFlags, LayoutParams, Orientation, RelPos,
-    RelPosSrc, Size, Widget, WidgetExt, event::Event, get_pos, layout,
+    RelPosSrc, Size, Space, Widget, WidgetExt, event::Event, get_pos, layout,
     reposition, update_rel_pos,
 };
 
@@ -50,9 +50,13 @@ impl<W> Layout<W> {
         Self::vertical()
     }
 
-    pub fn add(&mut self, size: impl Into<Size>, child: W) -> &mut Self {
-        self.children.push(LayoutItem::new(size, child));
+    pub fn add(&mut self, space: impl Into<Space>, child: W) -> &mut Self {
+        self.children.push(LayoutItem::new(space, child));
         self
+    }
+
+    pub fn add_auto(&mut self, child: W) -> &mut Self {
+        self.add(Space::Auto, child)
     }
 
     pub fn add_rel(&mut self, size: f32, child: W) -> &mut Self {
@@ -104,10 +108,13 @@ where
             update_rel_pos(&mut self.rel_pos, pos_base, self.bounds.pos());
         self.bounds.set_pos(Vec2::ZERO);
 
-        let sizes = self.children.iter().map(|a| a.size);
         let best = (self.orientation.component(self.bounds.size())
             - self.spacing * (self.children.len() - 1) as f32)
             .max(0.);
+        let sizes = self
+            .children
+            .iter_mut()
+            .map(|a| a.size(lp.theme, self.orientation));
         if !flags.contains(LayoutFlags::WIDGET_MODIFIED)
             && let Some(s) = self.size
         {
@@ -115,7 +122,8 @@ where
         } else {
             self.obounds.clear();
             self.obounds.push(0.);
-            let s = layout::align_sizes(best, sizes, &mut self.obounds);
+            let s =
+                layout::align_sizes_no_clone(best, sizes, &mut self.obounds);
             self.size = Some(s);
         }
 
