@@ -135,7 +135,9 @@ impl<Style> PartThumb<Style> {
             }
             MouseRelation::Enter | MouseRelation::Hover => {
                 if shell.mouse_state().intersects(Self::REACT) {
-                    if let Some(mpos) = shell.mouse_pos() {
+                    if !self.is_dragging()
+                        && let Some(mpos) = shell.mouse_pos()
+                    {
                         self.press(layout, shell, mpos)
                     } else {
                         return (true, ThumbEvent::Nothing);
