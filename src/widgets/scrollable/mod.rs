@@ -35,6 +35,7 @@ struct ScrollableInner<W, Msg, Style: ScrollableStyle> {
     rel_pos: RelPos,
     bounds: Rect<f32>,
 }
+
 impl<W, Msg, Style: ScrollableStyle> ScrollableInner<W, Msg, Style> {
     fn with_scrollbars_styled(
         style: Style,
