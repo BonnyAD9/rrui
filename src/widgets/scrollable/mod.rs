@@ -2,7 +2,10 @@ mod scrollable_style;
 mod scrollable_theme;
 mod scrollbar_behaviour;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Ref, RefCell, RefMut},
+    rc::Rc,
+};
 
 use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
@@ -24,7 +27,7 @@ pub struct Scrollable<W, Msg, Style: ScrollableStyle>(
     Rc<RefCell<ScrollableInner<W, Msg, Style>>>,
 );
 
-struct ScrollableInner<W, Msg, Style: ScrollableStyle> {
+pub struct ScrollableInner<W, Msg, Style: ScrollableStyle> {
     pub child: W,
     pub style: Style,
     pub behaviour: Vec2<ScrollbarBehaviour>,
@@ -66,6 +69,14 @@ impl<W, Msg, Style: ScrollableStyle> ScrollableInner<W, Msg, Style> {
 }
 
 impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
+    pub fn borrow(&self) -> Ref<'_, ScrollableInner<W, Msg, Style>> {
+        self.0.borrow()
+    }
+
+    pub fn borrow_mut(&self) -> RefMut<'_, ScrollableInner<W, Msg, Style>> {
+        self.0.borrow_mut()
+    }
+
     pub fn with_scrollbars_styled(
         style: Style,
         behaviour: impl Into<Vec2<ScrollbarBehaviour>>,

@@ -5,7 +5,10 @@ mod scrollbar_state;
 mod scrollbar_style;
 mod scrollbar_theme;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Ref, RefCell, RefMut},
+    rc::Rc,
+};
 
 use crate::{
     Element, Orientation, QuadRenderer, RedrawSlot, RelPos, SvgRenderer,
@@ -21,11 +24,12 @@ pub struct Scrollbar<Style: ScrollbarStyle, Msg>(
     Rc<RefCell<ScrollbarInner<Style, Msg>>>,
 );
 
-struct ScrollbarInner<Style: ScrollbarStyle, Msg> {
+pub struct ScrollbarInner<Style: ScrollbarStyle, Msg> {
     pub on_scroll: Box<dyn FnMut(f32) -> Option<Msg>>,
     pub inner: PartScrollbar<Style>,
     rel_pos: RelPos,
 }
+
 impl<Style: ScrollbarStyle, Msg> ScrollbarInner<Style, Msg> {
     fn styled(style: Style, orientation: Orientation) -> Self {
         Self {
@@ -37,6 +41,14 @@ impl<Style: ScrollbarStyle, Msg> ScrollbarInner<Style, Msg> {
 }
 
 impl<Style: ScrollbarStyle, Msg> Scrollbar<Style, Msg> {
+    pub fn borrow(&self) -> Ref<'_, ScrollbarInner<Style, Msg>> {
+        self.0.borrow()
+    }
+
+    pub fn borrow_mut(&mut self) -> RefMut<'_, ScrollbarInner<Style, Msg>> {
+        self.0.borrow_mut()
+    }
+
     pub fn styled(style: Style, orientation: Orientation) -> Self {
         Self(Rc::new(ScrollbarInner::styled(style, orientation).into()))
     }
