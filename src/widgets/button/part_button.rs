@@ -1,7 +1,7 @@
 use minlin::{Padding, Rect, RectExt, Vec2};
 
 use crate::{
-    LayoutBounds, QuadRenderer, RedrawSlot, Shell,
+    ControlRenderer, LayoutBounds, QuadRenderer, RedrawSlot, Shell,
     event::{Event, EventInfo, EventKind, MouseRelation, MouseState},
     widgets::{ButtonEvent, ButtonState, ButtonTheme},
 };
@@ -218,11 +218,15 @@ impl<Style> PartButton<Style> {
         renderer: &mut Rend,
         draw_child: impl FnOnce(&mut Rend),
     ) where
-        Rend: QuadRenderer,
+        Rend: QuadRenderer + ControlRenderer,
         Theme: ButtonTheme<Style = Style>,
     {
         self.draw_direct(off, theme, renderer);
-        draw_child(renderer);
+        if let Some(f) = theme.foreground(&self.style, self.state) {
+            renderer.with_foreground(Some(f), draw_child)
+        } else {
+            draw_child(renderer);
+        }
     }
 
     pub fn draw_direct<Rend, Theme>(

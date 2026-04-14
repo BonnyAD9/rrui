@@ -6,8 +6,8 @@ mod part_button;
 use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
-    Element, LayoutFlags, LayoutParams, QuadRenderer, RedrawSlot, RelPos,
-    TextAlign, Widget, WidgetExt,
+    ControlRenderer, Element, LayoutFlags, LayoutParams, QuadRenderer,
+    RedrawSlot, RelPos, TextAlign, Widget, WidgetExt,
     event::{Event, MouseButton, MouseState},
     widgets::TextBlock,
 };
@@ -104,7 +104,7 @@ impl<W, Rend, Msg, Evt, Theme, Style> Widget<Rend, Msg, Evt, Theme>
     for Button<W, Style, Msg>
 where
     W: Widget<Rend, Msg, Evt, Theme>,
-    Rend: QuadRenderer,
+    Rend: QuadRenderer + ControlRenderer,
     Evt: Event,
     Theme: ButtonTheme<Style = Style>,
 {
@@ -115,6 +115,9 @@ where
         rel_pos: RelPos,
         flags: LayoutFlags,
     ) -> Rect<f32> {
+        self.disabled.update();
+        self.inner.set_disable_no_redraw(*self.disabled);
+
         self.rel_pos.update(rel_pos.clone());
         self.inner
             .layout(bounds, |b| self.child.layout(lp, b, rel_pos, flags))
@@ -172,7 +175,7 @@ impl<W, Rend, Msg, Evt, Theme, Style> From<Button<W, Style, Msg>>
 where
     W: Widget<Rend, Msg, Evt, Theme> + 'static,
     Msg: 'static,
-    Rend: QuadRenderer,
+    Rend: QuadRenderer + ControlRenderer,
     Evt: Event,
     Theme: ButtonTheme<Style = Style>,
     Style: 'static,

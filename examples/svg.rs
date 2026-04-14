@@ -1,7 +1,7 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Align, Application, Element, ImageFill, LayerRenderer, QuadRenderer,
-    Shell, SvgRenderer, TextRenderer, Theme, VariableIn,
+    Align, Application, ControlRenderer, Element, ImageFill, LayerRenderer,
+    QuadRenderer, Shell, SvgRenderer, TextRenderer, Theme, VariableIn,
     config::IcedWgpuWinit,
     event::Event,
     widgets::{Button, Container, Grid, Stack, Svg},
@@ -32,7 +32,12 @@ impl App {
 
 impl<R, E> Application<R, E> for App
 where
-    R: SvgRenderer + QuadRenderer + TextRenderer + LayerRenderer + 'static,
+    R: SvgRenderer
+        + QuadRenderer
+        + TextRenderer
+        + LayerRenderer
+        + ControlRenderer
+        + 'static,
     E: Event + 'static,
 {
     type Message = ();
@@ -101,7 +106,7 @@ fn align_buttons<Rend, Evt>(
     align: impl Into<Vec2<Align>>,
 ) -> Element<Rend, (), Evt, Theme>
 where
-    Rend: QuadRenderer + TextRenderer,
+    Rend: QuadRenderer + TextRenderer + ControlRenderer,
     Evt: Event,
 {
     let var2 = var.clone();
@@ -130,7 +135,7 @@ fn center_buttons<Rend, Evt>(
     var: VariableIn<ImageFill>,
 ) -> Element<Rend, (), Evt, Theme>
 where
-    Rend: QuadRenderer + TextRenderer,
+    Rend: QuadRenderer + TextRenderer + ControlRenderer,
     Evt: Event,
 {
     let var2 = var.clone();

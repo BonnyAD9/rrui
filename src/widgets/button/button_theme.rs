@@ -1,4 +1,7 @@
-use crate::widgets::{ButtonState, ContainerAppereance};
+use crate::{
+    Color,
+    widgets::{ButtonState, ContainerAppereance},
+};
 
 pub trait ButtonTheme {
     type Style;
@@ -8,6 +11,12 @@ pub trait ButtonTheme {
         style: &Self::Style,
         state: ButtonState,
     ) -> Option<ContainerAppereance>;
+
+    fn foreground(
+        &self,
+        style: &Self::Style,
+        state: ButtonState,
+    ) -> Option<Color>;
 
     fn is_different(
         &self,

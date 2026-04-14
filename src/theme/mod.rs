@@ -60,8 +60,8 @@ impl ContainerTheme for Theme {
 impl TextBlockTheme for Theme {
     type Style = ();
 
-    fn foreground(&self, _: &Self::Style) -> Color {
-        self.fg
+    fn foreground(&self, _: &Self::Style, requested: Option<Color>) -> Color {
+        requested.unwrap_or(self.fg)
     }
 }
 
@@ -95,6 +95,19 @@ impl ButtonTheme for Theme {
                 }),
             },
             ButtonStyle::Scrollbar => None,
+        }
+    }
+
+    fn foreground(
+        &self,
+        _: &Self::Style,
+        state: ButtonState,
+    ) -> Option<Color> {
+        match state {
+            ButtonState::Normal => None,
+            ButtonState::Hover => None,
+            ButtonState::Pressed => None,
+            ButtonState::Disabled => Some(self.border.color),
         }
     }
 

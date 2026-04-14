@@ -1,3 +1,4 @@
+mod control_renderer;
 mod image_renderer;
 mod layer_renderer;
 mod quad_renderer;
@@ -5,8 +6,8 @@ mod svg_renderer;
 mod text_renderer;
 
 pub use self::{
-    image_renderer::*, layer_renderer::*, quad_renderer::*, svg_renderer::*,
-    text_renderer::*,
+    control_renderer::*, image_renderer::*, layer_renderer::*,
+    quad_renderer::*, svg_renderer::*, text_renderer::*,
 };
 
 use minlin::Vec2;

@@ -1,6 +1,6 @@
 use rrui::{
-    Application, Color, Element, QuadRenderer, Shell, TextAlign, TextRenderer,
-    TextWrap, Theme,
+    Application, Color, ControlRenderer, Element, QuadRenderer, Shell,
+    TextAlign, TextRenderer, TextWrap, Theme,
     config::IcedWgpuWinit,
     event::Event,
     widgets::{Container, MarginExt, TextBlock},
@@ -29,7 +29,9 @@ impl App {
     }
 }
 
-impl<R: QuadRenderer + TextRenderer, E: Event> Application<R, E> for App {
+impl<R: QuadRenderer + TextRenderer + ControlRenderer, E: Event>
+    Application<R, E> for App
+{
     type Message = ();
     type Theme = Theme;
 

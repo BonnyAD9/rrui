@@ -7,9 +7,9 @@ use std::borrow::Cow;
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::{
-    Align, Element, LayedText, LayoutFlags, LayoutParams, RedrawSlot, RelPos,
-    RelayoutSlot, Size, Text, TextAlign, TextRenderer, TextWrap, Widget,
-    WidgetExt, event::EventInfo,
+    Align, ControlRenderer, Element, LayedText, LayoutFlags, LayoutParams,
+    RedrawSlot, RelPos, RelayoutSlot, Size, Text, TextAlign, TextRenderer,
+    TextWrap, Widget, WidgetExt, event::EventInfo,
 };
 
 #[derive(Debug)]
@@ -79,7 +79,7 @@ impl<Style: Default, Font, LText> Default for TextBlock<Style, Font, LText> {
 impl<Rend, Msg, Evt, Theme, Style> Widget<Rend, Msg, Evt, Theme>
     for TextBlock<Style, Rend::Font, Rend::LayedText>
 where
-    Rend: TextRenderer,
+    Rend: TextRenderer + ControlRenderer,
     Theme: TextBlockTheme<Style = Style>,
 {
     fn layout(
@@ -154,7 +154,7 @@ where
             unreachable!()
         };
 
-        let fg = theme.foreground(&self.style);
+        let fg = theme.foreground(&self.style, renderer.foreground());
         let bounds = self.rel_pos.position_rect(self.bounds);
         renderer.draw_clipped_text(text, bounds.pos() + self.pos, fg, bounds);
     }
@@ -216,7 +216,7 @@ impl<Rend, Msg, Evt, Theme, Style>
     From<TextBlock<Style, Rend::Font, Rend::LayedText>>
     for Element<Rend, Msg, Evt, Theme>
 where
-    Rend: TextRenderer + 'static,
+    Rend: TextRenderer + ControlRenderer + 'static,
     Theme: TextBlockTheme<Style = Style>,
     Style: 'static,
 {

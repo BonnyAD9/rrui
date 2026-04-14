@@ -1,7 +1,7 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Application, Color, Element, QuadRenderer, Shell, SvgRenderer, TextAlign,
-    TextRenderer, Theme,
+    Application, Color, ControlRenderer, Element, QuadRenderer, Shell,
+    SvgRenderer, TextAlign, TextRenderer, Theme,
     config::IcedWgpuWinit,
     event::Event,
     widgets::{Layout, Scrollbar, ScrollbarState, TextBlock},
@@ -32,7 +32,7 @@ impl App {
 
 impl<R, E> Application<R, E> for App
 where
-    R: QuadRenderer + TextRenderer + SvgRenderer + 'static,
+    R: QuadRenderer + TextRenderer + SvgRenderer + ControlRenderer + 'static,
     E: Event + 'static,
 {
     type Message = ();

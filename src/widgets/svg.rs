@@ -4,8 +4,9 @@ use bytes::Bytes;
 use minlin::{Infinity, MapExt, Rect, RectExt, Vec2};
 
 use crate::{
-    Angle, Element, ImageFill, LayoutFlags, RedrawSlot, RelPos, RelayoutSlot,
-    SvgData, SvgParameters, SvgRenderer, Widget, WidgetExt,
+    Angle, ControlRenderer, Element, ImageFill, LayoutFlags, RedrawSlot,
+    RelPos, RelayoutSlot, SvgData, SvgParameters, SvgRenderer, Widget,
+    WidgetExt,
 };
 
 #[derive(Debug)]
@@ -14,6 +15,7 @@ pub struct Svg<S> {
     pub params: RedrawSlot<SvgParameters>,
     pub size: Option<Vec2<f32>>,
     pub fill: RelayoutSlot<ImageFill>,
+    pub use_requested_color: bool,
     svg_size: Option<Vec2<u32>>,
     sbounds: Rect<f32>,
     rel_pos: RelPos,
@@ -27,6 +29,7 @@ impl<S: SvgData> Svg<S> {
             params: Default::default(),
             size: None,
             fill: Default::default(),
+            use_requested_color: false,
             svg_size: None,
             sbounds: Rect::default(),
             rel_pos: RelPos::default(),
@@ -91,7 +94,7 @@ impl<S: SvgData> Svg<S> {
 impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
     for Svg<Rend::SvgData>
 where
-    Rend: SvgRenderer,
+    Rend: SvgRenderer + ControlRenderer,
 {
     fn layout(
         &mut self,
@@ -145,14 +148,29 @@ where
         self.params.update();
         let bounds = self.rel_pos.position_rect(self.bounds);
         let ibounds = self.rel_pos.position_rect(self.sbounds);
-        renderer.draw_svg_clipped(ibounds, bounds, &self.svg, &self.params);
+        if self.use_requested_color
+            && let Some(c) = renderer.foreground()
+        {
+            let params = SvgParameters {
+                color: Some(c),
+                ..*self.params
+            };
+            renderer.draw_svg_clipped(ibounds, bounds, &self.svg, &params);
+        } else {
+            renderer.draw_svg_clipped(
+                ibounds,
+                bounds,
+                &self.svg,
+                &self.params,
+            );
+        }
     }
 }
 
 impl<Rend, Msg, Evt, Theme> From<Svg<Rend::SvgData>>
     for Element<Rend, Msg, Evt, Theme>
 where
-    Rend: SvgRenderer,
+    Rend: SvgRenderer + ControlRenderer,
     Rend::SvgData: 'static,
 {
     fn from(value: Svg<Rend::SvgData>) -> Self {

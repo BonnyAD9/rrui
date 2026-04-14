@@ -1,3 +1,5 @@
+use std::mem;
+
 use iced_wgpu::{
     Engine,
     core::{
@@ -28,6 +30,7 @@ pub struct Renderer {
     clear_color: Option<Color>,
     cur_clip: Rect<f32>,
     next_clips: Vec<Rect<f32>>,
+    foreground: Option<crate::Color>,
 }
 
 impl crate::wgpu::Renderer for Renderer {
@@ -67,6 +70,7 @@ impl crate::wgpu::Renderer for Renderer {
             clear_color,
             cur_clip: Rect::default(),
             next_clips: vec![],
+            foreground: None,
         }
     }
 
@@ -311,5 +315,18 @@ impl crate::SvgRenderer for Renderer {
             rect(bounds.into()),
             rect(clip_bounds.into()),
         );
+    }
+}
+
+impl crate::ControlRenderer for Renderer {
+    fn replace_foreground(
+        &mut self,
+        color: Option<crate::Color>,
+    ) -> Option<crate::Color> {
+        mem::replace(&mut self.foreground, color)
+    }
+
+    fn foreground(&self) -> Option<crate::Color> {
+        self.foreground
     }
 }

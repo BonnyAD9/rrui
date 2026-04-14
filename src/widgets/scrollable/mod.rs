@@ -73,7 +73,9 @@ impl<W, Msg, Style: ScrollableStyle> Scrollable<W, Msg, Style> {
         self.0.borrow()
     }
 
-    pub fn borrow_mut(&mut self) -> RefMut<'_, ScrollableInner<W, Msg, Style>> {
+    pub fn borrow_mut(
+        &mut self,
+    ) -> RefMut<'_, ScrollableInner<W, Msg, Style>> {
         self.0.borrow_mut()
     }
 

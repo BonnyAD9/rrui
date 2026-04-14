@@ -1,7 +1,7 @@
 use minlin::{Infinity, Vec2};
 use rrui::{
-    Application, Color, Element, Font, QuadRenderer, Shell, TextAlign,
-    TextRenderer, TextWrap, Theme,
+    Application, Color, ControlRenderer, Element, Font, QuadRenderer, Shell,
+    TextAlign, TextRenderer, TextWrap, Theme,
     config::IcedWgpuWinit,
     event::Event,
     widgets::{Button, Container, Layout, Stack, TextBlock, Variable},
@@ -30,8 +30,10 @@ impl App {
     }
 }
 
-impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
-    Application<R, E> for App
+impl<R, E> Application<R, E> for App
+where
+    R: QuadRenderer + TextRenderer + ControlRenderer + 'static,
+    E: Event + 'static,
 {
     type Message = ();
     type Theme = Theme;
@@ -55,19 +57,30 @@ impl<R: QuadRenderer + TextRenderer + 'static, E: Event + 'static>
         let (text_in, text_out) = shell.make_ref_variable(text);
         let text: Variable<TextBlock<_, R::Font, _>> = Variable::new(text_out);
 
+        let (def_dis_in, def_dis_out) = shell.make_variable::<bool>(true);
+        let (mono_dis_in, mono_dis_out) = shell.make_variable::<bool>(false);
+        let def_dis_in2 = def_dis_in.clone();
+        let mono_dis_in2 = mono_dis_in.clone();
+
         let db_text = text_in.clone();
         let mut def_but = Button::text("Default");
+        def_but.disabled = def_dis_out.into();
         def_but.size([100., 30.]);
         def_but.on_press(move |_| {
             db_text.borrow_mut().font = None;
+            def_dis_in.set(true);
+            mono_dis_in.set(false);
             None
         });
 
         let db_text = text_in.clone();
         let mut mono_but = Button::text("Monospace");
+        mono_but.disabled = mono_dis_out.into();
         mono_but.size([100., 30.]);
         mono_but.on_press(move |_| {
             db_text.borrow_mut().font = Some(Font::monospace());
+            def_dis_in2.set(false);
+            mono_dis_in2.set(true);
             None
         });
 
