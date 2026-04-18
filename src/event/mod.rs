@@ -3,6 +3,7 @@ mod event_flags;
 mod event_info;
 mod event_kind;
 mod event_target;
+mod key_code;
 mod modifiers;
 mod mouse_button;
 mod mouse_relation;
@@ -15,8 +16,8 @@ use smol_str::SmolStr;
 
 pub use self::{
     event_ctx::*, event_flags::*, event_info::*, event_kind::*,
-    event_target::*, modifiers::*, mouse_button::*, mouse_relation::*,
-    mouse_state::*, scroll_delta::*,
+    event_target::*, key_code::*, modifiers::*, mouse_button::*,
+    mouse_relation::*, mouse_state::*, scroll_delta::*,
 };
 
 pub trait Event: Debug {
@@ -61,8 +62,8 @@ pub trait Event: Debug {
             | EventKind::ScaleFactorChange(_)
             | EventKind::RedrawRequest => EventFlags::WINDOW,
             EventKind::CloseRequest => EventFlags::WINDOW | EventFlags::INPUT,
-            EventKind::KeyPress
-            | EventKind::KeyRelease
+            EventKind::KeyPress(_)
+            | EventKind::KeyRelease(_)
             | EventKind::ModifiersChange(_) => {
                 EventFlags::KEYBOARD
                     | EventFlags::INPUT

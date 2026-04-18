@@ -1,11 +1,12 @@
 use std::{fmt::Debug, mem};
 
+use bitvec::{BitArr, array::BitArray};
 use minlin::{Rect, Vec2};
 
 use crate::{
     CellWidget, RefVariableIn, RefVariableOut, ShellProxy, VariableIn,
     VariableOut,
-    event::{Modifiers, MouseState},
+    event::{KeyCode, Modifiers, MouseState},
     new_ref_variable, new_variable,
 };
 
@@ -19,6 +20,7 @@ pub struct Shell<Rend, Msg, Evt, Theme> {
     pub(crate) focus_target: Option<CellWidget<Rend, Msg, Evt, Theme>>,
     pub(crate) drag_capture: Option<CellWidget<Rend, Msg, Evt, Theme>>,
     pub(crate) evt_id: u64,
+    pub(crate) keyboard_state: BitArr!(for KeyCode::MAX_VALUE),
 }
 
 impl<Rend, Msg, Evt, Theme> Shell<Rend, Msg, Evt, Theme> {
@@ -97,6 +99,13 @@ impl<Rend, Msg, Evt, Theme> Shell<Rend, Msg, Evt, Theme> {
         res
     }
 
+    pub fn is_pressed(&self, key: KeyCode) -> bool {
+        if key == KeyCode::Unknown {
+            return false;
+        }
+        self.keyboard_state[key.value()]
+    }
+
     fn replace_focus(
         &mut self,
         target: Option<CellWidget<Rend, Msg, Evt, Theme>>,
@@ -138,6 +147,7 @@ impl<Rend, Msg, Evt, Theme> Default for Shell<Rend, Msg, Evt, Theme> {
             mouse_state: Default::default(),
             focus_target: None,
             drag_capture: None,
+            keyboard_state: BitArray::ZERO,
             evt_id: 0,
         }
     }

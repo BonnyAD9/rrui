@@ -1,6 +1,8 @@
 use minlin::{Rect, RectExt, Vec2};
 
-use crate::event::{Event, EventFlags, EventKind, EventTarget, MouseRelation};
+use crate::event::{
+    Event, EventFlags, EventKind, EventTarget, KeyCode, MouseRelation,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct EventInfo<E> {
@@ -76,6 +78,14 @@ impl<E: Event> EventInfo<E> {
     pub fn target_flags(&mut self, target: EventTarget) {
         self.flags &= !EventFlags::DIRECT;
         self.flags |= target.target_flags();
+    }
+
+    pub fn key_press(&self) -> Option<KeyCode> {
+        if let EventKind::KeyPress(res) = self.kind {
+            Some(res)
+        } else {
+            None
+        }
     }
 }
 

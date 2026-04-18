@@ -7,7 +7,7 @@ use crate::{
     LayoutParams, MayInit, RelPos, RenderState, Renderer, Shell, Widget,
     Window,
     application::Application,
-    event::{Event, EventCtrl, EventInfo, EventKind, EventTarget},
+    event::{Event, EventCtrl, EventInfo, EventKind, EventTarget, KeyCode},
     widgets::Nothing,
 };
 
@@ -139,6 +139,12 @@ where
                 }
                 EventKind::MouseRelease(m) => {
                     self.shell.mouse_state.release(m);
+                }
+                EventKind::KeyPress(k) if k != KeyCode::Unknown => {
+                    self.shell.keyboard_state.set(k.value(), true);
+                }
+                EventKind::KeyRelease(k) if k != KeyCode::Unknown => {
+                    self.shell.keyboard_state.set(k.value(), false);
                 }
                 _ => {}
             }

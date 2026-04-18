@@ -13,11 +13,13 @@ use iced_wgpu::{
         renderer::Quad,
         svg,
         text::{
-            Alignment, Hit, LineHeight, Paragraph as ParagraphTrait, Shaping,
-            Wrapping,
+            self, Alignment, Editor as _, Hit, LineHeight,
+            Paragraph as ParagraphTrait, Shaping, Wrapping,
+            editor::{Action, Edit, Motion},
+            highlighter::PlainText,
         },
     },
-    graphics::text::Paragraph,
+    graphics::text::{Editor, Paragraph},
 };
 use minlin::Rect;
 
@@ -388,5 +390,99 @@ impl crate::SvgData for svg::Handle {
 
     fn from_static(data: impl Into<Cow<'static, [u8]>>) -> Self {
         Self::from_memory(data)
+    }
+}
+
+impl crate::Editor for Editor {
+    type Font = Font;
+
+    fn with_text(text: &str) -> Self {
+        iced_wgpu::core::text::Editor::with_text(text)
+    }
+
+    fn is_empty(&self) -> bool {
+        <Self as text::Editor>::is_empty(self)
+    }
+
+    fn copy(&self) -> Option<String> {
+        <Self as text::Editor>::copy(self)
+    }
+
+    fn do_action(&mut self, action: crate::EditorAction) {
+        self.perform(action.into());
+    }
+
+    fn update(
+        &mut self,
+        bounds: impl Into<minlin::Vec2<f32>>,
+        params: &crate::EditorParams<Self::Font>,
+    ) {
+        let b = bounds.into();
+        <Self as text::Editor>::update(
+            self,
+            Size::new(b.x, b.y),
+            params.font,
+            params.font_size.into(),
+            params.line_height.into(),
+            params.wrapping.into(),
+            &mut PlainText,
+        );
+    }
+
+    fn set_text(&mut self, text: &str) {
+        *self = iced_wgpu::core::text::Editor::with_text(text)
+    }
+}
+
+impl<'a> From<crate::EditorAction<'a>> for Action {
+    fn from(value: crate::EditorAction) -> Self {
+        match value {
+            crate::EditorAction::Move(motion) => Self::Move(motion.into()),
+            crate::EditorAction::Select(motion) => Self::Select(motion.into()),
+            crate::EditorAction::SelectWord => Self::SelectWord,
+            crate::EditorAction::SelectLine => Self::SelectLine,
+            crate::EditorAction::SelectAll => Self::SelectAll,
+            crate::EditorAction::Edit(edit) => Self::Edit(edit.into()),
+            crate::EditorAction::Click(point) => {
+                Self::Click(Point::new(point.x, point.y))
+            }
+            crate::EditorAction::Drag(point) => {
+                Self::Drag(Point::new(point.x, point.y))
+            }
+            crate::EditorAction::ScrollLines(lines) => Self::Scroll { lines },
+        }
+    }
+}
+
+impl From<crate::EditorMotion> for Motion {
+    fn from(value: crate::EditorMotion) -> Self {
+        match value {
+            crate::EditorMotion::Left => Self::Left,
+            crate::EditorMotion::Up => Self::Up,
+            crate::EditorMotion::Down => Self::Down,
+            crate::EditorMotion::WordLeft => Self::WordLeft,
+            crate::EditorMotion::WordRight => Self::WordRight,
+            crate::EditorMotion::Right => Self::Right,
+            crate::EditorMotion::Home => Self::Home,
+            crate::EditorMotion::End => Self::End,
+            crate::EditorMotion::PageUp => Self::PageUp,
+            crate::EditorMotion::PageDown => Self::PageDown,
+            crate::EditorMotion::DocumentStart => Self::DocumentStart,
+            crate::EditorMotion::DocumentEnd => Self::DocumentEnd,
+        }
+    }
+}
+
+impl<'a> From<crate::EditorEdit<'a>> for Edit {
+    fn from(value: crate::EditorEdit) -> Self {
+        match value {
+            crate::EditorEdit::Insert(c) => Self::Insert(c),
+            crate::EditorEdit::Paste(s) => Self::Paste(s.to_string().into()),
+            crate::EditorEdit::Enter => Self::Enter,
+            crate::EditorEdit::Indent => Self::Indent,
+            crate::EditorEdit::Unindent => Self::Unindent,
+            crate::EditorEdit::Backspace => Self::Backspace,
+            crate::EditorEdit::Delete => Self::Delete,
+        }
     }
 }

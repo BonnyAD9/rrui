@@ -2,11 +2,12 @@ use std::borrow::Cow;
 
 use minlin::{Rect, RectExt, Vec2};
 
-use crate::{Color, Font, LayedText, Text};
+use crate::{Color, Editor, Font, LayedText, Text};
 
 pub trait TextRenderer {
     type Font: Font;
     type LayedText: LayedText<Self::Font>;
+    type Editor: Editor;
 
     fn default_font(&self) -> Self::Font;
 
@@ -55,4 +56,12 @@ pub trait TextRenderer {
             bounds,
         )
     }
+
+    fn draw_editor(
+        &mut self,
+        editor: &Self::Editor,
+        pos: impl Into<Vec2<f32>>,
+        fg: impl Into<Color>,
+        clip_bounds: impl Into<Rect<f32>>,
+    );
 }

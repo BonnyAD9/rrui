@@ -9,11 +9,14 @@ use iced_wgpu::{
         svg::{self, Renderer as _},
         text::{Paragraph as _, Renderer as _},
     },
-    graphics::{Antialiasing, Shell, Viewport, text::Paragraph},
+    graphics::{
+        Antialiasing, Shell, Viewport,
+        text::{self, Paragraph},
+    },
 };
 use minlin::{MapExt, Rect, RectExt, Vec2};
 
-use crate::iced_wgpu::rect;
+use crate::iced_wgpu::{color, rect};
 
 #[derive(Debug)]
 pub struct RendererConfig {
@@ -167,6 +170,7 @@ impl crate::QuadRenderer for Renderer {
 impl crate::TextRenderer for Renderer {
     type Font = Font;
     type LayedText = Paragraph;
+    type Editor = text::Editor;
 
     fn default_font(&self) -> Self::Font {
         self.renderer.default_font()
@@ -218,6 +222,22 @@ impl crate::TextRenderer for Renderer {
                 width: s.width,
                 height: s.height,
             },
+        );
+    }
+
+    fn draw_editor(
+        &mut self,
+        editor: &Self::Editor,
+        pos: impl Into<Vec2<f32>>,
+        fg: impl Into<crate::Color>,
+        clip_bounds: impl Into<Rect<f32>>,
+    ) {
+        let p = pos.into();
+        self.renderer.fill_editor(
+            editor,
+            Point::new(p.x, p.y),
+            color(fg.into()),
+            rect(clip_bounds.into()),
         );
     }
 }

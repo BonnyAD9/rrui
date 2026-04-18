@@ -1,6 +1,6 @@
 use minlin::Vec2;
 
-use crate::event::{Modifiers, MouseButton, ScrollDelta};
+use crate::event::{KeyCode, Modifiers, MouseButton, ScrollDelta};
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum EventKind {
@@ -12,8 +12,8 @@ pub enum EventKind {
     RedrawRequest,
 
     // Keyboard
-    KeyPress,
-    KeyRelease,
+    KeyPress(KeyCode),
+    KeyRelease(KeyCode),
     ModifiersChange(Modifiers),
 
     // Mouse
