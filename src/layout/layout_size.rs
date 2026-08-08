@@ -54,6 +54,12 @@ impl LayoutSize {
         self.best.map(|a| a.cjoin(v, |a, v| a.max(v))).unwrap_or(v)
     }
 
+    pub fn best_max_at_least(&self, v: impl Into<Vec2<f32>>) -> Vec2<f32> {
+        self.best
+            .map(|a| a.cjoin(self.range.clamp(v), |a, v| a.max(v)))
+            .unwrap_or(self.max())
+    }
+
     pub fn best(&self, fallback: impl Into<Vec2<f32>>) -> Vec2<f32> {
         self.best
             .unwrap_or_else(|| self.range.clamp(fallback.into()))

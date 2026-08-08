@@ -19,6 +19,7 @@ This folder contains examples for rrui:
 - [svg.rs](svg.rs): Same as image but with svg.
 - [scrollbar.rs](scrollbar.rs): Showcases scrollbar widget.
 - [scrollable.rs](scrollable.rs): Showcases scrollable widget.
+- [input.rs](input.rs): Showcases input widget with validity verification.
 - [no_rrui.rs](no_rrui.rs): This is not really rrui example. It shows how to
   create window and draw to it without using rrui. It served as reference for
   implementing the backend.
