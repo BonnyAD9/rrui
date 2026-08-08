@@ -41,3 +41,4 @@ These are the currently implemented widgets:
   four directions.
 - `Svg`: Widget for displaying svg.
 - `Variable`: Widget that allows remote modifications of child.
+- `Input`: Widget for inputing text.
