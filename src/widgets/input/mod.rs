@@ -9,7 +9,7 @@ use std::{
 
 pub use self::{input_action::*, input_state::*, input_theme::*};
 
-use minlin::{Padding, RangeExt, Rect, RectExt};
+use minlin::{Padding, RangeExt, Rect, RectExt, Vec2};
 
 use crate::{
     Background, ControlRenderer, Editor, EditorAction, EditorEdit,
@@ -47,7 +47,9 @@ pub struct InputInner<Style, Editr: Editor, Msg> {
     pub on_confirm: Box<DynOnChangeCallback<Msg>>,
     pub confirm_on_focus_lost: bool,
     pub width: Option<f32>,
+    scroll: Vec2<f32>,
     update_editor: bool,
+    free_scroll: bool,
     editor: Editr,
     state: InputState,
     bounds: Rect<f32>,
@@ -74,11 +76,13 @@ where
                 on_confirm: Box::new(input_default_on_confirm),
                 confirm_on_focus_lost: true,
                 width: None,
+                scroll: Vec2::ZERO,
                 editor: Default::default(),
                 state: InputState::VALID,
                 bounds: Rect::default(),
                 rel_pos: RelPos::default(),
                 update_editor: true,
+                free_scroll: false,
             }
             .into(),
         ))
@@ -248,6 +252,7 @@ where
                 let Some(k) = event.key_press() else {
                     return false;
                 };
+                self.free_scroll = false;
                 let chr = event.key_char();
                 let (msg, act) = {
                     let contents =
@@ -320,7 +325,9 @@ where
                     match event.get_kind() {
                         EventKind::MouseMove(pos) => {
                             self.editor.do_action(EditorAction::Drag(
-                                pos - bounds.pos() - self.padding.offset(),
+                                pos - bounds.pos()
+                                    - self.padding.offset()
+                                    - self.scroll,
                             ));
                             true
                         }
@@ -340,9 +347,16 @@ where
                 if event.mouse_press_of(self.react) {
                     shell.focus();
                     if let Some(pos) = shell.mouse_pos() {
-                        self.editor.do_action(EditorAction::Click(
-                            pos - bounds.pos() - self.padding.offset(),
-                        ));
+                        let pos = pos
+                            - bounds.pos()
+                            - self.padding.offset()
+                            - self.scroll;
+                        let act = if shell.modifiers().shift() {
+                            EditorAction::Drag(pos)
+                        } else {
+                            EditorAction::Click(pos)
+                        };
+                        self.editor.do_action(act);
                     }
                     shell.capture_drag();
                     new_state |= InputState::DRAG;
@@ -350,8 +364,28 @@ where
                 } else if event.mouse_release_of(self.react) {
                     new_state &= !InputState::DRAG;
                     true
+                } else if let EventKind::MouseScroll(delta) = event.get_kind()
+                {
+                    let fs = self.font_size.unwrap_or(16.);
+                    let lh = self.line_height.absolute_round(fs);
+                    let mut delta = delta.to_pixels(lh);
+                    if shell.modifiers().shift() {
+                        delta.swap();
+                    }
+                    if delta.x != 0. {
+                        self.free_scroll = true;
+                        let min_scroll = self.bounds.width()
+                            - self.padding.size().x
+                            - self.editor.min_bounds().x
+                            - 2.;
+                        self.scroll.x =
+                            (self.scroll.x + delta.x).clamp(min_scroll, 0.);
+                        true
+                    } else {
+                        false
+                    }
                 } else {
-                    true
+                    false
                 }
             }
             MouseRelation::Enter | MouseRelation::Move => {
@@ -359,7 +393,9 @@ where
                 if self.state.contains(InputState::DRAG) {
                     if let Some(pos) = shell.mouse_pos() {
                         self.editor.do_action(EditorAction::Drag(
-                            pos - bounds.pos() - self.padding.offset(),
+                            pos - bounds.pos()
+                                - self.padding.offset()
+                                - self.scroll,
                         ));
                     }
                     true
@@ -400,7 +436,10 @@ where
     ) {
         let bounds = self.rel_pos.position_rect(self.bounds);
         if let Some(a) = theme.appereance(&self.style, self.state) {
-            renderer.draw_quad(&Quad::border(bounds, a.border), a.background);
+            renderer.draw_quad(
+                &Quad::border(bounds, a.border).snapped(),
+                a.background,
+            );
         }
 
         let lh = self.line_height.absolute_round(
@@ -431,7 +470,20 @@ where
 
             match self.editor.selection() {
                 crate::Selection::Caret(mut pos) => {
-                    pos += tbounds.pos();
+                    pos += tbounds.pos() + self.scroll;
+                    if !self.free_scroll {
+                        if pos.x > tbounds.right() {
+                            let change = pos.x - tbounds.right() + 2.;
+                            self.scroll.x -= change;
+                            pos.x -= change;
+                        } else if pos.x < tbounds.left() + lh {
+                            let new_scroll =
+                                (self.scroll.x + tbounds.left() + lh - pos.x)
+                                    .min(0.);
+                            pos.x -= self.scroll.x - new_scroll;
+                            self.scroll.x = new_scroll;
+                        }
+                    }
                     let color = theme.cursor(&self.style, self.state);
                     let cb = tbounds.intersect([pos.x, pos.y, 2., lh]);
                     renderer.draw_rect(cb, Background::Solid(color));
@@ -439,8 +491,11 @@ where
                 crate::Selection::Range(rects) => {
                     let color = theme.selection(&self.style, self.state);
                     for mut r in rects {
-                        r.set_pos(r.pos() + tbounds.pos());
-                        renderer.draw_rect(r, Background::Solid(color));
+                        r.set_pos(r.pos() + tbounds.pos() + self.scroll);
+                        renderer.draw_rect(
+                            tbounds.intersect(r),
+                            Background::Solid(color),
+                        );
                     }
                 }
             }
@@ -450,7 +505,12 @@ where
                 self.state,
                 renderer.foreground(),
             );
-            renderer.draw_editor(&self.editor, tbounds.pos(), color, tbounds);
+            renderer.draw_editor(
+                &self.editor,
+                tbounds.pos() + self.scroll,
+                color,
+                tbounds,
+            );
         } else {
             let color = theme.cursor(&self.style, self.state);
             let cb = tbounds.intersect([tbounds.x, tbounds.y, 2., lh]);

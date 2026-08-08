@@ -13,4 +13,11 @@ impl ScrollDelta {
             ScrollDelta::Pixels(v) => v.swap(),
         }
     }
+
+    pub fn to_pixels(&self, line: f32) -> Vec2<f32> {
+        match self {
+            ScrollDelta::Lines(l) => *l * line,
+            ScrollDelta::Pixels(p) => *p,
+        }
+    }
 }

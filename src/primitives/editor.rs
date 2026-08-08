@@ -26,4 +26,6 @@ pub trait Editor: Default + 'static {
     fn get_text(&self) -> String;
 
     fn selection(&self) -> Selection;
+
+    fn min_bounds(&self) -> Vec2<f32>;
 }

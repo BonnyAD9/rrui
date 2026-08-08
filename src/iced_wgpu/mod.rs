@@ -441,6 +441,11 @@ impl crate::Editor for Editor {
     fn selection(&self) -> crate::Selection {
         <Self as text::Editor>::selection(self).into()
     }
+
+    fn min_bounds(&self) -> minlin::Vec2<f32> {
+        let b = <Self as text::Editor>::min_bounds(self);
+        (b.width, b.height).into()
+    }
 }
 
 impl<'a> From<crate::EditorAction<'a>> for Action {

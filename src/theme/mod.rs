@@ -361,7 +361,7 @@ impl InputTheme for Theme {
     ) -> Option<ContainerAppereance> {
         let mut res = ContainerAppereance {
             border: self.border,
-            background: self.bg_norm.clone(),
+            background: self.bg_dark.clone(),
         };
 
         if !state.contains(InputState::VALID) {
