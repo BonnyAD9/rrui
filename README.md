@@ -30,7 +30,7 @@ These are the currently implemented widgets:
 - `Layout`: Layouting widget aligning childern horizontaly or verticaly with
   absolute or relative sizes and the given spacing. (basically 1D `Grid` +
   spacing)
-- `Margin`: Simple layouting container that adds absolute padding to its child.
+- `Margin`: Simple layouting container that adds absolute margin to its child.
 - `Scrollable`: Widget that allows scrolling over child widget.
 - `Scrollbar`: Scrollbar widget.
 - `TextBlock`: Widget for displaying text.
