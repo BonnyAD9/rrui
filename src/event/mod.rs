@@ -44,7 +44,9 @@ pub trait Event: Debug {
             EventKind::MouseMove(_) => EventTarget::DragCapture,
             EventKind::MouseRelease(_) => EventTarget::DragCaptureEnd,
             _ => {
-                if self.get_flags().contains(EventFlags::FOR_WIDGETS) {
+                if self.is_keyboard() {
+                    EventTarget::Focus
+                } else if self.get_flags().contains(EventFlags::FOR_WIDGETS) {
                     EventTarget::Root
                 } else {
                     EventTarget::Nothing

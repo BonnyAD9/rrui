@@ -8,8 +8,9 @@ use crate::{
     Background, Border, Color, Orientation, Radius, SvgParameters,
     widgets::{
         ButtonState, ButtonTheme, ContainerAppereance, ContainerTheme,
-        ScrollableStyle, ScrollableTheme, ScrollbarSizes, ScrollbarStyle,
-        ScrollbarTheme, TextBlockTheme, ThumbState, ThumbTheme, TrackTheme,
+        InputState, InputTheme, ScrollableStyle, ScrollableTheme,
+        ScrollbarSizes, ScrollbarStyle, ScrollbarTheme, TextBlockTheme,
+        ThumbState, ThumbTheme, TrackTheme,
     },
 };
 
@@ -347,5 +348,61 @@ impl ScrollableTheme for Theme {
         _: &<Self as ScrollableTheme>::Style,
     ) -> Option<ContainerAppereance> {
         None
+    }
+}
+
+impl InputTheme for Theme {
+    type Style = ();
+
+    fn appereance(
+        &self,
+        _: &Self::Style,
+        state: InputState,
+    ) -> Option<ContainerAppereance> {
+        let mut res = ContainerAppereance {
+            border: self.border,
+            background: self.bg_norm.clone(),
+        };
+
+        if !state.contains(InputState::VALID) {
+            res.background = res.background.tint(0.1, Color::xrgb(0xff0000));
+        }
+
+        if state.intersects(InputState::HOVER | InputState::FOCUS) {
+            res.border.color = self.accent;
+        }
+
+        Some(res)
+    }
+
+    fn foreground(
+        &self,
+        _: &Self::Style,
+        _: InputState,
+        requested: Option<Color>,
+    ) -> Color {
+        requested.unwrap_or(self.fg)
+    }
+
+    fn selection(&self, _: &Self::Style, _: InputState) -> Color {
+        self.accent.rgb_mul(0.5)
+    }
+
+    fn cursor(&self, _: &Self::Style, state: InputState) -> Color {
+        if state.contains(InputState::FOCUS) {
+            self.fg
+        } else {
+            Color::TRANSPARENT
+        }
+    }
+
+    fn is_different(
+        &self,
+        _: &Self::Style,
+        a: InputState,
+        b: InputState,
+    ) -> bool {
+        let mask = InputState::FOCUS | InputState::VALID | InputState::HOVER;
+        (a & mask) != (b & mask)
     }
 }

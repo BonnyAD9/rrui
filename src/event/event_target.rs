@@ -4,6 +4,7 @@ use crate::event::EventFlags;
 pub enum EventTarget {
     Nothing,
     Root,
+    Focus,
     DragCapture,
     DragCaptureEnd,
 }
@@ -13,6 +14,7 @@ impl EventTarget {
         match self {
             EventTarget::Nothing => EventFlags::empty(),
             EventTarget::Root => EventFlags::empty(),
+            EventTarget::Focus => EventFlags::FOCUS,
             EventTarget::DragCapture => EventFlags::DRAG_CAPTURE,
             EventTarget::DragCaptureEnd => EventFlags::DRAG_CAPTURE,
         }
@@ -28,6 +30,10 @@ impl Iterator for EventTarget {
             EventTarget::Root => {
                 *self = EventTarget::Nothing;
                 Some(EventTarget::Root)
+            }
+            EventTarget::Focus => {
+                *self = EventTarget::Nothing;
+                Some(EventTarget::Focus)
             }
             EventTarget::DragCapture => {
                 *self = EventTarget::Root;

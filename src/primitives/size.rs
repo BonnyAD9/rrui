@@ -23,6 +23,20 @@ impl Size {
             Self::Relative(v) => Vec2::new(0., *v),
         }
     }
+
+    pub fn absolute(&self, runit: f32) -> f32 {
+        match self {
+            Size::Relative(r) => r * runit,
+            Size::Absolute(a) => *a,
+        }
+    }
+
+    pub fn absolute_round(&self, runit: f32) -> f32 {
+        match self {
+            Size::Relative(r) => (r * runit).round(),
+            Size::Absolute(a) => *a,
+        }
+    }
 }
 
 impl Add<Size> for Size {
@@ -30,6 +44,12 @@ impl Add<Size> for Size {
 
     fn add(self, rhs: Size) -> Self::Output {
         self.to_parts() + rhs.to_parts()
+    }
+}
+
+impl From<f32> for Size {
+    fn from(value: f32) -> Self {
+        Self::Absolute(value)
     }
 }
 

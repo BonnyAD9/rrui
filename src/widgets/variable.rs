@@ -53,6 +53,15 @@ where
     ) {
         self.0.borrow_mut().draw(shell, theme, renderer);
     }
+
+    fn state_change(
+        &mut self,
+        shell: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: crate::WidgetState,
+    ) -> bool {
+        self.0.borrow_mut().state_change(shell, theme, state)
+    }
 }
 
 impl<W, Rend, Msg, Evt, Theme> From<Variable<W>>

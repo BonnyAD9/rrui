@@ -5,9 +5,12 @@ use minlin::{MapExt, RectExt};
 use crate::{
     AppCtrl, Configuration, Element, EventLoop, LayoutBounds, LayoutFlags,
     LayoutParams, MayInit, RelPos, RenderState, Renderer, Shell, Widget,
-    Window,
+    WidgetState, Window,
     application::Application,
-    event::{Event, EventCtrl, EventInfo, EventKind, EventTarget, KeyCode},
+    event::{
+        Event, EventCtrl, EventInfo, EventKind, EventTarget, KeyCode,
+        MouseButton,
+    },
     widgets::Nothing,
 };
 
@@ -189,8 +192,16 @@ where
         event: &mut EventInfo<Evt>,
         target: EventTarget,
     ) {
+        let focus_transfer = matches!(
+            event.get_kind(),
+            EventKind::MousePress(MouseButton::Left)
+        );
         let mut handled = false;
         self.shell.focus_target = None;
+
+        if focus_transfer {
+            self.shell.lose_focus();
+        }
 
         for t in target {
             event.target_flags(t);
@@ -199,24 +210,29 @@ where
                 EventTarget::Root => {
                     self.root.event(&mut self.shell, self.app.theme(), event)
                 }
+                EventTarget::Focus => {
+                    if let Some(f) = self.shell.focused.clone() {
+                        self.shell.with_focus(f.clone(), |s| {
+                            f.borrow_mut().event(s, self.app.theme(), event)
+                        })
+                    } else {
+                        false
+                    }
+                }
                 EventTarget::DragCapture => {
                     if let Some(dc) = self.shell.drag_capture.clone() {
-                        dc.borrow_mut().event(
-                            &mut self.shell,
-                            self.app.theme(),
-                            event,
-                        )
+                        self.shell.with_focus(dc.clone(), |s| {
+                            dc.borrow_mut().event(s, self.app.theme(), event)
+                        })
                     } else {
                         false
                     }
                 }
                 EventTarget::DragCaptureEnd => {
                     if let Some(dc) = self.shell.drag_capture.take() {
-                        dc.borrow_mut().event(
-                            &mut self.shell,
-                            self.app.theme(),
-                            event,
-                        )
+                        self.shell.with_focus(dc.clone(), |s| {
+                            dc.borrow_mut().event(s, self.app.theme(), event)
+                        })
                     } else {
                         false
                     }
@@ -224,6 +240,55 @@ where
             };
             if handled {
                 break;
+            }
+        }
+
+        while let Some(nf) = self.shell.new_focus.take() {
+            let of = self.shell.focused.take();
+            match (nf, of) {
+                (None, None) => break,
+                (Some(n), None) => {
+                    self.shell.with_focus(n.clone(), |s| {
+                        n.borrow_mut().state_change(
+                            s,
+                            self.app.theme(),
+                            WidgetState::FocusGain,
+                        );
+                    });
+                    self.shell.focused = Some(n);
+                    self.shell.new_focus = None;
+                    break;
+                }
+                (None, Some(o)) => {
+                    self.shell.with_focus(o.clone(), |s| {
+                        o.borrow_mut().state_change(
+                            s,
+                            self.app.theme(),
+                            WidgetState::FocusLost,
+                        );
+                    });
+                }
+                (Some(n), Some(o)) => {
+                    if n.as_ptr() as *const () != o.as_ptr() as *const () {
+                        self.shell.with_focus(o.clone(), |s| {
+                            o.borrow_mut().state_change(
+                                s,
+                                self.app.theme(),
+                                WidgetState::FocusLost,
+                            );
+                        });
+                        self.shell.with_focus(n.clone(), |s| {
+                            n.borrow_mut().state_change(
+                                s,
+                                self.app.theme(),
+                                WidgetState::FocusGain,
+                            );
+                        });
+                    }
+                    self.shell.focused = Some(n);
+                    self.shell.new_focus = None;
+                    break;
+                }
             }
         }
 

@@ -4,7 +4,8 @@ use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
     Element, GridSpan, LayerRenderer, LayoutBounds, LayoutFlags, RelPosSrc,
-    Size, Widget, WidgetExt, event::Event, get_pos, layout, update_rel_pos,
+    Shell, Size, Widget, WidgetExt, WidgetState, event::Event, get_pos,
+    layout, update_rel_pos,
 };
 
 pub use self::grid_item::*;
@@ -245,6 +246,17 @@ where
         if end_on_top {
             renderer.end_on_top();
         }
+    }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
+    ) -> bool {
+        self.children
+            .iter_mut()
+            .any(|c| c.widget.state_change(shell, theme, state))
     }
 }
 

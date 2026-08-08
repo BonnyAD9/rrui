@@ -17,3 +17,13 @@ bitflags! {
         const SUPER    = 0b111_000_000_000;
     }
 }
+
+impl Modifiers {
+    pub fn ctrl(&self) -> bool {
+        self.intersects(Self::CONTROL)
+    }
+
+    pub fn shift(&self) -> bool {
+        self.intersects(Self::SHIFT)
+    }
+}

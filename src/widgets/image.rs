@@ -168,6 +168,15 @@ where
             &self.params,
         );
     }
+
+    fn state_change(
+        &mut self,
+        _: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: crate::WidgetState,
+    ) -> bool {
+        false
+    }
 }
 
 impl<I: ImageData> Image<I> {

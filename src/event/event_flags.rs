@@ -9,7 +9,9 @@ bitflags! {
         const INPUT = 0x8;
         const OTHER = 0x10;
         const FOR_WIDGETS = 0x20;
+
         const DRAG_CAPTURE = 0x40;
-        const DIRECT = 0x40;
+        const FOCUS = 0x80;
+        const DIRECT = 0xC0;
     }
 }

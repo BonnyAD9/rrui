@@ -1,7 +1,8 @@
 use minlin::{Rect, RectExt, Vec2};
 
 use crate::event::{
-    Event, EventFlags, EventKind, EventTarget, KeyCode, MouseRelation,
+    Event, EventFlags, EventKind, EventTarget, KeyCode, MouseButton,
+    MouseRelation, MouseState,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -86,6 +87,22 @@ impl<E: Event> EventInfo<E> {
         } else {
             None
         }
+    }
+
+    pub fn mouse_press(&self) -> Option<MouseButton> {
+        if let EventKind::MousePress(b) = self.kind {
+            Some(b)
+        } else {
+            None
+        }
+    }
+
+    pub fn mouse_press_of(&self, but: MouseState) -> bool {
+        matches!(self.kind, EventKind::MousePress(b) if but.contains(b.into()))
+    }
+
+    pub fn mouse_release_of(&self, but: MouseState) -> bool {
+        matches!(self.kind, EventKind::MouseRelease(b) if but.contains(b.into()))
     }
 }
 

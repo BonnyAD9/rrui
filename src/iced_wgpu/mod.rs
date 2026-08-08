@@ -15,12 +15,13 @@ use iced_wgpu::{
         text::{
             self, Alignment, Editor as _, Hit, LineHeight,
             Paragraph as ParagraphTrait, Shaping, Wrapping,
-            editor::{Action, Edit, Motion},
+            editor::{Action, Edit, Motion, Selection},
             highlighter::PlainText,
         },
     },
     graphics::text::{Editor, Paragraph},
 };
+use itertools::Itertools;
 use minlin::Rect;
 
 use crate::LayedText;
@@ -432,6 +433,14 @@ impl crate::Editor for Editor {
     fn set_text(&mut self, text: &str) {
         *self = iced_wgpu::core::text::Editor::with_text(text)
     }
+
+    fn get_text(&self) -> String {
+        self.buffer().lines.iter().map(|a| a.text()).join("\n")
+    }
+
+    fn selection(&self) -> crate::Selection {
+        <Self as text::Editor>::selection(self).into()
+    }
 }
 
 impl<'a> From<crate::EditorAction<'a>> for Action {
@@ -483,6 +492,22 @@ impl<'a> From<crate::EditorEdit<'a>> for Edit {
             crate::EditorEdit::Unindent => Self::Unindent,
             crate::EditorEdit::Backspace => Self::Backspace,
             crate::EditorEdit::Delete => Self::Delete,
+        }
+    }
+}
+
+impl From<Selection> for crate::Selection {
+    fn from(value: Selection) -> Self {
+        match value {
+            Selection::Caret(point) => {
+                crate::Selection::Caret(minlin::Vec2::new(point.x, point.y))
+            }
+            Selection::Range(rectangles) => crate::Selection::Range(
+                rectangles
+                    .into_iter()
+                    .map(|r| Rect::new(r.x, r.y, r.width, r.height))
+                    .collect(),
+            ),
         }
     }
 }

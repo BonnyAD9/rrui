@@ -16,6 +16,7 @@ mod layed_text;
 mod orientation;
 mod quad;
 mod radius;
+mod selection;
 mod shadow;
 mod size;
 mod space;
@@ -28,8 +29,9 @@ pub use self::{
     align::*, angle::*, background::*, border::*, direction::*, editor::*,
     editor_action::*, editor_edit::*, editor_motion::*, editor_params::*,
     grid_span::*, image_fill::*, image_filter::*, image_parameters::*,
-    layed_text::*, orientation::*, quad::*, radius::*, shadow::*, size::*,
-    space::*, svg_parameters::*, text::*, text_align::*, text_wrap::*,
+    layed_text::*, orientation::*, quad::*, radius::*, selection::*,
+    shadow::*, size::*, space::*, svg_parameters::*, text::*, text_align::*,
+    text_wrap::*,
 };
 
 pub use bytes::*;

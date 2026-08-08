@@ -43,6 +43,15 @@ impl<Rend, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme> for Nothing {
     }
 
     fn reposition(&mut self, _: &Theme, _: Vec2<f32>) {}
+
+    fn state_change(
+        &mut self,
+        _: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: crate::WidgetState,
+    ) -> bool {
+        false
+    }
 }
 
 impl<Rend, Msg, Evt: Debug, Theme> From<Nothing>

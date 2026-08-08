@@ -7,7 +7,7 @@ use std::{borrow::Cow, fmt::Debug};
 
 use crate::{
     ControlRenderer, Element, LayoutFlags, LayoutParams, QuadRenderer,
-    RedrawSlot, RelPos, TextAlign, Widget, WidgetExt,
+    RedrawSlot, RelPos, Shell, TextAlign, Widget, WidgetExt, WidgetState,
     event::{Event, MouseButton, MouseState},
     widgets::TextBlock,
 };
@@ -152,6 +152,15 @@ where
             ButtonEvent::Clicked(b) => shell.msgs((self.on_press)(b)),
         }
         handled
+    }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
+    ) -> bool {
+        self.child.state_change(shell, theme, state)
     }
 
     fn draw(

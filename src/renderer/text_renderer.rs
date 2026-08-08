@@ -7,7 +7,7 @@ use crate::{Color, Editor, Font, LayedText, Text};
 pub trait TextRenderer {
     type Font: Font;
     type LayedText: LayedText<Self::Font>;
-    type Editor: Editor;
+    type Editor: Editor<Font = Self::Font>;
 
     fn default_font(&self) -> Self::Font;
 

@@ -11,7 +11,7 @@ use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
     Element, LayerRenderer, LayoutBounds, Orientation, QuadRenderer, RelPos,
-    SvgRenderer, Widget, WidgetExt,
+    Shell, SvgRenderer, Widget, WidgetExt, WidgetState,
     event::{Event, EventKind, Modifiers, MouseRelation},
     widgets::{
         ButtonTheme, PartScrollbar, ScrollbarEvent, ScrollbarStyle,
@@ -374,6 +374,10 @@ where
             self.scroll.y.draw(off, theme, renderer);
         }
     }
+    
+    fn state_change(&mut self, shell: &mut Shell<Rend, Msg, Evt, Theme>, theme: &Theme, state: WidgetState) -> bool {
+        self.child.state_change(shell, theme, state)
+    }
 }
 
 #[rustfmt::skip] // rustfmt is confused from the long clauses and fails.
@@ -431,6 +435,15 @@ where
         renderer: &mut Rend,
     ) {
         self.0.borrow_mut().draw(shell, theme, renderer);
+    }
+    
+    fn state_change(
+        &mut self,
+        _: &mut Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: WidgetState
+    ) -> bool {
+        false
     }
 }
 

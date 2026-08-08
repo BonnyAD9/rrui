@@ -4,8 +4,8 @@ use minlin::{Infinity, Rect, RectExt, Vec2};
 
 use crate::{
     Element, LayoutBounds, LayoutFlags, LayoutParams, Orientation, RelPos,
-    RelPosSrc, Size, Space, Widget, WidgetExt, event::Event, get_pos, layout,
-    reposition, update_rel_pos,
+    RelPosSrc, Shell, Size, Space, Widget, WidgetExt, WidgetState,
+    event::Event, get_pos, layout, reposition, update_rel_pos,
 };
 
 pub use self::layout_item::*;
@@ -173,6 +173,17 @@ where
         for c in &mut self.children {
             c.widget.draw(shell, theme, renderer);
         }
+    }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
+    ) -> bool {
+        self.children
+            .iter_mut()
+            .any(|c| c.widget.state_change(shell, theme, state))
     }
 }
 

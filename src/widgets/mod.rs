@@ -3,6 +3,7 @@ mod container;
 mod debug;
 mod grid;
 mod image;
+mod input;
 mod layout;
 mod margin;
 mod nothing;
@@ -17,7 +18,7 @@ mod track;
 mod variable;
 
 pub use self::{
-    button::*, container::*, debug::*, grid::*, image::*, layout::*,
+    button::*, container::*, debug::*, grid::*, image::*, input::*, layout::*,
     margin::*, nothing::*, rectangle::*, scrollable::*, scrollbar::*,
     stack::*, svg::*, text_block::*, thumb::*, track::*, variable::*,
 };

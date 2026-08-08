@@ -7,7 +7,8 @@ use std::ops::{Deref, DerefMut};
 use minlin::{Rect, RectExt};
 
 use crate::{
-    Border, Color, Element, Quad, QuadRenderer, RelPos, Widget, WidgetExt,
+    Border, Color, Element, Quad, QuadRenderer, RelPos, Shell, Widget,
+    WidgetExt, WidgetState,
 };
 
 #[derive(Debug)]
@@ -90,6 +91,11 @@ impl<W> Debug<W> {
         self.enabled = true;
         self
     }
+
+    pub fn after(mut self) -> Self {
+        self.draw_after = true;
+        self
+    }
 }
 
 impl<W, Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme> for Debug<W>
@@ -159,6 +165,15 @@ where
             );
             self.child.draw(shell, theme, renderer);
         }
+    }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
+    ) -> bool {
+        self.child.state_change(shell, theme, state)
     }
 }
 

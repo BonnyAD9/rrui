@@ -16,6 +16,7 @@ mod variable;
 pub mod wgpu;
 mod widget;
 mod widget_ext;
+mod widget_state;
 pub mod widgets;
 pub mod winit;
 
@@ -25,6 +26,7 @@ pub use self::{
     app_state::*, application::*, configuration::*, element::*, layout::*,
     may_init::*, primitives::*, renderer::*, shell::*, shell_proxy::*,
     theme::*, traits::*, variable::*, widget::*, widget_ext::*,
+    widget_state::*,
 };
 
 pub type Color = minlin::Rgba<f32>;

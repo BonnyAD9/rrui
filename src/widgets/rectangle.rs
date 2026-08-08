@@ -80,6 +80,15 @@ impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> Widget<Rend, Msg, Evt, Theme>
     fn reposition(&mut self, _: &Theme, pos: Vec2<f32>) {
         self.bounds.set_pos(pos);
     }
+
+    fn state_change(
+        &mut self,
+        _: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: crate::WidgetState,
+    ) -> bool {
+        false
+    }
 }
 
 impl<Rend: QuadRenderer, Msg, Evt: Debug, Theme> From<Rectangle>

@@ -4,7 +4,7 @@ pub use self::text_block_theme::*;
 
 use std::borrow::Cow;
 
-use minlin::{Rect, RectExt, Vec2};
+use minlin::{MapExt, Rect, RectExt, Vec2};
 
 use crate::{
     Align, ControlRenderer, Element, LayedText, LayoutFlags, LayoutParams,
@@ -68,6 +68,12 @@ impl<Style, Font, LText> TextBlock<Style, Font, LText> {
     {
         Self::styled_variable(Style::default(), text.into())
     }
+
+    pub fn centered(mut self) -> Self {
+        self.align_x = TextAlign::Center;
+        self.align_y = Align::Center;
+        self
+    }
 }
 
 impl<Style: Default, Font, LText> Default for TextBlock<Style, Font, LText> {
@@ -115,7 +121,7 @@ where
                 let text = self.make_text(lp.renderer, b.size());
                 self.layed.insert(LayedText::from_text(&text))
             };
-            let min_bounds = t.min_bounds();
+            let min_bounds = t.min_bounds().map(f32::round);
             self.bounds = bounds.best_at_least(min_bounds);
             t.set_bounds(self.bounds.size());
             let align_bounds = t.align_bounds();
@@ -157,6 +163,15 @@ where
         let fg = theme.foreground(&self.style, renderer.foreground());
         let bounds = self.rel_pos.position_rect(self.bounds);
         renderer.draw_clipped_text(text, bounds.pos() + self.pos, fg, bounds);
+    }
+
+    fn state_change(
+        &mut self,
+        _: &mut crate::Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: crate::WidgetState,
+    ) -> bool {
+        false
     }
 }
 

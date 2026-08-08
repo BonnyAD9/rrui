@@ -19,6 +19,8 @@ pub struct Shell<Rend, Msg, Evt, Theme> {
     pub(crate) mouse_state: MouseState,
     pub(crate) focus_target: Option<CellWidget<Rend, Msg, Evt, Theme>>,
     pub(crate) drag_capture: Option<CellWidget<Rend, Msg, Evt, Theme>>,
+    pub(crate) focused: Option<CellWidget<Rend, Msg, Evt, Theme>>,
+    pub(crate) new_focus: Option<Option<CellWidget<Rend, Msg, Evt, Theme>>>,
     pub(crate) evt_id: u64,
     pub(crate) keyboard_state: BitArr!(for KeyCode::MAX_VALUE),
 }
@@ -88,6 +90,16 @@ impl<Rend, Msg, Evt, Theme> Shell<Rend, Msg, Evt, Theme> {
         }
     }
 
+    pub fn focus(&mut self) {
+        if let Some(w) = &self.focus_target {
+            self.new_focus = Some(Some(w.clone()));
+        }
+    }
+
+    pub fn lose_focus(&mut self) {
+        self.new_focus = Some(None);
+    }
+
     pub fn with_focus<T>(
         &mut self,
         target: CellWidget<Rend, Msg, Evt, Theme>,
@@ -147,6 +159,8 @@ impl<Rend, Msg, Evt, Theme> Default for Shell<Rend, Msg, Evt, Theme> {
             mouse_state: Default::default(),
             focus_target: None,
             drag_capture: None,
+            focused: None,
+            new_focus: None,
             keyboard_state: BitArray::ZERO,
             evt_id: 0,
         }

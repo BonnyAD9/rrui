@@ -6,8 +6,8 @@ pub use self::margin_ext::*;
 use minlin::{Padding, Rect, Vec2};
 
 use crate::{
-    Element, LayoutBounds, LayoutFlags, LayoutParams, RelPos, Widget,
-    WidgetExt, event::EventInfo,
+    Element, LayoutBounds, LayoutFlags, LayoutParams, RelPos, Shell, Widget,
+    WidgetExt, WidgetState, event::EventInfo,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -93,6 +93,15 @@ where
         renderer: &mut Rend,
     ) {
         self.child.draw(shell, theme, renderer)
+    }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
+    ) -> bool {
+        self.child.state_change(shell, theme, state)
     }
 }
 

@@ -11,8 +11,8 @@ use std::{
 };
 
 use crate::{
-    Element, Orientation, QuadRenderer, RedrawSlot, RelPos, SvgRenderer,
-    Widget, WidgetExt, event::Event,
+    Element, Orientation, QuadRenderer, RedrawSlot, RelPos, Shell,
+    SvgRenderer, Widget, WidgetExt, WidgetState, event::Event,
 };
 
 pub use self::{
@@ -149,6 +149,15 @@ where
     ) {
         self.0.borrow_mut().draw(shell, theme, renderer);
     }
+
+    fn state_change(
+        &mut self,
+        _: &mut Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: WidgetState,
+    ) -> bool {
+        false
+    }
 }
 
 impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
@@ -198,6 +207,15 @@ where
         renderer: &mut Rend,
     ) {
         self.inner.draw(self.rel_pos.get(), theme, renderer);
+    }
+
+    fn state_change(
+        &mut self,
+        _: &mut Shell<Rend, Msg, Evt, Theme>,
+        _: &Theme,
+        _: WidgetState,
+    ) -> bool {
+        false
     }
 }
 

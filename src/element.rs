@@ -101,4 +101,14 @@ impl<Rend, Msg, Evt, Theme> Widget<Rend, Msg, Evt, Theme>
     fn reposition(&mut self, theme: &Theme, pos: Vec2<f32>) {
         self.0.mutate(|w| w.reposition(theme, pos));
     }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: crate::WidgetState,
+    ) -> bool {
+        self.0
+            .focus_mutate(shell, |w, s| w.state_change(s, theme, state))
+    }
 }

@@ -1,8 +1,10 @@
 use minlin::Vec2;
 
-use crate::{EditorAction, EditorParams, Font};
+use crate::{
+    EditorAction, EditorParams, Font, primitives::selection::Selection,
+};
 
-pub trait Editor: Default {
+pub trait Editor: Default + 'static {
     type Font: Font;
 
     fn with_text(text: &str) -> Self;
@@ -20,4 +22,8 @@ pub trait Editor: Default {
     );
 
     fn set_text(&mut self, text: &str);
+
+    fn get_text(&self) -> String;
+
+    fn selection(&self) -> Selection;
 }

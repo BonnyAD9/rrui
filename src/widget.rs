@@ -1,7 +1,8 @@
 use minlin::{Rect, Vec2};
 
 use crate::{
-    LayoutBounds, LayoutFlags, LayoutParams, RelPos, Shell, event::EventInfo,
+    LayoutBounds, LayoutFlags, LayoutParams, RelPos, Shell, WidgetState,
+    event::EventInfo,
 };
 
 pub trait Widget<Rend, Msg, Evt, Theme> {
@@ -22,6 +23,13 @@ pub trait Widget<Rend, Msg, Evt, Theme> {
         shell: &mut Shell<Rend, Msg, Evt, Theme>,
         theme: &Theme,
         event: &EventInfo<Evt>,
+    ) -> bool;
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
     ) -> bool;
 
     fn draw(

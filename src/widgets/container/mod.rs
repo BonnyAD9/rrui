@@ -9,7 +9,7 @@ use minlin::{Infinity, MapExt, Padding, Rect, RectExt, Vec2};
 
 use crate::{
     Element, LayoutBounds, LayoutFlags, LayoutParams, QuadRenderer, RelPos,
-    RelayoutSlot, Shell, Size, Widget, WidgetExt,
+    RelayoutSlot, Shell, Size, Widget, WidgetExt, WidgetState,
     event::{Event, EventInfo},
 };
 
@@ -110,7 +110,8 @@ where
         let cbounds =
             self.child.layout(lp, &cbounds, rel_pos, flags) - abs_pad;
 
-        let remaining = bounds.size.best_max() - cbounds.size();
+        let remaining =
+            bounds.size.best_at_least(cbounds.size()) - cbounds.size();
         let rel_pad = self.padding.map(|a| a.to_parts().y);
         let pad = Self::resolve_padding(remaining, rel_pad);
 
@@ -186,6 +187,15 @@ where
             renderer.draw_border(bounds, a.border, a.background);
         }
         self.child.draw(shell, theme, renderer);
+    }
+
+    fn state_change(
+        &mut self,
+        shell: &mut Shell<Rend, Msg, Evt, Theme>,
+        theme: &Theme,
+        state: WidgetState,
+    ) -> bool {
+        self.child.state_change(shell, theme, state)
     }
 }
 
